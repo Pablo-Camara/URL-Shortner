@@ -53,9 +53,10 @@ class ShortstringSeeder extends Seeder
         $numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
         $set = array_merge($alphabet, $numbers);
 
-        for($k = 3; $k <= 10; $k++){
-            $this->generateAllKLength($set, $k);
-        }
+        $stringLength = env('SHORTSTRINGS_LENGTH', 3);
+
+        $this->generateAllKLength($set, $stringLength);
+
 
     }
 }
