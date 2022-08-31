@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <title>Laravel</title>
+        <title>InIdeia.com - Encurtador de Urls</title>
 
         <!-- Fonts -->
         <link
@@ -34,6 +34,17 @@
                 /* margin-left: 100px; */
                 margin: auto;
                 margin-top: 30px;
+
+                position: relative;
+            }
+
+            .form-box .close-form-box {
+                position: absolute;
+                top: 10px;
+                right: 15px;
+                color: red;
+                font-size: 16px;
+                cursor: pointer;
             }
 
             .form-box h1 {
@@ -128,11 +139,22 @@
                 color: gray;
             }
 
-            #generate-another-shortlink {
+            #generate-another-shortlink,
+            #create-account-link,
+            #my-account-link {
                 width: 100%;
                 margin-top: 5px;
                 font-size: 14px;
                 display: block;
+            }
+
+            #my-account-link {
+                text-align: center;
+            }
+
+            #form-box-login-feedback {
+                margin-bottom: 4px;
+                font-size: 14px;
             }
 
             .mtop-22 {
@@ -292,7 +314,7 @@
             />
         </div>
 
-        <div class="form-box" id="form-box">
+        <div class="form-box" id="form-box" style="display: block">
             <h1>Encurtador de URLs</h1>
             <div class="input-container">
                 <div class="input-label" id="long-url-label">
@@ -309,6 +331,7 @@
             </div>
 
             <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
+            <a href="#" id="my-account-link">Minha conta</a>
 
             <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
         </div>
@@ -323,21 +346,66 @@
                 <input type="text" id="shortlink" readonly />
             </div>
 
-            <div class="button" id="save-shortlink" style="display: none">Guardar nos meus links</div>
-            <div class="button" id="go-to-my-links" style="display: none">Ver meus links curtos</div>
+            <div class="button" id="save-shortlink" style="display: none">Guardar na minha lista de links</div>
+            <div class="button" id="go-to-my-links" style="display: none">Ver minha lista de links</div>
             <a href="#" id="generate-another-shortlink">Encurtar outro link</a>
         </div>
+
+        <div
+            class="form-box"
+            id="form-box-login" style="display: none"
+        >
+            <div class="form-box-title">Minha conta</div>
+            <div class="close-form-box" id="form-box-login-close-btn">X</div>
+            <div class="input-container">
+                <div class="input-label" id="login-email-label">
+                    Email
+                </div>
+                <input type="text" id="login-email" />
+            </div>
+
+            <div class="input-container">
+                <div class="input-label" id="login-password-label">
+                    Password
+                </div>
+                <input type="password" id="login-password" />
+            </div>
+
+            <div id="form-box-login-feedback" class="form-box-feedback" style="display: none"></div>
+
+            <div class="button disabled" id="login-button">Entrar</div>
+            <a href="#" id="create-account-link">Ainda não tenho uma conta</a>
+        </div>
+
+
 
         <script>
             const formBox = document.getElementById("form-box");
             const formBoxFeedback = document.getElementById('form-box-feedback');
             const longUrlLabel = document.getElementById("long-url-label");
             const longUrlInput = document.getElementById("long-url");
+            const myAccountLink = document.getElementById("my-account-link");
 
-            const emailLabel = document.getElementById(
+            const destinationEmailLabel = document.getElementById(
                 "destination-email-label"
             );
-            const emailInput = document.getElementById("destination-email");
+            const destinationEmailInput = document.getElementById("destination-email");
+
+            const formBoxLogin = document.getElementById("form-box-login");
+            const formBoxLoginFeedback = document.getElementById('form-box-login-feedback');
+            const formBoxLoginCloseBtn = document.getElementById('form-box-login-close-btn');
+            const loginEmailLabel = document.getElementById(
+                "login-email-label"
+            );
+            const loginEmailInput = document.getElementById("login-email");
+
+            const loginPasswordLabel = document.getElementById(
+                "login-password-label"
+            );
+            const loginPasswordInput = document.getElementById("login-password");
+
+            const loginButton =
+                document.getElementById("login-button");
 
             const generateShortlinkBtn =
                 document.getElementById("generate-shortlink");
@@ -351,6 +419,29 @@
             );
             const saveShortlinkBtn = document.getElementById('save-shortlink');
             const goToMyLinksBtn = document.getElementById('go-to-my-links');
+
+            saveShortlinkBtn.onclick = function (e) {
+                formBoxWithShortlink.style.display = 'none';
+                formBoxLogin.style.display = 'block';
+                loginEmailInput.focus();
+                window.previousView = formBoxWithShortlink.id;
+            };
+
+            myAccountLink.onclick = function (e) {
+                formBox.style.display = 'none';
+                formBoxLogin.style.display = 'block';
+                loginEmailInput.focus();
+            };
+
+            formBoxLoginCloseBtn.onclick = function (e) {
+                formBoxLogin.style.display = 'none';
+                if (window.previousView == 'form-box-with-shortlink') {
+                    formBoxWithShortlink.style.display = 'block';
+                    return;
+                }
+
+                formBox.style.display = 'block';
+            };
 
             generateAnotherShortlinkLink.onclick = function () {
                 shortlinkResultInput.value = "";
@@ -385,28 +476,72 @@
                 }
             });
 
-            emailLabel.onclick = function (e) {
+            destinationEmailLabel.onclick = function (e) {
                 e.target.parentNode.classList.add("active");
-                emailInput.focus();
+                destinationEmailInput.focus();
             };
 
-            emailInput.onfocus = function (e) {
+            destinationEmailInput.onfocus = function (e) {
                 e.target.parentNode.classList.add("active");
                 e.target.parentNode.classList.add("mtop-22");
                 e.target.value = e.target.value.trim();
             };
 
-            emailInput.addEventListener("focusout", function (e) {
+            destinationEmailInput.addEventListener("focusout", function (e) {
                 e.target.value = e.target.value.trim();
-                if (emailInput.value.length == 0) {
-                    emailLabel.parentNode.classList.remove("active");
-                    emailLabel.parentNode.classList.remove("mtop-22");
+                if (destinationEmailInput.value.length == 0) {
+                    destinationEmailLabel.parentNode.classList.remove("active");
+                    destinationEmailLabel.parentNode.classList.remove("mtop-22");
+                }
+            });
+
+
+            loginEmailLabel.onclick = function (e) {
+                e.target.parentNode.classList.add("active");
+                loginEmailInput.focus();
+            };
+
+            loginEmailInput.onfocus = function (e) {
+                e.target.parentNode.classList.add("active");
+                e.target.parentNode.classList.add("mtop-22");
+                e.target.value = e.target.value.trim();
+            };
+
+            loginEmailInput.addEventListener("focusout", function (e) {
+                e.target.value = e.target.value.trim();
+                if (loginEmailInput.value.length == 0) {
+                    loginEmailLabel.parentNode.classList.remove("active");
+                    loginEmailLabel.parentNode.classList.remove("mtop-22");
+                }
+            });
+
+
+            loginPasswordLabel.onclick = function (e) {
+                e.target.parentNode.classList.add("active");
+                loginPasswordInput.focus();
+            };
+
+            loginPasswordInput.onfocus = function (e) {
+                e.target.parentNode.classList.add("active");
+                e.target.parentNode.classList.add("mtop-22");
+                e.target.value = e.target.value.trim();
+            };
+
+            loginPasswordInput.addEventListener("focusout", function (e) {
+                e.target.value = e.target.value.trim();
+                if (loginPasswordInput.value.length == 0) {
+                    loginPasswordLabel.parentNode.classList.remove("active");
+                    loginPasswordLabel.parentNode.classList.remove("mtop-22");
                 }
             });
 
             generateShortlinkBtn.onclick = function (e) {
 
-                if (!window._authManager.isAuthenticated) {
+                if (
+                    !window._authManager.isAuthenticated
+                    ||
+                    e.target.classList.contains('disabled')
+                ) {
                     return false;
                 }
 
@@ -418,11 +553,11 @@
                     longUrlInput.classList.remove('has-error');
                 }
 
-                if (emailInput.value.length == 0) {
-                    emailInput.classList.add('has-error');
+                if (destinationEmailInput.value.length == 0) {
+                    destinationEmailInput.classList.add('has-error');
                     return false;
                 } else {
-                    emailInput.classList.remove('has-error');
+                    destinationEmailInput.classList.remove('has-error');
                 }
 
                 var xhr = new XMLHttpRequest();
@@ -467,6 +602,8 @@
                                 formBoxFeedback.classList.remove('info');
                                 formBoxFeedback.style.display = 'block';
                             }
+
+                            e.target.classList.remove('disabled');
                         } catch (e) {
                             // invalid json something went wrong
                             formBoxFeedback.innerText = 'Ocorreu um erro no nosso servidor..';
@@ -479,9 +616,12 @@
 
                 xhr.open(
                     "POST",
-                    '{{ url("/api/shorten") }}?long_url=https://asas.com&destination_email=pablo@camara.pt'
+                    '{{ url("/api/shorten") }}?long_url='+ longUrlInput.value +'&destination_email=' + destinationEmailInput.value
                 );
                 xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+
+                // disable generate button to prevent double requests
+                e.target.classList.add('disabled');
 
                 formBoxFeedback.innerText = 'por favor espere..'
                 formBoxFeedback.classList.add('info');
@@ -489,15 +629,62 @@
                 xhr.send();
             };
 
+            loginButton.onclick = function (e) {
 
+                if (
+                    !window._authManager.isAuthenticated
+                    ||
+                    e.target.classList.contains('disabled')
+                ) {
+                    return false;
+                }
+
+                if (loginEmailInput.value.length == 0) {
+                    loginEmailInput.classList.add('has-error');
+                    return false;
+                } else {
+                    loginEmailInput.classList.remove('has-error');
+                }
+
+                if (loginPasswordInput.value.length == 0) {
+                    loginPasswordInput.classList.add('has-error');
+                    return false;
+                } else {
+                    loginPasswordInput.classList.remove('has-error');
+                }
+
+                e.target.classList.add('disabled');
+                window._authManager.login(loginEmailInput.value, loginPasswordInput.value);
+            };
 
             document.addEventListener('userAuthenticated', (e) => {
                 generateShortlinkBtn.classList.remove('disabled');
+                loginButton.classList.remove('disabled');
+            }, false);
+
+            document.addEventListener('userLoggedIn', (e) => {
+                alert('logged in');
+            }, false);
+
+            document.addEventListener('userLoginFailed', (e) => {
+                formBoxLoginFeedback.innerText = e.reason;
+                formBoxLoginFeedback.style.display = 'block';
+
+                if (e.isError) {
+                    formBoxLoginFeedback.classList.remove('info');
+                    formBoxLoginFeedback.classList.add('error');
+                } else {
+                    formBoxLoginFeedback.classList.remove('error');
+                    formBoxLoginFeedback.classList.add('info');
+                }
+
+                loginButton.classList.remove('disabled');
             }, false);
 
 
             if (window._authManager.isAuthenticated) {
                 generateShortlinkBtn.classList.remove('disabled');
+                loginButton.classList.remove('disabled');
             }
         </script>
     </body>

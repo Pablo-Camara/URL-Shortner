@@ -12,6 +12,7 @@ class AuthResponses {
             //TODO: translate msg str
             'error_id' => 'not_authenticated',
             // TODO: translate
+            // in theory should never be shown in the frontend.
             'message' => 'Must authenticate first!'
         ], Response::HTTP_UNAUTHORIZED);
     }
@@ -22,7 +23,7 @@ class AuthResponses {
             //TODO: translate msg str
             'error_id' => 'incorrect_credentials',
             // TODO: translate
-            'message' => 'Email or password is invalid'
+            'message' => 'Credenciais inválidas'
         ], Response::HTTP_UNAUTHORIZED);
     }
 }

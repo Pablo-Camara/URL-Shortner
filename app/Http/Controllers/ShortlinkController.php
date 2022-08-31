@@ -50,13 +50,14 @@ class ShortlinkController extends Controller
 
             return new Response(
                 [
-                    'message' => 'No shortlinks available'
+                    'message' => 'Estamos sem links disponíveis! Volte a tentar dentro de alguns minutos!'
                 ],
                 Response::HTTP_SERVICE_UNAVAILABLE
             );
         }
 
         $newShortlink = new Shortlink();
+        $newShortlink->user_id = $request->user()->id;
         $newShortlink->shortstring_id = $nextAvailableShortstring->id;
         $newShortlink->long_url = $request->input('long_url');
         $newShortlink->destination_email = $request->input('destination_email');
@@ -67,8 +68,6 @@ class ShortlinkController extends Controller
             $newShortlink->save();
             $nextAvailableShortstring->is_available = 0;
             $nextAvailableShortstring->save();
-            // associate short link to user (guest or not)
-            $request->user()->shortlinks()->attach($newShortlink->id);
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;

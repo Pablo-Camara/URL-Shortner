@@ -16,9 +16,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/authenticate', [AuthenticationController::class, 'authenticationAttempt']);
-/*
+
+
 Route::post('/login', [AuthenticationController::class, 'loginAttempt'])
         ->middleware(['auth:sanctum'])
-        ->name('login-attempt');*/
+        ->name('login-attempt');
 
 Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkController::class, 'store']);

@@ -48,11 +48,17 @@ class User extends Authenticatable
      */
     public function shortlinks()
     {
+        return $this->hasMany(Shortlink::class);
+    }
+
+    /**
+     * Get all the user associated abilities
+     */
+    public function abilities()
+    {
         return $this->belongsToMany(
-            Shortlink::class,
-            'user_shortlinks',
-            'user_id',
-            'shortlink_id'
+            Ability::class,
+            'user_abilities'
         );
     }
 }

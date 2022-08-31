@@ -105,4 +105,117 @@ class AuthenticationController extends Controller
     }
 
 
+     /**
+     * Validates user credentials and generates a logged in authentication token
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Response  $response
+     * @return \Illuminate\Http\Response
+     */
+    public function loginAttempt(Request $request, Response $response)
+    {
+        $config = config('session');
+
+        $authCookie = Cookie::get($config['auth_token_cookie_name']);
+
+        // when logging in, users must always have an Auth Cookie (with guest token)
+        if (is_null($authCookie)) {
+            return AuthResponses::notAuthenticated();
+        }
+
+        $authCookie = decrypt($authCookie);
+
+        $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
+        $isAuthTokenValid = false;
+
+        if($isAuthCookieValid) {
+            $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
+        }
+
+        if (
+            $isAuthCookieValid && $isAuthTokenValid
+        ) {
+            // if auth cookie is valid
+            // if auth token is valid / not expired
+            // and the auth cookie is for a logged in user (non guest)
+            // the user is already logged in
+            // lets return the current auth cookie data
+
+            if ($authCookie['guest'] === 0) {
+                return $response
+                        ->setContent([
+                            'at' => $authCookie['auth_token'],
+                            'guest' => 0
+                        ]);
+            }
+        } else {
+            // auth cookie or token is invalid
+            // lets forbid the login. Must authenticate as guest first.
+
+            // and lets forget this invalid auth cookie and/or token
+            Cookie::forget($config['auth_token_cookie_name']);
+
+            return AuthResponses::notAuthenticated();
+        }
+
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || ! Hash::check($request->password, $user->password)) {
+            return AuthResponses::incorrectCredentials();
+        }
+
+        $userAbilities = $user->abilities->all();
+        $userAbilities = array_map(function($ability){
+            return $ability['name'];
+        }, $userAbilities);
+        $userAbilities = array_merge(['logged_in'], $userAbilities);
+
+        $userTokenExpirationDatetime = Carbon::now()->addRealMinutes(
+            $config['auth_token_cookie_lifetime']
+        );
+
+        $userToken = $user->createToken(
+            'stay_logged_in_token',
+            $userAbilities,
+            $userTokenExpirationDatetime
+        )->plainTextToken;
+
+        // move shortlinks generated as guest
+        // to the now logged in user account.
+        Shortlink::where(
+            'user_id', '=', $authCookie['user_id']
+        )->update(['user_id' => $user->id]);
+
+        $authCookie = Cookie::make(
+            $config['auth_token_cookie_name'],
+            encrypt([
+                'auth_token' => $userToken,
+                'guest' => 0,
+                'user_id' => $user->id
+            ]),
+            $config['auth_token_cookie_lifetime'],
+            $config['path'],
+            $config['domain'],
+            $config['secure'],
+            false,
+            false,
+            $config['same_site'] ?? null
+        );
+
+        // forget 'guest' authentication cookie/token
+        Cookie::forget($config['auth_token_cookie_name']);
+
+
+        return $response
+            ->setContent([
+                'at' => $userToken,
+                'guest' => 0
+            ])
+            ->withCookie($authCookie);
+    }
 }
