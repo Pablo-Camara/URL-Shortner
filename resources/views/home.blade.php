@@ -119,63 +119,65 @@
             <h1>Encurtador de URLs</h1>
             <div class="input-container">
                 <div class="input-label" id="long-url-label">
-                    Cole aqui o seu URL..
+                    Cole aqui o seu URL loongo..
                 </div>
                 <input type="text" id="long-url" />
             </div>
 
             <div class="input-container">
-                <div class="input-label" id="email-label">
-                    Digite aqui o seu Email
+                <div class="input-label" id="destination-email-label">
+                    Email destino
                 </div>
-                <input type="text" id="email" />
+                <input type="text" id="destination-email" />
             </div>
 
-            <div class="button">Gerar Link Curto!</div>
+            <div class="button" id="generate-shortlink">Gerar Link Curto!</div>
         </div>
 
         <script>
-            const formBox = document.getElementById("form-box");
-            const longUrlLabel = document.getElementById("long-url-label");
-            const longUrlInput = document.getElementById("long-url");
+            const formBox = document.getElementById('form-box');
+            const longUrlLabel = document.getElementById('long-url-label');
+            const longUrlInput = document.getElementById('long-url');
 
-            const emailLabel = document.getElementById("email-label");
-            const emailInput = document.getElementById("email");
+            const emailLabel = document.getElementById('destination-email-label');
+            const emailInput = document.getElementById('destination-email');
+
+            const generateShortlinkBtn = document.getElementById('generate-shortlink');
 
             longUrlLabel.onclick = function (e) {
-                e.target.parentNode.classList.add("active");
-                formBox.classList.add("has-active-input");
+                e.target.parentNode.classList.add('active');
+                formBox.classList.add('has-active-input');
                 longUrlInput.focus();
             };
 
             longUrlInput.onfocus = function (e) {
-                e.target.parentNode.classList.add("active");
-                formBox.classList.add("has-active-input");
+                e.target.parentNode.classList.add('active');
+                formBox.classList.add('has-active-input');
                 e.target.value = e.target.value.trim();
             };
 
-            longUrlInput.addEventListener("focusout", function(e) {
+            longUrlInput.addEventListener('focusout', function(e) {
                 e.target.value = e.target.value.trim();
                 if (
                     longUrlInput.value.length == 0
                 ) {
                     longUrlLabel.parentNode.classList.remove('active');
-                    formBox.classList.remove("has-active-input");
+                    formBox.classList.remove('has-active-input');
                 }
             });
 
             emailLabel.onclick = function (e) {
-                e.target.parentNode.classList.add("active");
+                e.target.parentNode.classList.add('active');
                 emailInput.focus();
             };
 
             emailInput.onfocus = function (e) {
-                e.target.parentNode.classList.add("active");
-                e.target.parentNode.classList.add("mtop-22");
+                e.target.parentNode.classList.add('active');
+                e.target.parentNode.classList.add('mtop-22');
                 e.target.value = e.target.value.trim();
             };
 
-            emailInput.addEventListener("focusout", function(e) {
+            emailInput.addEventListener('focusout', function(e) {
                 e.target.value = e.target.value.trim();
                 if (
                     emailInput.value.length == 0
@@ -184,6 +186,10 @@
                     emailLabel.parentNode.classList.remove('mtop-22');
                 }
             });
+
+            generateShortlinkBtn.onclick = function (e) {
+
+            };
 
         </script>
     </body>
