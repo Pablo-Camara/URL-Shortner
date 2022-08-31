@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ShortlinkController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,4 +15,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('/shorten', [ShortlinkController::class, 'store']);
+Route::post('/authenticate', [AuthenticationController::class, 'authenticationAttempt']);
+/*
+Route::post('/login', [AuthenticationController::class, 'loginAttempt'])
+        ->middleware(['auth:sanctum'])
+        ->name('login-attempt');*/
+
+Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkController::class, 'store']);

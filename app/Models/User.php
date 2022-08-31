@@ -41,4 +41,18 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+
+    /**
+     * Get all the shortlinks belonging to an user
+     */
+    public function shortlinks()
+    {
+        return $this->belongsToMany(
+            Shortlink::class,
+            'user_shortlinks',
+            'user_id',
+            'shortlink_id'
+        );
+    }
 }

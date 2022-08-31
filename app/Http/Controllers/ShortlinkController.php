@@ -67,6 +67,8 @@ class ShortlinkController extends Controller
             $newShortlink->save();
             $nextAvailableShortstring->is_available = 0;
             $nextAvailableShortstring->save();
+            // associate short link to user (guest or not)
+            $request->user()->shortlinks()->attach($newShortlink->id);
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;
