@@ -654,6 +654,10 @@
                 }
 
                 e.target.classList.add('disabled');
+                formBoxLoginFeedback.innerText = 'por favor espere..'
+                formBoxLoginFeedback.classList.remove('error');
+                formBoxLoginFeedback.classList.add('info');
+                formBoxLoginFeedback.style.display = 'block';
                 window._authManager.login(loginEmailInput.value, loginPasswordInput.value);
             };
 
@@ -663,7 +667,8 @@
             }, false);
 
             document.addEventListener('userLoggedIn', (e) => {
-                alert('logged in');
+                //TODO: login
+                formBoxLoginFeedback.style.display = 'none';
             }, false);
 
             document.addEventListener('userLoginFailed', (e) => {
