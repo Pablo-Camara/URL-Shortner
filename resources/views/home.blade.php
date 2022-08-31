@@ -380,316 +380,547 @@
 
 
         <script>
-            const formBox = document.getElementById("form-box");
-            const formBoxFeedback = document.getElementById('form-box-feedback');
-            const longUrlLabel = document.getElementById("long-url-label");
-            const longUrlInput = document.getElementById("long-url");
-            const myAccountLink = document.getElementById("my-account-link");
 
-            const destinationEmailLabel = document.getElementById(
-                "destination-email-label"
-            );
-            const destinationEmailInput = document.getElementById("destination-email");
+            window.App = {
+                Views: {
+                    ShortenUrl: {
+                        el: function () {
+                            return document.getElementById("form-box");
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                            const longUrlInput = this.Components.LongUrl.el();
+                            longUrlInput.value = "";
+                            longUrlInput.focus();
+                        },
+                        hide: function() {
+                            this.el().style.display = 'none';
+                            this.Components.Feedback.hide();
+                        },
+                        Components: {
+                            Feedback: {
+                                el: function () {
+                                    return document.getElementById('form-box-feedback');
+                                },
+                                hide: function () {
+                                    const el = this.el();
+                                    el.innerText = '';
+                                    el.classList.remove('error');
+                                    el.classList.remove('info');
+                                    el.style.display = 'none';
+                                },
+                                showError: function (message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.add('error');
+                                    el.classList.remove('info');
+                                    el.style.display = 'block';
+                                },
+                                showInfo: function (message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.add('info');
+                                    el.classList.remove('error');
+                                    el.style.display = 'block';
+                                }
+                            },
+                            LongUrl: {
+                                hasInitialized: false,
+                                el: function() {
+                                    return document.getElementById("long-url");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("long-url-label");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            window.App.Views.ShortenUrl.el().classList.add("has-active-input");
+                                            $this.el().focus();
+                                        }
 
-            const formBoxLogin = document.getElementById("form-box-login");
-            const formBoxLoginFeedback = document.getElementById('form-box-login-feedback');
-            const formBoxLoginCloseBtn = document.getElementById('form-box-login-close-btn');
-            const loginEmailLabel = document.getElementById(
-                "login-email-label"
-            );
-            const loginEmailInput = document.getElementById("login-email");
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.value = e.target.value.trim();
+                                            window.App.Views.ShortenUrl.el().classList.add("has-active-input");
+                                        };
 
-            const loginPasswordLabel = document.getElementById(
-                "login-password-label"
-            );
-            const loginPasswordInput = document.getElementById("login-password");
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                window.App.Views.ShortenUrl.el().classList.remove("has-active-input");
+                                            }
+                                        });
 
-            const loginButton =
-                document.getElementById("login-button");
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            DestinationEmail: {
+                                el: function () {
+                                    return document.getElementById("destination-email");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("destination-email-label");
+                                },
+                                initialize: function () {
+                                    const $this = this;
+                                    this.labelEl().onclick = function (e) {
+                                        e.target.parentNode.classList.add("active");
+                                        $this.el().focus();
+                                    };
 
-            const generateShortlinkBtn =
-                document.getElementById("generate-shortlink");
+                                    this.el().onfocus = function (e) {
+                                        e.target.parentNode.classList.add("active");
+                                        e.target.parentNode.classList.add("mtop-22");
+                                        e.target.value = e.target.value.trim();
+                                    };
 
-            const formBoxWithShortlink = document.getElementById(
-                "form-box-with-shortlink"
-            );
-            const shortlinkResultInput = document.getElementById("shortlink");
-            const generateAnotherShortlinkLink = document.getElementById(
-                "generate-another-shortlink"
-            );
-            const saveShortlinkBtn = document.getElementById('save-shortlink');
-            const goToMyLinksBtn = document.getElementById('go-to-my-links');
+                                    this.el().addEventListener("focusout", function (e) {
+                                        e.target.value = e.target.value.trim();
+                                        if (e.target.value.length == 0) {
+                                            $this.labelEl().parentNode.classList.remove("active");
+                                            $this.labelEl().parentNode.classList.remove("mtop-22");
+                                        }
+                                    });
+                                }
+                            },
+                            GenerateBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("generate-shortlink");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized !== false) {
+                                        return;
+                                    }
+                                    // code to initialize once:
+                                    this.el().onclick = function (e) {
+                                        if (
+                                            !window._authManager.isAuthenticated
+                                            ||
+                                            e.target.classList.contains('disabled')
+                                        ) {
+                                            return false;
+                                        }
 
-            saveShortlinkBtn.onclick = function (e) {
-                formBoxWithShortlink.style.display = 'none';
-                formBoxLogin.style.display = 'block';
-                loginEmailInput.focus();
-                window.previousView = formBoxWithShortlink.id;
-            };
+                                        const longUrlInput = window.App.Views.ShortenUrl.Components.LongUrl.el();
+                                        const destinationEmailInput = window.App.Views.ShortenUrl.Components.DestinationEmail.el();
 
-            myAccountLink.onclick = function (e) {
-                formBox.style.display = 'none';
-                formBoxLogin.style.display = 'block';
-                loginEmailInput.focus();
-            };
+                                        if (longUrlInput.value.length == 0) {
+                                            longUrlInput.classList.add('has-error');
+                                            return false;
+                                        } else {
+                                            longUrlInput.classList.remove('has-error');
+                                        }
 
-            formBoxLoginCloseBtn.onclick = function (e) {
-                formBoxLogin.style.display = 'none';
-                if (window.previousView == 'form-box-with-shortlink') {
-                    formBoxWithShortlink.style.display = 'block';
-                    return;
-                }
+                                        if (destinationEmailInput.value.length == 0) {
+                                            destinationEmailInput.classList.add('has-error');
+                                            return false;
+                                        } else {
+                                            destinationEmailInput.classList.remove('has-error');
+                                        }
 
-                formBox.style.display = 'block';
-            };
+                                        var xhr = new XMLHttpRequest();
+                                        xhr.withCredentials = true;
 
-            generateAnotherShortlinkLink.onclick = function () {
-                shortlinkResultInput.value = "";
-                formBoxWithShortlink.style.display = "none";
-                longUrlInput.value = "";
-                formBox.style.display = "block";
-                longUrlInput.focus();
-            };
+                                        xhr.addEventListener("readystatechange", function () {
+                                            if (this.readyState === 4) {
+                                                try {
+                                                    const jsonResObj = JSON.parse(this.responseText);
 
-            shortlinkResultInput.onclick = function (e) {
-                e.target.focus();
-                e.target.select();
-            };
+                                                    if (this.status === 201) {
+                                                        window.App.Views.ShortenUrl.hide();
+                                                        window.App.Views.ShortlinkResult.Components.Shortlink.set(
+                                                            jsonResObj.shortlink
+                                                        );
+                                                        window.App.Views.ShortlinkResult.show();
 
-            longUrlLabel.onclick = function (e) {
-                e.target.parentNode.classList.add("active");
-                formBox.classList.add("has-active-input");
-                longUrlInput.focus();
-            };
+                                                        if (window._authManager.isLoggedIn) {
+                                                            window.App.Views.ShortlinkResult.Components.GotoMyLinksBtn.show();
+                                                            window.App.Views.ShortlinkResult.Components.SaveShortlinkBtn.hide();
+                                                        } else {
+                                                            window.App.Views.ShortlinkResult.Components.GotoMyLinksBtn.hide();
+                                                            window.App.Views.ShortlinkResult.Components.SaveShortlinkBtn.show();
+                                                        }
 
-            longUrlInput.onfocus = function (e) {
-                e.target.parentNode.classList.add("active");
-                formBox.classList.add("has-active-input");
-                e.target.value = e.target.value.trim();
-            };
+                                                    }
 
-            longUrlInput.addEventListener("focusout", function (e) {
-                e.target.value = e.target.value.trim();
-                if (longUrlInput.value.length == 0) {
-                    longUrlLabel.parentNode.classList.remove("active");
-                    formBox.classList.remove("has-active-input");
-                }
-            });
+                                                    if(this.status === 503) {
+                                                        window.App.Views.ShortenUrl.Components.Feedback.showError(jsonResObj.message);
+                                                    }
 
-            destinationEmailLabel.onclick = function (e) {
-                e.target.parentNode.classList.add("active");
-                destinationEmailInput.focus();
-            };
+                                                    if(this.status === 500) {
+                                                        window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                    }
 
-            destinationEmailInput.onfocus = function (e) {
-                e.target.parentNode.classList.add("active");
-                e.target.parentNode.classList.add("mtop-22");
-                e.target.value = e.target.value.trim();
-            };
+                                                    e.target.classList.remove('disabled');
+                                                } catch (e) {
+                                                    // invalid json something went wrong
+                                                    window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                }
+                                            }
+                                        });
 
-            destinationEmailInput.addEventListener("focusout", function (e) {
-                e.target.value = e.target.value.trim();
-                if (destinationEmailInput.value.length == 0) {
-                    destinationEmailLabel.parentNode.classList.remove("active");
-                    destinationEmailLabel.parentNode.classList.remove("mtop-22");
-                }
-            });
+                                        xhr.open(
+                                            "POST",
+                                            '{{ url("/api/shorten") }}?long_url='+ longUrlInput.value +'&destination_email=' + destinationEmailInput.value
+                                        );
+                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
 
+                                        // disable generate button to prevent double requests
+                                        e.target.classList.add('disabled');
 
-            loginEmailLabel.onclick = function (e) {
-                e.target.parentNode.classList.add("active");
-                loginEmailInput.focus();
-            };
+                                        window.App.Views.ShortenUrl.Components.Feedback.showInfo('por favor espere..');
+                                        xhr.send();
+                                    };
+                                    this.hasInitialized = true;
+                                }
+                            },
+                            MyAccountLink: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("my-account-link");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.ShortenUrl.hide();
+                                            window.App.Views.Login.show();
+                                        };
 
-            loginEmailInput.onfocus = function (e) {
-                e.target.parentNode.classList.add("active");
-                e.target.parentNode.classList.add("mtop-22");
-                e.target.value = e.target.value.trim();
-            };
-
-            loginEmailInput.addEventListener("focusout", function (e) {
-                e.target.value = e.target.value.trim();
-                if (loginEmailInput.value.length == 0) {
-                    loginEmailLabel.parentNode.classList.remove("active");
-                    loginEmailLabel.parentNode.classList.remove("mtop-22");
-                }
-            });
-
-
-            loginPasswordLabel.onclick = function (e) {
-                e.target.parentNode.classList.add("active");
-                loginPasswordInput.focus();
-            };
-
-            loginPasswordInput.onfocus = function (e) {
-                e.target.parentNode.classList.add("active");
-                e.target.parentNode.classList.add("mtop-22");
-                e.target.value = e.target.value.trim();
-            };
-
-            loginPasswordInput.addEventListener("focusout", function (e) {
-                e.target.value = e.target.value.trim();
-                if (loginPasswordInput.value.length == 0) {
-                    loginPasswordLabel.parentNode.classList.remove("active");
-                    loginPasswordLabel.parentNode.classList.remove("mtop-22");
-                }
-            });
-
-            generateShortlinkBtn.onclick = function (e) {
-
-                if (
-                    !window._authManager.isAuthenticated
-                    ||
-                    e.target.classList.contains('disabled')
-                ) {
-                    return false;
-                }
-
-
-                if (longUrlInput.value.length == 0) {
-                    longUrlInput.classList.add('has-error');
-                    return false;
-                } else {
-                    longUrlInput.classList.remove('has-error');
-                }
-
-                if (destinationEmailInput.value.length == 0) {
-                    destinationEmailInput.classList.add('has-error');
-                    return false;
-                } else {
-                    destinationEmailInput.classList.remove('has-error');
-                }
-
-                var xhr = new XMLHttpRequest();
-                xhr.withCredentials = true;
-
-                xhr.addEventListener("readystatechange", function () {
-                    if (this.readyState === 4) {
-                        try {
-                            const jsonResObj = JSON.parse(this.responseText);
-
-                            if (this.status === 201) {
-                                formBox.style.display = "none";
-                                formBoxFeedback.innerText = '';
-                                formBoxFeedback.classList.remove('error');
-                                formBoxFeedback.classList.remove('info');
-                                formBoxFeedback.style.display = 'none';
-
-                                shortlinkResultInput.value =
-                                    jsonResObj.shortlink;
-                                formBoxWithShortlink.style.display = "block";
-
-                                if (window._authManager.isLoggedIn) {
-                                    goToMyLinksBtn.style.display = 'block';
-                                    saveShortlinkBtn.style.display = 'none';
-                                } else {
-                                    goToMyLinksBtn.style.display = 'none';
-                                    saveShortlinkBtn.style.display = 'block';
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
+                        },
+                        initialize: function () {
+                            this.Components.LongUrl.initialize();
+                            this.Components.DestinationEmail.initialize();
+                            this.Components.GenerateBtn.initialize();
+                            this.Components.MyAccountLink.initialize();
+                        }
+                    },
+                    ShortlinkResult: {
+                        el: function () {
+                            return document.getElementById("form-box-with-shortlink");
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = "block";
+                        },
+                        hide: function () {
+                            this.el().style.display = "none";
+                        },
+                        Components: {
+                            Shortlink: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("shortlink");
+                                },
+                                set: function (value) {
+                                    this.el().value = value;
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            e.target.focus();
+                                            e.target.select();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            SaveShortlinkBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('save-shortlink');
+                                },
+                                show: function () {
+                                    this.el().style.display = 'block';
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.ShortlinkResult.hide();
+                                            window.App.Views.Login.show();
+                                            window.App.previousView = window.App.Views.ShortlinkResult.el().id;
+                                        };
+                                        this.hasInitialized = true;
+                                    }
                                 }
 
-                            }
-
-                            if(this.status === 503) {
-                                formBoxFeedback.innerText = jsonResObj.message;
-                                formBoxFeedback.classList.add('error');
-                                formBoxFeedback.classList.remove('info');
-                                formBoxFeedback.style.display = 'block';
-                            }
-
-                            if(this.status === 500) {
-                                formBoxFeedback.innerText = 'Ocorreu um erro no nosso servidor..';
-                                formBoxFeedback.classList.add('error');
-                                formBoxFeedback.classList.remove('info');
-                                formBoxFeedback.style.display = 'block';
-                            }
-
-                            e.target.classList.remove('disabled');
-                        } catch (e) {
-                            // invalid json something went wrong
-                            formBoxFeedback.innerText = 'Ocorreu um erro no nosso servidor..';
-                            formBoxFeedback.classList.add('error');
-                            formBoxFeedback.classList.remove('info');
-                            formBoxFeedback.style.display = 'block';
+                            },
+                            GotoMyLinksBtn: {
+                                hasInitialized: false,
+                                el: function() {
+                                    return document.getElementById('go-to-my-links');
+                                },
+                                show: function () {
+                                    this.el().style.display = 'block';
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        //TODO: goto my links
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            GenerateAnotherLink: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("generate-another-shortlink");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function () {
+                                            window.App.Views.ShortenUrl.show();
+                                            window.App.Views.ShortlinkResult.hide();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                        },
+                        initialize: function () {
+                            this.Components.Shortlink.initialize();
+                            this.Components.GotoMyLinksBtn.initialize();
+                            this.Components.SaveShortlinkBtn.initialize();
+                            this.Components.GenerateAnotherLink.initialize();
                         }
-                    }
-                });
 
-                xhr.open(
-                    "POST",
-                    '{{ url("/api/shorten") }}?long_url='+ longUrlInput.value +'&destination_email=' + destinationEmailInput.value
-                );
-                xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                    },
+                    Login: {
+                        el: function () {
+                            return document.getElementById("form-box-login");
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                            this.Components.Email.el().focus();
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        Components: {
+                            Email: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("login-email");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("login-email-label");
+                                },
+                                initialize: function () {
 
-                // disable generate button to prevent double requests
-                e.target.classList.add('disabled');
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
 
-                formBoxFeedback.innerText = 'por favor espere..'
-                formBoxFeedback.classList.add('info');
-                formBoxFeedback.style.display = 'block';
-                xhr.send();
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Password: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("login-password");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("login-password-label");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+
+                                        this.hasInitialized = true;
+                                    }
+
+                                }
+                            },
+                            LoginBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("login-button");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            const loginEmailInput = window.App.Views.Login.Components.Email.el();
+                                            const loginPasswordInput = window.App.Views.Login.Components.Password.el();
+
+                                            if (loginEmailInput.value.length == 0) {
+                                                loginEmailInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                loginEmailInput.classList.remove('has-error');
+                                            }
+
+                                            if (loginPasswordInput.value.length == 0) {
+                                                loginPasswordInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                loginPasswordInput.classList.remove('has-error');
+                                            }
+
+                                            $this.disable();
+                                            window.App.Views.Login.Components.Feedback.showInfo('por favor espere..');
+                                            window._authManager.login(loginEmailInput.value, loginPasswordInput.value);
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            CloseBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('form-box-login-close-btn');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.Login.hide();
+
+                                            if (window.App.previousView == window.App.Views.ShortlinkResult.el().id) {
+                                                window.App.Views.ShortlinkResult.show();
+                                                return;
+                                            }
+
+                                            window.App.Views.ShortenUrl.show();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Feedback: {
+                                el: function () {
+                                    return document.getElementById('form-box-login-feedback');
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                showInfo: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('error');
+                                    el.classList.add('info');
+                                    el.style.display = 'block';
+                                },
+                                showError: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('info');
+                                    el.classList.add('error');
+                                    el.style.display = 'block';
+                                },
+
+                            }
+                        },
+                        initialize: function () {
+                            this.Components.Email.initialize();
+                            this.Components.Password.initialize();
+                            this.Components.LoginBtn.initialize();
+                            this.Components.CloseBtn.initialize();
+                        }
+
+                    },
+                }
             };
 
-            loginButton.onclick = function (e) {
 
-                if (
-                    !window._authManager.isAuthenticated
-                    ||
-                    e.target.classList.contains('disabled')
-                ) {
-                    return false;
-                }
-
-                if (loginEmailInput.value.length == 0) {
-                    loginEmailInput.classList.add('has-error');
-                    return false;
-                } else {
-                    loginEmailInput.classList.remove('has-error');
-                }
-
-                if (loginPasswordInput.value.length == 0) {
-                    loginPasswordInput.classList.add('has-error');
-                    return false;
-                } else {
-                    loginPasswordInput.classList.remove('has-error');
-                }
-
-                e.target.classList.add('disabled');
-                formBoxLoginFeedback.innerText = 'por favor espere..'
-                formBoxLoginFeedback.classList.remove('error');
-                formBoxLoginFeedback.classList.add('info');
-                formBoxLoginFeedback.style.display = 'block';
-                window._authManager.login(loginEmailInput.value, loginPasswordInput.value);
-            };
+            window.App.Views.ShortenUrl.show();
 
             document.addEventListener('userAuthenticated', (e) => {
-                generateShortlinkBtn.classList.remove('disabled');
-                loginButton.classList.remove('disabled');
+                window.App.Views.ShortenUrl.Components.GenerateBtn.enable();
+                window.App.Views.Login.Components.LoginBtn.enable();
             }, false);
 
             document.addEventListener('userLoggedIn', (e) => {
                 //TODO: login
-                formBoxLoginFeedback.style.display = 'none';
+                window.App.Views.Login.Components.Feedback.hide();
             }, false);
 
             document.addEventListener('userLoginFailed', (e) => {
-                formBoxLoginFeedback.innerText = e.reason;
-                formBoxLoginFeedback.style.display = 'block';
 
                 if (e.isError) {
-                    formBoxLoginFeedback.classList.remove('info');
-                    formBoxLoginFeedback.classList.add('error');
+                    window.App.Views.Login.Components.Feedback.showError(e.reason);
                 } else {
-                    formBoxLoginFeedback.classList.remove('error');
-                    formBoxLoginFeedback.classList.add('info');
+                    window.App.Views.Login.Components.Feedback.showInfo(e.reason);
                 }
 
-                loginButton.classList.remove('disabled');
+                window.App.Views.Login.Components.LoginBtn.enable();
             }, false);
 
 
             if (window._authManager.isAuthenticated) {
-                generateShortlinkBtn.classList.remove('disabled');
-                loginButton.classList.remove('disabled');
+                window.App.Views.ShortenUrl.Components.GenerateBtn.enable();
+                window.App.Views.Login.Components.LoginBtn.enable();
             }
         </script>
     </body>
