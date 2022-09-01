@@ -21,6 +21,10 @@ Route::post('/login', [AuthenticationController::class, 'loginAttempt'])
         ->middleware(['auth:sanctum'])
         ->name('login-attempt');
 
+Route::post('/logout', [AuthenticationController::class, 'logoutAttempt'])
+        ->middleware(['auth:sanctum', 'abilities:logged_in'])
+        ->name('logout-attempt');
+
 Route::post('/register', [AuthenticationController::class, 'registerAttempt'])
         ->middleware(['auth:sanctum'])
         ->name('register-attempt');

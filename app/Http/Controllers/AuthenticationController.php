@@ -105,6 +105,20 @@ class AuthenticationController extends Controller
             ->withCookie($authCookie);
     }
 
+    /**
+     * Logs an user out
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Response  $response
+     * @return \Illuminate\Http\Response
+     */
+    public function logoutAttempt(Request $request, Response $response)
+    {
+        $config = config('session');
+        $response->withoutCookie($config['auth_token_cookie_name'])->setStatusCode(200);
+
+        return $response;
+    }
 
      /**
      * Validates user credentials and generates a logged in authentication token

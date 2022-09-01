@@ -113,6 +113,15 @@
                 border-radius: 5px;
             }
 
+            .form-box .button.red {
+                background: linear-gradient(
+                    120deg,
+                    rgb(255 0 0) 0%,
+                    rgb(255 65 65) 25%,
+                    rgb(255 204 204) 100%
+                );
+            }
+
             .form-box .button:hover {
                 font-weight: bold;
                 cursor: pointer;
@@ -159,6 +168,26 @@
             .mtop-22 {
                 margin-top: 22px;
             }
+
+            .form-box .list-container {
+
+            }
+
+            .form-box .list-container .list-item {
+                margin-bottom: 10px;
+                border-bottom: 1px solid #EEEEEE;
+                padding-bottom: 4px;
+            }
+
+            .form-box .list-container .list-item .short-url {
+
+            }
+
+            .form-box .list-container .list-item .long-url {
+                color: gray;
+                overflow: hidden;
+                word-break: break-word;
+            }
         </style>
 
         <script>
@@ -174,6 +203,7 @@
                         authentication: "/authenticate",
                         login: "/login",
                         register: "/register",
+                        logout: "/logout"
                     },
                 },
 
@@ -247,7 +277,31 @@
                     );
                     xhr.send();
                 },
+                logout: function () {
+                    if (this.isAuthenticated !== true) {
+                        // must authenticate as guest first
+                        return;
+                    }
 
+                    var xhr = new XMLHttpRequest();
+                    xhr.withCredentials = true;
+
+
+                    xhr.addEventListener("readystatechange", function () {
+                        if (this.readyState === 4) {
+                            if (this.status === 200) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+
+                    xhr.open(
+                        "POST",
+                        this.api.url + this.api.endpoints.logout
+                    );
+                    xhr.setRequestHeader("Authorization", "Bearer " + this.at);
+                    xhr.send();
+                },
                 login: function (email, password) {
                     if (this.isAuthenticated !== true) {
                         // must authenticate as guest first
@@ -602,7 +656,7 @@
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
                                             window.App.Views.ShortenUrl.hide();
-                                            window.App.Views.Login.show();
+                                            window.App.Views.MyAccount.show();
                                         };
 
                                         this.hasInitialized = true;
@@ -1264,6 +1318,61 @@
                         }
 
                     },
+                    MyAccount: {
+                        hasInitialized: false,
+                        el: function () {
+                            return document.getElementById('form-box-account');
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        show: function () {
+                            if (!window._authManager.isLoggedIn) {
+                                window.App.Views.Login.show();
+                                return;
+                            }
+
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        Components: {
+                            ShortenNewBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('account-shorten-new');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.MyAccount.hide();
+                                            window.App.Views.ShortenUrl.show();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            LogoutBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('account-logout');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window._authManager.logout();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
+
+                        },
+                        initialize: function () {
+                            this.Components.ShortenNewBtn.initialize();
+                            this.Components.LogoutBtn.initialize();
+                        }
+
+                    }
                 }
             };
 
@@ -1284,7 +1393,7 @@
             />
         </div>
 
-        <div class="form-box" id="form-box" style="display: block">
+        <div class="form-box" id="form-box" style="display: none">
             <h1>Encurtador de URLs</h1>
             <div class="input-container">
                 <div class="input-label" id="long-url-label">
@@ -1396,6 +1505,43 @@
         </div>
 
 
+        <div
+            class="form-box"
+            id="form-box-account" style="display: none"
+        >
+            <div class="form-box-title">Minha conta</div>
+            <div class="button" id="account-shorten-new">Criar novo link curto</div>
+            <div class="button red" id="account-logout" style="margin-top: 10px">Sair</div>
+            <hr/>
+            <div class="form-box-title" style="margin-top: 12px">Os meus links curtos:</div>
+            <div class="list-container">
+                <div class="list-item">
+                    <div class="short-url">https://wil.pt/xyz</div>
+                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
+                </div>
+
+                <div class="list-item">
+                    <div class="short-url">https://wil.pt/xyz</div>
+                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
+                </div>
+
+                <div class="list-item">
+                    <div class="short-url">https://wil.pt/xyz</div>
+                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
+                </div>
+
+                <div class="list-item">
+                    <div class="short-url">https://wil.pt/xyz</div>
+                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
+                </div>
+
+                <div class="list-item">
+                    <div class="short-url">https://wil.pt/xyz</div>
+                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
+                </div>
+            </div>
+        </div>
+
 
         <script>
 
@@ -1415,6 +1561,7 @@
             document.addEventListener('userLoggedIn', (e) => {
                 window.App.Views.Login.hide();
                 window.App.Views.Register.hide();
+                window.App.Views.MyAccount.show();
             }, false);
 
             document.addEventListener('userLoginFailed', (e) => {
