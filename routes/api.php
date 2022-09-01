@@ -29,5 +29,8 @@ Route::post('/register', [AuthenticationController::class, 'registerAttempt'])
         ->middleware(['auth:sanctum'])
         ->name('register-attempt');
 
+Route::post('/links', [ShortlinkController::class, 'index'])
+        ->middleware(['auth:sanctum', 'abilities:logged_in'])
+        ->name('my-link');
 
 Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkController::class, 'store']);

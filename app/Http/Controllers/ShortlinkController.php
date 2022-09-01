@@ -14,11 +14,35 @@ class ShortlinkController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        //TODO: pagination
+        $userShortlinks = $request->user()->shortlinks()
+        ->select(['id', 'long_url', 'destination_email', 'shortstring_id'])
+        ->with(
+            [
+                'shortstring' => function ($query) {
+                    $query->select(['id','shortstring']);
+                }
+            ]
+         )
+         ->orderBy('id', 'desc')
+         ->get()->toArray();
+
+        $userShortlinks = array_map(
+            function ($row) {
+                return [
+                    'id' => $row['id'],
+                    'long_url' => $row['long_url'],
+                    'shortlink' => URL::to('/' . $row['shortstring']['shortstring']),
+                    'destination_email' => $row['destination_email']
+                ];
+            }, $userShortlinks
+        );
+        return new Response($userShortlinks);
     }
 
     /**
@@ -32,10 +56,9 @@ class ShortlinkController extends Controller
         // url validation, read below ( about max length )
         // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
 
-        $regex = '/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/';
 
         $request->validate([
-            'long_url' => 'required|max:2048|regex:'.$regex,
+            'long_url' => 'required|url|max:2048',
             'destination_email' => 'required|email:rfc,dns',
         ]);
 

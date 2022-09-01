@@ -456,6 +456,10 @@
                             const longUrlInput = this.Components.LongUrl.el();
                             longUrlInput.value = "";
                             longUrlInput.focus();
+
+                            if (window._authManager.isAuthenticated) {
+                                this.Components.GenerateBtn.enable();
+                            }
                         },
                         hide: function() {
                             this.el().style.display = 'none';
@@ -613,14 +617,12 @@
                                                             window.App.Views.ShortlinkResult.Components.GotoMyLinksBtn.hide();
                                                             window.App.Views.ShortlinkResult.Components.SaveShortlinkBtn.show();
                                                         }
-
+                                                        return;
                                                     }
 
-                                                    if(this.status === 503) {
+                                                    if(typeof jsonResObj.message !== 'undefined') {
                                                         window.App.Views.ShortenUrl.Components.Feedback.showError(jsonResObj.message);
-                                                    }
-
-                                                    if(this.status === 500) {
+                                                    } else {
                                                         window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                     }
 
@@ -651,6 +653,9 @@
                                 hasInitialized: false,
                                 el: function () {
                                     return document.getElementById("my-account-link");
+                                },
+                                show: function () {
+                                    this.el().style.display = 'block';
                                 },
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
@@ -737,7 +742,10 @@
                                 },
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
-                                        //TODO: goto my links
+                                        this.el().onclick = function () {
+                                            window.App.Views.ShortlinkResult.hide();
+                                            window.App.Views.MyAccount.show();
+                                        };
                                         this.hasInitialized = true;
                                     }
                                 }
@@ -1364,12 +1372,97 @@
                                         this.hasInitialized = true;
                                     }
                                 }
-                            }
+                            },
+                            MyLinks: {
+                                initialize: function () {
+                                    this.Components.Loading.show();
+                                    this.Components.Links.show();
+                                },
+                                Components: {
+                                    Loading: {
+                                        el: function () {
+                                            return document.getElementById('form-box-acc-links-loading');
+                                        },
+                                        show: function () {
+                                            this.el().style.display = 'block';
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                    },
+                                    Links: {
+                                        api: "{{ url('/api/links') }}",
+                                        el: function () {
+                                            return document.getElementById('form-box-acc-links');
+                                        },
+                                        show: function () {
+                                            this.el().style.display = 'block';
+                                            this.fetch();
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                        clear: function () {
+                                            this.el().innerHTML = '';
+                                        },
+                                        addLink: function (id, long_url, shortlink, destination_email) {
+                                            const listItem = document.createElement("div");
+                                            listItem.classList.add('list-item');
 
+                                            const shortlinkContainer = document.createElement("div");
+                                            shortlinkContainer.classList.add('short-url');
+                                            shortlinkContainer.innerText = shortlink;
+
+                                            const longUrlContainer = document.createElement("div");
+                                            longUrlContainer.classList.add('long-url');
+                                            longUrlContainer.innerText = long_url;
+
+                                            this.el().appendChild(listItem);
+                                            listItem.appendChild(shortlinkContainer);
+                                            listItem.appendChild(longUrlContainer);
+                                        },
+                                        fetch: function () {
+                                            if (window._authManager.isAuthenticated !== true) {
+                                                return;
+                                            }
+                                            this.clear();
+                                            window.App.Views.MyAccount.Components.MyLinks.Components.Loading.show();
+
+                                            var $this = this;
+
+                                            var xhr = new XMLHttpRequest();
+                                            xhr.withCredentials = true;
+
+                                            xhr.addEventListener("readystatechange", function () {
+                                                if (this.readyState === 4) {
+                                                    const resObj = JSON.parse(this.response); //TODO: Catch exception
+
+                                                    if (this.status === 200) {
+                                                        window.App.Views.MyAccount.Components.MyLinks.Components.Loading.hide();
+                                                        for (var i = 0; i <= resObj.length; i++) {
+                                                            $this.addLink(
+                                                                resObj[i].id,
+                                                                resObj[i].long_url,
+                                                                resObj[i].shortlink,
+                                                                resObj[i].email
+                                                            );
+                                                        }
+                                                    }
+                                                }
+                                            });
+
+                                            xhr.open("POST", this.api);
+                                            xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                            xhr.send();
+                                        },
+                                    }
+                                }
+                            }
                         },
                         initialize: function () {
                             this.Components.ShortenNewBtn.initialize();
                             this.Components.LogoutBtn.initialize();
+                            this.Components.MyLinks.initialize();
                         }
 
                     }
@@ -1410,7 +1503,7 @@
             </div>
 
             <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
-            <a href="javascript:void(0);" id="my-account-link" class="form-link">Minha conta</a>
+            <a href="javascript:void(0);" id="my-account-link" class="form-link" style="display: none">Minha conta</a>
 
             <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
         </div>
@@ -1513,33 +1606,12 @@
             <div class="button" id="account-shorten-new">Criar novo link curto</div>
             <div class="button red" id="account-logout" style="margin-top: 10px">Sair</div>
             <hr/>
-            <div class="form-box-title" style="margin-top: 12px">Os meus links curtos:</div>
-            <div class="list-container">
-                <div class="list-item">
-                    <div class="short-url">https://wil.pt/xyz</div>
-                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
-                </div>
-
-                <div class="list-item">
-                    <div class="short-url">https://wil.pt/xyz</div>
-                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
-                </div>
-
-                <div class="list-item">
-                    <div class="short-url">https://wil.pt/xyz</div>
-                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
-                </div>
-
-                <div class="list-item">
-                    <div class="short-url">https://wil.pt/xyz</div>
-                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
-                </div>
-
-                <div class="list-item">
-                    <div class="short-url">https://wil.pt/xyz</div>
-                    <div class="long-url">https://myreallyreallylongurlthatnobody.com/should/ever/have?with=lots&amp;of=parameters...</div>
-                </div>
+            <div id="form-box-account-my-links">
+                <div class="form-box-title" style="margin-top: 12px">Os meus links curtos:</div>
+                <div id="form-box-acc-links-loading">A carregar links..</div>
+                <div id="form-box-acc-links" class="list-container" style="display: none"></div>
             </div>
+
         </div>
 
 
@@ -1547,6 +1619,7 @@
 
             function enableAuthenticationDependentButtons() {
                 window.App.Views.ShortenUrl.Components.GenerateBtn.enable();
+                window.App.Views.ShortenUrl.Components.MyAccountLink.show();
                 window.App.Views.Login.Components.LoginBtn.enable();
                 window.App.Views.Register.Components.RegisterBtn.enable();
             }
