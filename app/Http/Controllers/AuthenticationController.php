@@ -63,7 +63,8 @@ class AuthenticationController extends Controller
         }
 
         // creates new guest user
-        $user = new User(['guest' => 1]);
+        $user = new User();
+        $user->guest = 1;
         $user->save();
 
         // creates new guest token
@@ -217,5 +218,122 @@ class AuthenticationController extends Controller
                 'guest' => 0
             ])
             ->withCookie($authCookie);
+    }
+
+    /**
+     * Registers a new user, after validating user data
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Response  $response
+     * @return \Illuminate\Http\Response
+     */
+    public function registerAttempt(Request $request, Response $response) {
+        $config = config('session');
+
+        $authCookie = Cookie::get($config['auth_token_cookie_name']);
+
+        // when registering in, users must always have an Auth Cookie (with guest token)
+        if (is_null($authCookie)) {
+            return AuthResponses::notAuthenticated();
+        }
+
+        $authCookie = decrypt($authCookie);
+
+        $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
+        $isAuthTokenValid = false;
+
+        if($isAuthCookieValid) {
+            $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
+        }
+
+        if (
+            $isAuthCookieValid && $isAuthTokenValid
+        ) {
+            // if auth cookie is valid
+            // if auth token is valid / not expired
+            // and the auth cookie is for a logged in user (non guest)
+            // the user is already logged in
+            // lets return the current auth cookie data
+
+            if ($authCookie['guest'] === 0) {
+                return $response
+                        ->setContent([
+                            'at' => $authCookie['auth_token'],
+                            'guest' => 0
+                        ]);
+            }
+        } else {
+            // auth cookie or token is invalid
+            // lets forbid this action. Must authenticate as guest first.
+
+            // this should never happen in reality.
+
+            // and lets forget this invalid auth cookie and/or token
+            Cookie::forget($config['auth_token_cookie_name']);
+
+            return AuthResponses::notAuthenticated();
+        }
+
+
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|confirmed|unique:users',
+            'password' => 'required|confirmed'
+        ]);
+
+        $user = new User();
+        $user->guest = 0;
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->password = Hash::make($request->input('password'));
+        $user->save();
+
+
+        $userAbilities = ['logged_in'];
+
+        $userTokenExpirationDatetime = Carbon::now()->addRealMinutes(
+            $config['auth_token_cookie_lifetime']
+        );
+
+        $userToken = $user->createToken(
+            'stay_logged_in_token',
+            $userAbilities,
+            $userTokenExpirationDatetime
+        )->plainTextToken;
+
+        // move shortlinks generated as guest
+        // to the now newly created (and now logged in) user account
+        Shortlink::where(
+            'user_id', '=', $authCookie['user_id']
+        )->update(['user_id' => $user->id]);
+
+        $authCookie = Cookie::make(
+            $config['auth_token_cookie_name'],
+            encrypt([
+                'auth_token' => $userToken,
+                'guest' => 0,
+                'user_id' => $user->id
+            ]),
+            $config['auth_token_cookie_lifetime'],
+            $config['path'],
+            $config['domain'],
+            $config['secure'],
+            false,
+            false,
+            $config['same_site'] ?? null
+        );
+
+        // forget 'guest' authentication cookie/token
+        Cookie::forget($config['auth_token_cookie_name']);
+
+
+        return $response
+            ->setContent([
+                'at' => $userToken,
+                'guest' => 0
+            ])
+            ->setStatusCode(Response::HTTP_CREATED)
+            ->withCookie($authCookie);
+
     }
 }

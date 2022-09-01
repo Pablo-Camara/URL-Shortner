@@ -720,6 +720,7 @@
                             this.initialize();
                             this.el().style.display = 'block';
                             this.Components.Email.el().focus();
+                            this.Components.Feedback.hide();
                         },
                         hide: function () {
                             this.el().style.display = 'none';
@@ -888,7 +889,9 @@
                                     return document.getElementById('form-box-login-feedback');
                                 },
                                 hide: function () {
-                                    this.el().style.display = 'none';
+                                    const el = this.el();
+                                    el.style.display = 'none';
+                                    el.innerText = '';
                                 },
                                 showInfo: function(message) {
                                     const el = this.el();
@@ -924,6 +927,7 @@
                             this.initialize();
                             this.el().style.display = 'block';
                             this.Components.Name.el().focus();
+                            this.Components.Feedback.hide();
                         },
                         hide: function () {
                             this.el().style.display = 'none';
@@ -1227,7 +1231,9 @@
                                     return document.getElementById('form-box-register-feedback');
                                 },
                                 hide: function () {
-                                    this.el().style.display = 'none';
+                                    const el = this.el();
+                                    el.style.display = 'none';
+                                    el.innerText = '';
                                 },
                                 showInfo: function(message) {
                                     const el = this.el();
@@ -1407,8 +1413,8 @@
             }, false);
 
             document.addEventListener('userLoggedIn', (e) => {
-                //TODO: login
-                window.App.Views.Login.Components.Feedback.hide();
+                window.App.Views.Login.hide();
+                window.App.Views.Register.hide();
             }, false);
 
             document.addEventListener('userLoginFailed', (e) => {
