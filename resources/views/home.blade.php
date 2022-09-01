@@ -264,19 +264,24 @@
                                 );
                             }
 
-                            if (this.status === 401) {
-                                if (
-                                    resObj.error_id === "incorrect_credentials"
-                                ) {
-                                    // trigger userLoginFailed event
-                                    window._authManager.customEvents.userLoginFailedEvent.reason =
-                                        resObj.message;
-                                    window._authManager.customEvents.userLoginFailedEvent.isError = true;
-                                    document.dispatchEvent(
-                                        window._authManager.customEvents
-                                            .userLoginFailedEvent
-                                    );
-                                }
+                            if (
+                                typeof resObj.message !== 'undefined'
+                                &&
+                                (
+                                    typeof resObj.errors !== 'undefined'
+                                    ||
+                                    typeof resObj.error_id !== 'undefined'
+                                )
+                            ) {
+                                // trigger userLoginFailed event
+                                window._authManager.customEvents.userLoginFailedEvent.reason =
+                                    resObj.message;
+                                window._authManager.customEvents.userLoginFailedEvent.isError = true;
+                                document.dispatchEvent(
+                                    window._authManager.customEvents
+                                        .userLoginFailedEvent
+                                );
+
                             }
                         }
                     });
