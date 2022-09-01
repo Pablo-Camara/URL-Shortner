@@ -1611,7 +1611,7 @@
         class="antialiased"
         style="
             background: url('https://www.inideia.com/wp-content/uploads/2019/11/fundo_2.jpg');
-            background-size: cover;
+            background-size: 100%;
         "
     >
         <div style="text-align: center; margin-top: 10px">
