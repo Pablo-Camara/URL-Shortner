@@ -1158,7 +1158,7 @@
             />
         </div>
 
-        <div class="form-box" id="form-box" style="display: none">
+        <div class="form-box" id="form-box" style="display: block">
             <h1>Encurtador de URLs</h1>
             <div class="input-container">
                 <div class="input-label" id="long-url-label">
@@ -1224,7 +1224,7 @@
 
         <div
             class="form-box"
-            id="form-box-register" style="display: block"
+            id="form-box-register" style="display: none"
         >
             <div class="form-box-title">Criar conta</div>
             <div class="close-form-box" id="form-box-register-close-btn">X</div>
@@ -1280,8 +1280,7 @@
             }
 
 
-            //window.App.Views.ShortenUrl.show();
-            window.App.Views.Register.show();
+            window.App.Views.ShortenUrl.show();
 
             document.addEventListener('userAuthenticated', (e) => {
                 enableAuthenticationDependentButtons();
