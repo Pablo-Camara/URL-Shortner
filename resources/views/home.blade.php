@@ -1039,9 +1039,18 @@
                                             ) {
                                                 return false;
                                             }
-
+                                            const registerNameInput = window.App.Views.Register.Components.Name.el();
                                             const registerEmailInput = window.App.Views.Register.Components.Email.el();
+                                            const registerEmailConfInput = window.App.Views.Register.Components.EmailConfirmation.el();
                                             const registerPasswordInput = window.App.Views.Register.Components.Password.el();
+                                            const registerPasswordConfInput = window.App.Views.Register.Components.PasswordConfirmation.el();
+
+                                            if (registerNameInput.value.length == 0) {
+                                                registerNameInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                registerNameInput.classList.remove('has-error');
+                                            }
 
                                             if (registerEmailInput.value.length == 0) {
                                                 registerEmailInput.classList.add('has-error');
@@ -1050,11 +1059,25 @@
                                                 registerEmailInput.classList.remove('has-error');
                                             }
 
+                                            if (registerEmailConfInput.value !== registerEmailInput.value) {
+                                                registerEmailConfInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                registerEmailConfInput.classList.remove('has-error');
+                                            }
+
                                             if (registerPasswordInput.value.length == 0) {
                                                 registerPasswordInput.classList.add('has-error');
                                                 return false;
                                             } else {
                                                 registerPasswordInput.classList.remove('has-error');
+                                            }
+
+                                            if (registerPasswordConfInput.value !== registerPasswordInput.value) {
+                                                registerPasswordConfInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                registerPasswordConfInput.classList.remove('has-error');
                                             }
 
                                             $this.disable();
