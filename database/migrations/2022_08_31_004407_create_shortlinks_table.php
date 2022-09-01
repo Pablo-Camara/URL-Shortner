@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('shortlinks', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('shortstring_id');
             $table->string('destination_email');
             $table->string('long_url', 2048);
@@ -26,6 +26,7 @@ return new class extends Migration
 
             $table->foreign('shortstring_id')->references('id')->on('shortstrings');
             $table->foreign('status_id')->references('id')->on('shortlink_statuses');
+            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 
