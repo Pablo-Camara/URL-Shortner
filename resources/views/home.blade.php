@@ -609,14 +609,6 @@
                                                             jsonResObj.shortlink
                                                         );
                                                         window.App.Views.ShortlinkResult.show();
-
-                                                        if (window._authManager.isLoggedIn) {
-                                                            window.App.Views.ShortlinkResult.Components.GotoMyLinksBtn.show();
-                                                            window.App.Views.ShortlinkResult.Components.SaveShortlinkBtn.hide();
-                                                        } else {
-                                                            window.App.Views.ShortlinkResult.Components.GotoMyLinksBtn.hide();
-                                                            window.App.Views.ShortlinkResult.Components.SaveShortlinkBtn.show();
-                                                        }
                                                         return;
                                                     }
 
@@ -683,6 +675,14 @@
                         show: function () {
                             this.initialize();
                             this.el().style.display = "block";
+
+                            if (window._authManager.isLoggedIn) {
+                                this.Components.GotoMyLinksBtn.show();
+                                this.Components.SaveShortlinkBtn.hide();
+                            } else {
+                                this.Components.GotoMyLinksBtn.hide();
+                                this.Components.SaveShortlinkBtn.show();
+                            }
                         },
                         hide: function () {
                             this.el().style.display = "none";
@@ -771,6 +771,141 @@
                             this.Components.GotoMyLinksBtn.initialize();
                             this.Components.SaveShortlinkBtn.initialize();
                             this.Components.GenerateAnotherLink.initialize();
+                        }
+
+                    },
+                    RegisterAvailableShortlink: {
+                        el: function () {
+                            return document.getElementById("form-box-shortlink-requested");
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = "block";
+                            this.Components.RequestedShortlinkLongUrl.el().focus();
+                        },
+                        hide: function () {
+                            this.el().style.display = "none";
+                        },
+                        Components: {
+                            RequestedShortlink: {
+                                el: function () {
+                                    return document.getElementById('requested-shortlink');
+                                },
+                                getShortstring: function () {
+                                    return this.el().dataset.shortstring;
+                                }
+                            },
+                            RequestedShortlinkLongUrl: {
+                                el: function () {
+                                    return document.getElementById('requested-shortlink-long-url');
+                                },
+                            },
+                            Feedback: {
+                                el: function () {
+                                    return document.getElementById('requested-shortlink-register-feedback');
+                                },
+                                hide: function () {
+                                    const el = this.el();
+                                    el.innerText = '';
+                                    el.classList.remove('error');
+                                    el.classList.remove('info');
+                                    el.style.display = 'none';
+                                },
+                                showError: function (message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.add('error');
+                                    el.classList.remove('info');
+                                    el.style.display = 'block';
+                                },
+                                showInfo: function (message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.add('info');
+                                    el.classList.remove('error');
+                                    el.style.display = 'block';
+                                }
+                            },
+                            ContinueBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('shortlink-register');
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            const shortStr = window.App.Views.RegisterAvailableShortlink.Components.RequestedShortlink.getShortstring();
+                                            const longUrlField = window.App.Views.RegisterAvailableShortlink.Components.RequestedShortlinkLongUrl.el();
+
+                                            if (longUrlField.value.length == 0) {
+                                                longUrlField.classList.add('has-error');
+                                                return;
+                                            }
+
+                                            longUrlField.classList.remove('has-error');
+
+                                            var xhr = new XMLHttpRequest();
+                                            xhr.withCredentials = true;
+
+                                            xhr.addEventListener("readystatechange", function () {
+                                                if (this.readyState === 4) {
+                                                    try {
+                                                        const jsonResObj = JSON.parse(this.responseText);
+
+                                                        if (this.status === 201) {
+                                                            window.App.Views.RegisterAvailableShortlink.hide();
+                                                            window.App.Views.ShortlinkResult.Components.Shortlink.set(
+                                                                jsonResObj.shortlink
+                                                            );
+                                                            window.App.Views.ShortlinkResult.show();
+                                                            return;
+                                                        }
+
+                                                        if(typeof jsonResObj.message !== 'undefined') {
+                                                            window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError(jsonResObj.message);
+                                                        } else {
+                                                            window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                        }
+
+                                                        e.target.classList.remove('disabled');
+                                                    } catch (e) {
+                                                        // invalid json something went wrong
+                                                        window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                    }
+                                                }
+                                            });
+
+                                            xhr.open(
+                                                "POST",
+                                                '{{ url("/api/register-available") }}?long_url='+ longUrlField.value +'&shortstring=' + shortStr
+                                            );
+                                            xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+
+                                            // disable generate button to prevent double requests
+                                            e.target.classList.add('disabled');
+
+                                            window.App.Views.RegisterAvailableShortlink.Components.Feedback.showInfo('por favor espere..');
+                                            xhr.send();
+
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
+                        },
+                        initialize: function () {
+                            this.Components.ContinueBtn.initialize();
                         }
 
                     },
@@ -1525,6 +1660,29 @@
 
         <div
             class="form-box"
+            id="form-box-shortlink-requested"
+            style="display: none"
+        >
+            <div class="form-box-title">
+                Este link curto está disponível!
+            </div>
+            @if(isset($shortlink) && isset($shortlink_shortstring))
+                <div class="input-container">
+                    <input type="text" id="requested-shortlink" data-shortstring="{{$shortlink_shortstring}}" value="{{ $shortlink}}" readonly />
+                </div>
+            @endif
+            <div>Para onde quer apontar este link?</div>
+            <div class="input-container">
+                <input type="text" id="requested-shortlink-long-url"/>
+            </div>
+
+            <div id="requested-shortlink-register-feedback" class="form-box-feedback" style="display: none"></div>
+
+            <div class="button disabled" id="shortlink-register">Continuar</div>
+        </div>
+
+        <div
+            class="form-box"
             id="form-box-login" style="display: none"
         >
             <div class="form-box-title">Minha conta</div>
@@ -1614,18 +1772,33 @@
 
         </div>
 
-
+        @if(isset($shortlink) && (isset($shortlink_available) && $shortlink_available === true))
+            <script>
+                window.App.isUserRequestingAvailableShortstring = true;
+            </script>
+        @else
+            <script>
+                window.App.isUserRequestingAvailableShortstring = false;
+            </script>
+        @endif
         <script>
+
+
 
             function enableAuthenticationDependentButtons() {
                 window.App.Views.ShortenUrl.Components.GenerateBtn.enable();
                 window.App.Views.ShortenUrl.Components.MyAccountLink.show();
                 window.App.Views.Login.Components.LoginBtn.enable();
                 window.App.Views.Register.Components.RegisterBtn.enable();
+                window.App.Views.RegisterAvailableShortlink.Components.ContinueBtn.enable();
             }
 
-
-            window.App.Views.ShortenUrl.show();
+            if (window.App.isUserRequestingAvailableShortstring) {
+                window.App.Views.ShortenUrl.hide();
+                window.App.Views.RegisterAvailableShortlink.show();
+            } else {
+                window.App.Views.ShortenUrl.show();
+            }
 
             document.addEventListener('userAuthenticated', (e) => {
                 enableAuthenticationDependentButtons();

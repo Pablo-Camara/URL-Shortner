@@ -7,10 +7,43 @@ use App\Models\Shortstring;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\URL;
 
 class ShortlinkController extends Controller
 {
+     /**
+     * Display a listing of the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function visit($shortstring, Request $request) {
+
+        $shortstring = Shortstring::where('shortstring', '=', $shortstring)->with('shortlink')->first();
+
+        if ($shortstring) {
+            $shortlink = $shortstring['shortlink'];
+
+            if (!is_null($shortlink)) {
+                return Redirect::to(
+                    $shortlink->long_url, 301
+                );
+            }
+
+            if ($shortstring->is_available) {
+                return view('home', [
+                    'shortlink' => url('/' . $shortstring->shortstring),
+                    'shortlink_available' => true,
+                    'shortlink_shortstring' => $shortstring->shortstring
+                ]);
+            }
+
+        }
+        // shortstring not available
+        return redirect('/');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -46,6 +79,64 @@ class ShortlinkController extends Controller
     }
 
     /**
+     * Register/point available shortstring to a long url
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function registerAvailable(Request $request)
+    {
+        // url validation, read below ( about max length )
+        // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
+        $request->validate([
+            'long_url' => 'required|url|max:2048',
+        ]);
+
+        $shortstring = $request->input('shortstring');
+
+        $shortstring = Shortstring::where('shortstring', '=', $shortstring)->first();
+
+        if (!$shortstring) {
+            return new Response([
+                //TODO: translate
+                'message' => 'Este link não está disponível!'
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
+        if (!$shortstring->is_available) {
+            return new Response([
+                //TODO: translate
+                'message' => 'Este link já não está disponível!'
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
+
+        $newShortlink = new Shortlink();
+        $newShortlink->user_id = $request->user()->id;
+        $newShortlink->shortstring_id = $shortstring->id;
+        $newShortlink->long_url = $request->input('long_url');
+        $newShortlink->status_id = Shortlink::STATUS_ACTIVE;
+
+        DB::beginTransaction();
+        try {
+            $newShortlink->save();
+            $shortstring->is_available = 0;
+            $shortstring->save();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+        DB::commit();
+
+        return new Response(
+            [
+                'shortlink' => URL::to('/' . $shortstring->shortstring)
+            ],
+            Response::HTTP_CREATED
+        );
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -55,8 +146,6 @@ class ShortlinkController extends Controller
     {
         // url validation, read below ( about max length )
         // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
-
-
         $request->validate([
             'long_url' => 'required|url|max:2048',
             'destination_email' => 'required|email:rfc,dns',

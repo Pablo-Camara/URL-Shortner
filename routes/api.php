@@ -34,3 +34,4 @@ Route::post('/links', [ShortlinkController::class, 'index'])
         ->name('my-link');
 
 Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkController::class, 'store']);
+Route::middleware('auth:sanctum')->post('/register-available', [ShortlinkController::class, 'registerAvailable']);

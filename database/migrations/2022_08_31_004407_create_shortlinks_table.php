@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('shortstring_id');
-            $table->string('destination_email');
+            $table->string('destination_email')->nullable();
             $table->string('long_url', 2048);
             $table->tinyInteger('status_id')->unsigned();
 
