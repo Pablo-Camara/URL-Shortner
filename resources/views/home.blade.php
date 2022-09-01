@@ -173,6 +173,7 @@
                     endpoints: {
                         authentication: "/authenticate",
                         login: "/login",
+                        register: "/register",
                     },
                 },
 
@@ -180,6 +181,7 @@
                     userAuthenticatedEvent: null,
                     userLoggedInEvent: null,
                     userLoginFailed: null,
+                    userRegisterFailed: null,
                 },
 
                 initialize: function () {
@@ -203,6 +205,14 @@
                         document.createEvent("Event");
                     this.customEvents.userLoginFailedEvent.initEvent(
                         "userLoginFailed",
+                        true,
+                        true
+                    );
+
+                    this.customEvents.userRegisterFailedEvent =
+                        document.createEvent("Event");
+                    this.customEvents.userRegisterFailedEvent.initEvent(
+                        "userRegisterFailed",
                         true,
                         true
                     );
@@ -286,12 +296,88 @@
                         }
                     });
 
+
+                    email = encodeURIComponent(email);
+                    password = encodeURIComponent(password);
+
                     const credentialsQueryStr =
                         "?email=" + email + "&password=" + password;
                     xhr.open(
                         "POST",
                         this.api.url +
                             this.api.endpoints.login +
+                            credentialsQueryStr
+                    );
+                    xhr.setRequestHeader("Authorization", "Bearer " + this.at);
+                    xhr.send();
+                },
+
+                register: function (
+                    name,
+                    email,
+                    emailConfirmation,
+                    password,
+                    passwordConfirmation
+                ) {
+                    if (this.isAuthenticated !== true) {
+                        // must authenticate as guest first
+                        return;
+                    }
+
+                    var xhr = new XMLHttpRequest();
+                    xhr.withCredentials = true;
+
+                    xhr.addEventListener("readystatechange", function () {
+                        if (this.readyState === 4) {
+                            const resObj = JSON.parse(this.response); //TODO: Catch exception
+
+                            if (this.status === 201) {
+                                window._authManager.at = resObj.at;
+                                window._authManager.isLoggedIn = resObj.guest
+                                    ? false
+                                    : true;
+
+                                // trigger userLoggedIn event
+                                document.dispatchEvent(
+                                    window._authManager.customEvents
+                                        .userLoggedInEvent
+                                );
+                            }
+
+                            if (
+                                typeof resObj.message !== 'undefined'
+                                &&
+                                (
+                                    typeof resObj.errors !== 'undefined'
+                                    ||
+                                    typeof resObj.error_id !== 'undefined'
+                                )
+                            ) {
+                                // trigger userRegisterFailed event
+                                window._authManager.customEvents.userRegisterFailedEvent.reason =
+                                    resObj.message;
+                                window._authManager.customEvents.userRegisterFailedEvent.isError = true;
+                                document.dispatchEvent(
+                                    window._authManager.customEvents
+                                        .userRegisterFailedEvent
+                                );
+
+                            }
+                        }
+                    });
+
+                    name = encodeURIComponent(name);
+                    email = encodeURIComponent(email);
+                    emailConfirmation = encodeURIComponent(emailConfirmation);
+                    password = encodeURIComponent(password);
+                    passwordConfirmation = encodeURIComponent(passwordConfirmation);
+
+                    const credentialsQueryStr =
+                        "?name=" + name + "&email=" + email + "&email_confirmation=" + emailConfirmation + "&password=" + password + "&password_confirmation=" + passwordConfirmation;
+                    xhr.open(
+                        "POST",
+                        this.api.url +
+                            this.api.endpoints.register +
                             credentialsQueryStr
                     );
                     xhr.setRequestHeader("Authorization", "Bearer " + this.at);
@@ -1087,7 +1173,13 @@
 
                                             $this.disable();
                                             window.App.Views.Register.Components.Feedback.showInfo('por favor espere..');
-                                            //window._authManager.login(registerEmailInput.value, registerPasswordInput.value);
+                                            window._authManager.register(
+                                                registerNameInput.value,
+                                                registerEmailInput.value,
+                                                registerEmailConfInput.value,
+                                                registerPasswordInput.value,
+                                                registerPasswordConfInput.value,
+                                            );
                                         };
 
                                         this.hasInitialized = true;
@@ -1328,6 +1420,18 @@
                 }
 
                 window.App.Views.Login.Components.LoginBtn.enable();
+            }, false);
+
+
+            document.addEventListener('userRegisterFailed', (e) => {
+
+                if (e.isError) {
+                    window.App.Views.Register.Components.Feedback.showError(e.reason);
+                } else {
+                    window.App.Views.Register.Components.Feedback.showInfo(e.reason);
+                }
+
+                window.App.Views.Register.Components.RegisterBtn.enable();
             }, false);
 
 
