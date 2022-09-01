@@ -139,9 +139,7 @@
                 color: gray;
             }
 
-            #generate-another-shortlink,
-            #create-account-link,
-            #my-account-link {
+            .form-link {
                 width: 100%;
                 margin-top: 5px;
                 font-size: 14px;
@@ -152,7 +150,8 @@
                 text-align: center;
             }
 
-            #form-box-login-feedback {
+            #form-box-login-feedback,
+            #form-box-register-feedback {
                 margin-bottom: 4px;
                 font-size: 14px;
             }
@@ -298,88 +297,7 @@
             window._authManager.initialize();
 
 
-        </script>
-    </head>
-    <body
-        class="antialiased"
-        style="
-            background: url('https://www.inideia.com/wp-content/uploads/2019/11/fundo_2.jpg');
-            background-size: cover;
-        "
-    >
-        <div style="text-align: center; margin-top: 10px">
-            <img
-                src="https://www.inideia.com/wp-content/uploads/2019/01/logo_white.png"
-                style="max-width: 300px"
-            />
-        </div>
 
-        <div class="form-box" id="form-box" style="display: block">
-            <h1>Encurtador de URLs</h1>
-            <div class="input-container">
-                <div class="input-label" id="long-url-label">
-                    Cole aqui o seu URL loongo..
-                </div>
-                <input type="text" id="long-url" />
-            </div>
-
-            <div class="input-container">
-                <div class="input-label" id="destination-email-label">
-                    Email destino
-                </div>
-                <input type="text" id="destination-email" />
-            </div>
-
-            <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
-            <a href="#" id="my-account-link">Minha conta</a>
-
-            <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
-        </div>
-
-        <div
-            class="form-box"
-            id="form-box-with-shortlink"
-            style="display: none"
-        >
-            <div class="form-box-title">O seu link curto está pronto!</div>
-            <div class="input-container">
-                <input type="text" id="shortlink" readonly />
-            </div>
-
-            <div class="button" id="save-shortlink" style="display: none">Guardar na minha lista de links</div>
-            <div class="button" id="go-to-my-links" style="display: none">Ver minha lista de links</div>
-            <a href="#" id="generate-another-shortlink">Encurtar outro link</a>
-        </div>
-
-        <div
-            class="form-box"
-            id="form-box-login" style="display: none"
-        >
-            <div class="form-box-title">Minha conta</div>
-            <div class="close-form-box" id="form-box-login-close-btn">X</div>
-            <div class="input-container">
-                <div class="input-label" id="login-email-label">
-                    Email
-                </div>
-                <input type="text" id="login-email" />
-            </div>
-
-            <div class="input-container">
-                <div class="input-label" id="login-password-label">
-                    Password
-                </div>
-                <input type="password" id="login-password" />
-            </div>
-
-            <div id="form-box-login-feedback" class="form-box-feedback" style="display: none"></div>
-
-            <div class="button disabled" id="login-button">Entrar</div>
-            <a href="#" id="create-account-link">Ainda não tenho uma conta</a>
-        </div>
-
-
-
-        <script>
 
             window.App = {
                 Views: {
@@ -858,6 +776,22 @@
                                     }
                                 }
                             },
+                            CreateAccLink: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('create-account-link');
+                                },
+
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.Login.hide();
+                                            window.App.Views.Register.show();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                             Feedback: {
                                 el: function () {
                                     return document.getElementById('form-box-login-feedback');
@@ -887,6 +821,320 @@
                             this.Components.Password.initialize();
                             this.Components.LoginBtn.initialize();
                             this.Components.CloseBtn.initialize();
+                            this.Components.CreateAccLink.initialize();
+                        }
+
+                    },
+                    Register: {
+                        el: function () {
+                            return document.getElementById("form-box-register");
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                            this.Components.Name.el().focus();
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        Components: {
+                            Name: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-name");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("register-name-label");
+                                },
+                                initialize: function () {
+
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Email: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-email");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("register-email-label");
+                                },
+                                initialize: function () {
+
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            EmailConfirmation: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-email-confirmation");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("register-email-confirmation-label");
+                                },
+                                initialize: function () {
+
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Password: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-password");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("register-password-label");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+
+                                        this.hasInitialized = true;
+                                    }
+
+                                }
+                            },
+                            PasswordConfirmation: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-password-confirmation");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("register-password-confirmation-label");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+
+                                        this.hasInitialized = true;
+                                    }
+
+                                }
+                            },
+                            RegisterBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-button");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            const registerEmailInput = window.App.Views.Register.Components.Email.el();
+                                            const registerPasswordInput = window.App.Views.Register.Components.Password.el();
+
+                                            if (registerEmailInput.value.length == 0) {
+                                                registerEmailInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                registerEmailInput.classList.remove('has-error');
+                                            }
+
+                                            if (registerPasswordInput.value.length == 0) {
+                                                registerPasswordInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                registerPasswordInput.classList.remove('has-error');
+                                            }
+
+                                            $this.disable();
+                                            window.App.Views.Register.Components.Feedback.showInfo('por favor espere..');
+                                            //window._authManager.login(registerEmailInput.value, registerPasswordInput.value);
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            LoginToAccLink: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('login-to-account-link');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.Register.hide();
+                                            window.App.Views.Login.show();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            CloseBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('form-box-register-close-btn');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.Register.hide();
+
+                                            if (window.App.previousView == window.App.Views.ShortlinkResult.el().id) {
+                                                window.App.Views.ShortlinkResult.show();
+                                                return;
+                                            }
+
+                                            window.App.Views.ShortenUrl.show();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Feedback: {
+                                el: function () {
+                                    return document.getElementById('form-box-register-feedback');
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                showInfo: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('error');
+                                    el.classList.add('info');
+                                    el.style.display = 'block';
+                                },
+                                showError: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('info');
+                                    el.classList.add('error');
+                                    el.style.display = 'block';
+                                },
+
+                            }
+                        },
+                        initialize: function () {
+                            this.Components.Name.initialize();
+                            this.Components.Email.initialize();
+                            this.Components.EmailConfirmation.initialize();
+                            this.Components.Password.initialize();
+                            this.Components.PasswordConfirmation.initialize();
+                            this.Components.RegisterBtn.initialize();
+                            this.Components.LoginToAccLink.initialize();
+                            this.Components.CloseBtn.initialize();
                         }
 
                     },
@@ -894,11 +1142,149 @@
             };
 
 
-            window.App.Views.ShortenUrl.show();
+        </script>
+    </head>
+    <body
+        class="antialiased"
+        style="
+            background: url('https://www.inideia.com/wp-content/uploads/2019/11/fundo_2.jpg');
+            background-size: cover;
+        "
+    >
+        <div style="text-align: center; margin-top: 10px">
+            <img
+                src="https://www.inideia.com/wp-content/uploads/2019/01/logo_white.png"
+                style="max-width: 300px"
+            />
+        </div>
 
-            document.addEventListener('userAuthenticated', (e) => {
+        <div class="form-box" id="form-box" style="display: none">
+            <h1>Encurtador de URLs</h1>
+            <div class="input-container">
+                <div class="input-label" id="long-url-label">
+                    Cole aqui o seu URL loongo..
+                </div>
+                <input type="text" id="long-url" />
+            </div>
+
+            <div class="input-container">
+                <div class="input-label" id="destination-email-label">
+                    Email destino
+                </div>
+                <input type="text" id="destination-email" />
+            </div>
+
+            <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
+            <a href="javascript:void(0);" id="my-account-link" class="form-link">Minha conta</a>
+
+            <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
+        </div>
+
+        <div
+            class="form-box"
+            id="form-box-with-shortlink"
+            style="display: none"
+        >
+            <div class="form-box-title">O seu link curto está pronto!</div>
+            <div class="input-container">
+                <input type="text" id="shortlink" readonly />
+            </div>
+
+            <div class="button" id="save-shortlink" style="display: none">Guardar na minha lista de links</div>
+            <div class="button" id="go-to-my-links" style="display: none">Ver minha lista de links</div>
+            <a href="javascript:void(0);" id="generate-another-shortlink" class="form-link">Encurtar outro link</a>
+        </div>
+
+        <div
+            class="form-box"
+            id="form-box-login" style="display: none"
+        >
+            <div class="form-box-title">Minha conta</div>
+            <div class="close-form-box" id="form-box-login-close-btn">X</div>
+            <div class="input-container">
+                <div class="input-label" id="login-email-label">
+                    Email
+                </div>
+                <input type="text" id="login-email" />
+            </div>
+
+            <div class="input-container">
+                <div class="input-label" id="login-password-label">
+                    Palavra-passe
+                </div>
+                <input type="password" id="login-password" />
+            </div>
+
+            <div id="form-box-login-feedback" class="form-box-feedback" style="display: none"></div>
+
+            <div class="button disabled" id="login-button">Entrar</div>
+            <a href="javascript:void(0);" id="create-account-link" class="form-link">Ainda não tenho uma conta</a>
+        </div>
+
+
+        <div
+            class="form-box"
+            id="form-box-register" style="display: block"
+        >
+            <div class="form-box-title">Criar conta</div>
+            <div class="close-form-box" id="form-box-register-close-btn">X</div>
+            <div class="input-container">
+                <div class="input-label" id="register-name-label">
+                    O seu nome
+                </div>
+                <input type="text" id="register-name" />
+            </div>
+
+            <div class="input-container">
+                <div class="input-label" id="register-email-label">
+                    Email
+                </div>
+                <input type="text" id="register-email" />
+            </div>
+
+            <div class="input-container">
+                <div class="input-label" id="register-email-confirmation-label">
+                    Digite novamente o seu email
+                </div>
+                <input type="text" id="register-email-confirmation" />
+            </div>
+
+            <div class="input-container">
+                <div class="input-label" id="register-password-label">
+                    Crie uma password
+                </div>
+                <input type="password" id="register-password" />
+            </div>
+
+            <div class="input-container">
+                <div class="input-label" id="register-password-confirmation-label">
+                    Digite novamente a sua password
+                </div>
+                <input type="password" id="register-password-confirmation" />
+            </div>
+
+            <div id="form-box-register-feedback" class="form-box-feedback" style="display: none"></div>
+
+            <div class="button disabled" id="register-button">Continuar</div>
+            <a href="javascript:void(0);" id="login-to-account-link" class="form-link">Já tenho uma conta</a>
+        </div>
+
+
+
+        <script>
+
+            function enableAuthenticationDependentButtons() {
                 window.App.Views.ShortenUrl.Components.GenerateBtn.enable();
                 window.App.Views.Login.Components.LoginBtn.enable();
+                window.App.Views.Register.Components.RegisterBtn.enable();
+            }
+
+
+            //window.App.Views.ShortenUrl.show();
+            window.App.Views.Register.show();
+
+            document.addEventListener('userAuthenticated', (e) => {
+                enableAuthenticationDependentButtons();
             }, false);
 
             document.addEventListener('userLoggedIn', (e) => {
@@ -919,8 +1305,7 @@
 
 
             if (window._authManager.isAuthenticated) {
-                window.App.Views.ShortenUrl.Components.GenerateBtn.enable();
-                window.App.Views.Login.Components.LoginBtn.enable();
+                enableAuthenticationDependentButtons();
             }
         </script>
     </body>
