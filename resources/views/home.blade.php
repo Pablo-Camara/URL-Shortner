@@ -1574,7 +1574,7 @@
 
                                                     if (this.status === 200) {
                                                         window.App.Views.MyAccount.Components.MyLinks.Components.Loading.hide();
-                                                        for (var i = 0; i <= resObj.length; i++) {
+                                                        for (var i = 0; i < resObj.length; i++) {
                                                             $this.addLink(
                                                                 resObj[i].id,
                                                                 resObj[i].long_url,
