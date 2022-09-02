@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'force_https_in_prod' => env('FORCE_HTTPS_SCHEME_IN_PROD', false),
+
     'asset_url' => env('ASSET_URL', null),
 
     /*

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\URL;
 use App\Models\Sanctum\PersonalAccessToken;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
@@ -37,5 +38,11 @@ class AppServiceProvider extends ServiceProvider
                 return $accessToken->expired_at ? $is_valid && !$accessToken->expired_at->isPast() : $is_valid;
             }
         );
+
+        if($this->app->environment('production')) {
+            if ( config('app.force_https_in_prod') == true ) {
+                URL::forceScheme('https');
+            }
+        }
     }
 }
