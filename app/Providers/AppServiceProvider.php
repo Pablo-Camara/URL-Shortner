@@ -31,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
         // Loader Alias
         $loader = AliasLoader::getInstance();
         $loader->alias(\Laravel\Sanctum\NewAccessToken::class, \App\Models\Sanctum\NewAccessToken::class);
-        $loader->alias(\Laravel\Sanctum\Events\TokenAuthenticated::class, \App\Models\Sanctum\Events\TokenAuthenticated::class);
+
+        Sanctum::authenticateAccessTokensUsing(
+            static function (PersonalAccessToken $accessToken, bool $is_valid) {
+                return $accessToken->expired_at ? $is_valid && !$accessToken->expired_at->isPast() : $is_valid;
+            }
+        );
     }
 }
