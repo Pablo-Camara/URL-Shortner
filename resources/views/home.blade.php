@@ -302,7 +302,7 @@
                     xhr.setRequestHeader("Authorization", "Bearer " + this.at);
                     xhr.send();
                 },
-                login: function (email, password) {
+                login: function (email, password, captchaToken) {
                     if (this.isAuthenticated !== true) {
                         // must authenticate as guest first
                         return;
@@ -355,7 +355,7 @@
                     password = encodeURIComponent(password);
 
                     const credentialsQueryStr =
-                        "?email=" + email + "&password=" + password;
+                        "?email=" + email + "&password=" + password + '&g-recaptcha-response=' + captchaToken;
                     xhr.open(
                         "POST",
                         this.api.url +
@@ -371,7 +371,8 @@
                     email,
                     emailConfirmation,
                     password,
-                    passwordConfirmation
+                    passwordConfirmation,
+                    captchaToken
                 ) {
                     if (this.isAuthenticated !== true) {
                         // must authenticate as guest first
@@ -427,7 +428,7 @@
                     passwordConfirmation = encodeURIComponent(passwordConfirmation);
 
                     const credentialsQueryStr =
-                        "?name=" + name + "&email=" + email + "&email_confirmation=" + emailConfirmation + "&password=" + password + "&password_confirmation=" + passwordConfirmation;
+                        "?name=" + name + "&email=" + email + "&email_confirmation=" + emailConfirmation + "&password=" + password + "&password_confirmation=" + passwordConfirmation+ '&g-recaptcha-response=' + captchaToken;;
                     xhr.open(
                         "POST",
                         this.api.url +
@@ -588,55 +589,58 @@
                                             longUrlInput.classList.remove('has-error');
                                         }
 
-                                        if (destinationEmailInput.value.length == 0) {
-                                            destinationEmailInput.classList.add('has-error');
-                                            return false;
-                                        } else {
-                                            destinationEmailInput.classList.remove('has-error');
-                                        }
+                                        grecaptcha.ready(function() {
+                                            grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
+                                                var xhr = new XMLHttpRequest();
+                                                xhr.withCredentials = true;
 
-                                        var xhr = new XMLHttpRequest();
-                                        xhr.withCredentials = true;
+                                                xhr.addEventListener("readystatechange", function () {
+                                                    if (this.readyState === 4) {
+                                                        try {
+                                                            const jsonResObj = JSON.parse(this.responseText);
 
-                                        xhr.addEventListener("readystatechange", function () {
-                                            if (this.readyState === 4) {
-                                                try {
-                                                    const jsonResObj = JSON.parse(this.responseText);
+                                                            if (this.status === 201) {
+                                                                window.App.Views.ShortenUrl.hide();
+                                                                window.App.Views.ShortlinkResult.Components.Shortlink.set(
+                                                                    jsonResObj.shortlink
+                                                                );
+                                                                window.App.Views.ShortlinkResult.show();
+                                                                return;
+                                                            }
 
-                                                    if (this.status === 201) {
-                                                        window.App.Views.ShortenUrl.hide();
-                                                        window.App.Views.ShortlinkResult.Components.Shortlink.set(
-                                                            jsonResObj.shortlink
-                                                        );
-                                                        window.App.Views.ShortlinkResult.show();
-                                                        return;
+                                                            if(typeof jsonResObj.message !== 'undefined') {
+                                                                window.App.Views.ShortenUrl.Components.Feedback.showError(jsonResObj.message);
+                                                            } else {
+                                                                window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                            }
+
+                                                            e.target.classList.remove('disabled');
+                                                        } catch (e) {
+                                                            // invalid json something went wrong
+                                                            window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                        }
                                                     }
+                                                });
 
-                                                    if(typeof jsonResObj.message !== 'undefined') {
-                                                        window.App.Views.ShortenUrl.Components.Feedback.showError(jsonResObj.message);
-                                                    } else {
-                                                        window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
-                                                    }
-
-                                                    e.target.classList.remove('disabled');
-                                                } catch (e) {
-                                                    // invalid json something went wrong
-                                                    window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                var paramsStr = 'long_url='+ longUrlInput.value;
+                                                if (destinationEmailInput.value.length > 0) {
+                                                    paramsStr += '&destination_email=' + destinationEmailInput.value;
                                                 }
-                                            }
+                                                paramsStr += '&g-recaptcha-response=' + token;
+
+                                                xhr.open(
+                                                    "POST",
+                                                    '{{ url("/api/shorten") }}?' + paramsStr
+                                                );
+                                                xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+
+                                                // disable generate button to prevent double requests
+                                                e.target.classList.add('disabled');
+
+                                                window.App.Views.ShortenUrl.Components.Feedback.showInfo('por favor espere..');
+                                                xhr.send();
+                                            });
                                         });
-
-                                        xhr.open(
-                                            "POST",
-                                            '{{ url("/api/shorten") }}?long_url='+ longUrlInput.value +'&destination_email=' + destinationEmailInput.value
-                                        );
-                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
-
-                                        // disable generate button to prevent double requests
-                                        e.target.classList.add('disabled');
-
-                                        window.App.Views.ShortenUrl.Components.Feedback.showInfo('por favor espere..');
-                                        xhr.send();
                                     };
                                     this.hasInitialized = true;
                                 }
@@ -855,48 +859,55 @@
 
                                             longUrlField.classList.remove('has-error');
 
-                                            var xhr = new XMLHttpRequest();
-                                            xhr.withCredentials = true;
-
-                                            xhr.addEventListener("readystatechange", function () {
-                                                if (this.readyState === 4) {
-                                                    try {
-                                                        const jsonResObj = JSON.parse(this.responseText);
-
-                                                        if (this.status === 201) {
-                                                            window.App.Views.RegisterAvailableShortlink.hide();
-                                                            window.App.Views.ShortlinkResult.Components.Shortlink.set(
-                                                                jsonResObj.shortlink
-                                                            );
-                                                            window.App.Views.ShortlinkResult.show();
-                                                            return;
-                                                        }
-
-                                                        if(typeof jsonResObj.message !== 'undefined') {
-                                                            window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError(jsonResObj.message);
-                                                        } else {
-                                                            window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
-                                                        }
-
-                                                        e.target.classList.remove('disabled');
-                                                    } catch (e) {
-                                                        // invalid json something went wrong
-                                                        window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
-                                                    }
-                                                }
-                                            });
-
-                                            xhr.open(
-                                                "POST",
-                                                '{{ url("/api/register-available") }}?long_url='+ longUrlField.value +'&shortstring=' + shortStr
-                                            );
-                                            xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
-
                                             // disable generate button to prevent double requests
                                             e.target.classList.add('disabled');
 
                                             window.App.Views.RegisterAvailableShortlink.Components.Feedback.showInfo('por favor espere..');
-                                            xhr.send();
+
+                                            grecaptcha.ready(function() {
+                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                    function(token) {
+                                                        var xhr = new XMLHttpRequest();
+                                                        xhr.withCredentials = true;
+
+                                                        xhr.addEventListener("readystatechange", function () {
+                                                            if (this.readyState === 4) {
+                                                                try {
+                                                                    const jsonResObj = JSON.parse(this.responseText);
+
+                                                                    if (this.status === 201) {
+                                                                        window.App.Views.RegisterAvailableShortlink.hide();
+                                                                        window.App.Views.ShortlinkResult.Components.Shortlink.set(
+                                                                            jsonResObj.shortlink
+                                                                        );
+                                                                        window.App.Views.ShortlinkResult.show();
+                                                                        return;
+                                                                    }
+
+                                                                    if(typeof jsonResObj.message !== 'undefined') {
+                                                                        window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError(jsonResObj.message);
+                                                                    } else {
+                                                                        window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                                    }
+
+                                                                    e.target.classList.remove('disabled');
+                                                                } catch (e) {
+                                                                    // invalid json something went wrong
+                                                                    window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                                }
+                                                            }
+                                                        });
+
+                                                        xhr.open(
+                                                            "POST",
+                                                            '{{ url("/api/register-available") }}?long_url='+ longUrlField.value +'&shortstring=' + shortStr + '&g-recaptcha-response=' + token
+                                                        );
+                                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                                        xhr.send();
+                                                    }
+                                                );
+                                            });
+
 
                                         };
                                         this.hasInitialized = true;
@@ -1037,7 +1048,13 @@
 
                                             $this.disable();
                                             window.App.Views.Login.Components.Feedback.showInfo('por favor espere..');
-                                            window._authManager.login(loginEmailInput.value, loginPasswordInput.value);
+                                            grecaptcha.ready(function() {
+                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                    function(token) {
+                                                        window._authManager.login(loginEmailInput.value, loginPasswordInput.value, token);
+                                                    }
+                                                );
+                                            });
                                         };
 
                                         this.hasInitialized = true;
@@ -1374,13 +1391,20 @@
 
                                             $this.disable();
                                             window.App.Views.Register.Components.Feedback.showInfo('por favor espere..');
-                                            window._authManager.register(
-                                                registerNameInput.value,
-                                                registerEmailInput.value,
-                                                registerEmailConfInput.value,
-                                                registerPasswordInput.value,
-                                                registerPasswordConfInput.value,
-                                            );
+                                            grecaptcha.ready(function() {
+                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                    function(token) {
+                                                        window._authManager.register(
+                                                            registerNameInput.value,
+                                                            registerEmailInput.value,
+                                                            registerEmailConfInput.value,
+                                                            registerPasswordInput.value,
+                                                            registerPasswordConfInput.value,
+                                                            token
+                                                        );
+                                                    }
+                                                );
+                                            });
                                         };
 
                                         this.hasInitialized = true;
@@ -1606,6 +1630,8 @@
 
 
         </script>
+
+        <script src="https://www.google.com/recaptcha/api.js?render={{ $captchaSitekey }}"></script>
     </head>
     <body
         class="antialiased"

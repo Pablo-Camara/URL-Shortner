@@ -175,7 +175,8 @@ class AuthenticationController extends Controller
 
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
+            'g-recaptcha-response' => 'required|captcha'
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -292,7 +293,8 @@ class AuthenticationController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|confirmed|unique:users',
-            'password' => 'required|confirmed'
+            'password' => 'required|confirmed',
+            'g-recaptcha-response' => 'required|captcha'
         ]);
 
         $user = new User();

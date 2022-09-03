@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('home');
+    $captchaSitekey = config('captcha.sitekey');
+    return view('home', ['captchaSitekey' => $captchaSitekey]);
 });
 
 

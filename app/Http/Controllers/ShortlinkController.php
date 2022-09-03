@@ -34,10 +34,13 @@ class ShortlinkController extends Controller
             }
 
             if ($shortstring->is_available) {
+                $captchaSitekey = config('captcha.sitekey');
+
                 return view('home', [
                     'shortlink' => url('/' . $shortstring->shortstring),
                     'shortlink_available' => true,
-                    'shortlink_shortstring' => $shortstring->shortstring
+                    'shortlink_shortstring' => $shortstring->shortstring,
+                    'captchaSitekey' => $captchaSitekey
                 ]);
             }
 
@@ -92,6 +95,7 @@ class ShortlinkController extends Controller
         // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
         $request->validate([
             'long_url' => 'required|url|max:2048',
+            'g-recaptcha-response' => 'required|captcha'
         ]);
 
         $shortstring = $request->input('shortstring');
@@ -151,6 +155,7 @@ class ShortlinkController extends Controller
         $request->validate([
             'long_url' => 'required|url|max:2048',
             'destination_email' => 'email:rfc,dns',
+            'g-recaptcha-response' => 'required|captcha'
         ]);
 
         $nextAvailableShortstring = Shortstring::where('is_available', 1)->first();
