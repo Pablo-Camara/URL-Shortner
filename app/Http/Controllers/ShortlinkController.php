@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ShortlinkReady;
 use App\Models\Shortlink;
 use App\Models\Shortstring;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\URL;
 
@@ -142,13 +144,13 @@ class ShortlinkController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function shorten(Request $request)
     {
         // url validation, read below ( about max length )
         // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
         $request->validate([
             'long_url' => 'required|url|max:2048',
-            'destination_email' => 'required|email:rfc,dns',
+            'destination_email' => 'email:rfc,dns',
         ]);
 
         $nextAvailableShortstring = Shortstring::where('is_available', 1)->first();
@@ -185,6 +187,12 @@ class ShortlinkController extends Controller
             throw $th;
         }
         DB::commit();
+
+        if (!is_null($newShortlink->destination_email)) {
+            Mail::to(
+                $newShortlink->destination_email
+            )->queue(new ShortlinkReady($newShortlink));
+        }
 
         return new Response(
             [
