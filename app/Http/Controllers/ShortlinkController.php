@@ -158,7 +158,28 @@ class ShortlinkController extends Controller
             'g-recaptcha-response' => 'required|captcha'
         ]);
 
-        $nextAvailableShortstring = Shortstring::where('is_available', 1)->first();
+        $usePreseededShortstrings = config('app.use_preseeded_shortstrings');
+        $useBcIfPreseededShortstringsEnd = config('app.use_bc_if_preseeded_shortstrings_end');
+
+        $useBcToGenerateShortstring = false;
+
+        if ($usePreseededShortstrings) {
+            $nextAvailableShortstring = Shortstring::where('is_available', 1)->first();
+
+            if (
+                !$nextAvailableShortstring
+                &&
+                $useBcIfPreseededShortstringsEnd
+            ) {
+                $useBcToGenerateShortstring = true;
+            }
+        } else {
+            $useBcToGenerateShortstring = true;
+        }
+
+        if ($useBcToGenerateShortstring) {
+            $nextAvailableShortstring = $this->tryGeneratingShortstringWithBaseConvert();
+        }
 
         if (!$nextAvailableShortstring) {
             // this should never happen
@@ -239,5 +260,80 @@ class ShortlinkController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+
+    /**
+     * Generates a shortstring with base_convert
+     * based on a number (autoincrement value to avoid dupes)
+     *
+     * @param int $currentAutoincrementValue
+     * @return void
+     */
+    private function generateShortstringWithBaseConvert(int $currentAutoincrementValue) {
+        $alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        $totalAlphabetChars = strlen($alphabet);
+        $minimumShortstringLength = config('app.minimum_shortstrings_length');
+
+        if (
+            !is_numeric($minimumShortstringLength)
+            ||
+            $minimumShortstringLength < 1
+        ) {
+            // precautions..
+           $minimumShortstringLength = 1;
+        }
+
+        $shortstring = base_convert(
+            ($currentAutoincrementValue - 1 /* minus 1, to not skip first convertion */) + ($totalAlphabetChars**($minimumShortstringLength-1)),
+            10,
+            $totalAlphabetChars
+        );
+
+        return $shortstring;
+    }
+
+
+    /**
+     * Attempts to generate a shortstring and return it
+     * if not successful will return null
+     *
+     * @return Shortstring|null
+     */
+    private function tryGeneratingShortstringWithBaseConvert() {
+        $shortstringCreated = false;
+        $totalAttempts = 0;
+        $nextAvailableShortstring = null;
+        while ($shortstringCreated == false) {
+            try {
+                $shortstringsTableStatus = DB::select(
+                    "SHOW TABLE STATUS LIKE 'shortstrings'"
+                );
+                $currAutoincrementVal = $shortstringsTableStatus[0]->Auto_increment;
+                $shortstringToAdd = $this->generateShortstringWithBaseConvert($currAutoincrementVal);
+
+                $nextAvailableShortstring = new Shortstring();
+                $nextAvailableShortstring->shortstring = $shortstringToAdd;
+
+                // we make it available
+                // until down below we use it
+                // and make it unavailable
+                $nextAvailableShortstring->is_available = 1;
+                $nextAvailableShortstring->save();
+                $shortstringCreated = true;
+            } catch (\Throwable $th) {
+                $totalAttempts++;
+            }
+
+            // TODO: set max attempts in env variable / app config
+            // avoid infinite loop
+            if ($totalAttempts >= 100) {
+                //TODO: log event ( to monitor if this ever happens )
+                // should never happen but just in case..
+                break;
+            }
+        }
+
+        return $nextAvailableShortstring;
     }
 }
