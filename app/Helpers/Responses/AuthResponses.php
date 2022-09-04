@@ -13,7 +13,7 @@ class AuthResponses {
             'error_id' => 'not_authenticated',
             // TODO: translate
             // in theory should never be shown in the frontend.
-            'message' => 'Must authenticate first!'
+            'message' => 'Ocorreu um erro. Por favor actualize a página e tente novamente.'
         ], Response::HTTP_UNAUTHORIZED);
     }
 
@@ -25,5 +25,15 @@ class AuthResponses {
             // TODO: translate
             'message' => 'Credenciais inválidas'
         ], Response::HTTP_UNAUTHORIZED);
+    }
+
+    public static function registerFailed() {
+        return response()->json([
+            //TODO: translate msg str
+            'error_id' => 'register_failed',
+            // TODO: translate
+            // in theory should never be shown in the frontend.
+            'message' => 'Não foi possível criar a sua conta de utilizador.'
+        ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 }

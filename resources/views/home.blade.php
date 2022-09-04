@@ -1624,6 +1624,40 @@
                             this.Components.MyLinks.initialize();
                         }
 
+                    },
+                    EmailConfirmed: {
+                        el: function () {
+                            return document.getElementById('email-confirmed');
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        Components: {
+                            MyAccountBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('email-confirmed-login-btn');
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized === false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.EmailConfirmed.hide();
+                                            window.App.Views.Login.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
+                        },
+                        initialize: function () {
+                            this.Components.MyAccountBtn.initialize();
+                        }
                     }
                 }
             };
@@ -1796,7 +1830,14 @@
                 <div id="form-box-acc-links-loading">A carregar links..</div>
                 <div id="form-box-acc-links" class="list-container" style="display: none"></div>
             </div>
+        </div>
 
+        <div
+            class="form-box"
+            id="email-confirmed" style="display: none"
+        >
+            <div class="form-box-title">Email confirmado!</div>
+            <div class="button" id="email-confirmed-login-btn">Minha conta</div>
         </div>
 
         @if(isset($shortlink) && (isset($shortlink_available) && $shortlink_available === true))
@@ -1808,6 +1849,13 @@
                 window.App.isUserRequestingAvailableShortstring = false;
             </script>
         @endif
+
+        @if(isset($page))
+            <script>
+                window.App.currentPage = '{{ $page }}';
+            </script>
+        @endif
+
         <script>
 
 
@@ -1824,7 +1872,17 @@
                 window.App.Views.ShortenUrl.hide();
                 window.App.Views.RegisterAvailableShortlink.show();
             } else {
-                window.App.Views.ShortenUrl.show();
+                if (
+                    typeof window.App.currentPage !== 'undefined'
+                    &&
+                    typeof window.App.Views[window.App.currentPage] !== 'undefined'
+                    &&
+                    typeof window.App.Views[window.App.currentPage].show === 'function'
+                ) {
+                    window.App.Views[window.App.currentPage].show();
+                } else {
+                    window.App.Views.ShortenUrl.show();
+                }
             }
 
             document.addEventListener('userAuthenticated', (e) => {

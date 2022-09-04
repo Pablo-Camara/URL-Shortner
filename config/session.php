@@ -58,6 +58,23 @@ return [
     */
     'auth_token_cookie_lifetime' => env('AUTH_TOKEN_COOKIE_LIFETIME', 1440),
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email Confirmation Token Lifetime
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the number of minutes that you wish for
+    | the email confirmation token to last
+    | when expired the user will not be able to confirm his email
+    | with the same token / link sent by email
+    | the user will have to 'Resend confirmation email'
+    | when trying to login ( and failing )
+    |
+    | default: 24*60 = 1440 = 24h in minutes
+    */
+    'email_confirmation_token_lifetime' => env('EMAIL_CONFIRMATION_TOKEN_LIFETIME', 1440),
+
     /*
     |--------------------------------------------------------------------------
     | Session Encryption

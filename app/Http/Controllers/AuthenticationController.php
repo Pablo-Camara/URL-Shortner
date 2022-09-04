@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\InteractsWithTime;
 use App\Helpers\Responses\AuthResponses;
+use App\Mail\EmailConfirmation;
 use App\Models\Shortlink;
+use Illuminate\Support\Facades\Mail;
 
 class AuthenticationController extends Controller
 {
@@ -54,12 +56,6 @@ class AuthenticationController extends Controller
 
                 return $response;
             }
-
-            // if auth cookie is invalid
-            // or
-            // if auth token is expired or invalid
-            // forget the cookie
-            Cookie::forget($config['auth_token_cookie_name']);
         }
 
         // creates new guest user
@@ -168,9 +164,7 @@ class AuthenticationController extends Controller
             // lets forbid the login. Must authenticate as guest first.
 
             // and lets forget this invalid auth cookie and/or token
-            Cookie::forget($config['auth_token_cookie_name']);
-
-            return AuthResponses::notAuthenticated();
+            return AuthResponses::notAuthenticated()->withoutCookie($config['auth_token_cookie_name']);
         }
 
         $request->validate([
@@ -222,10 +216,6 @@ class AuthenticationController extends Controller
             false,
             $config['same_site'] ?? null
         );
-
-        // forget 'guest' authentication cookie/token
-        Cookie::forget($config['auth_token_cookie_name']);
-
 
         return $response
             ->setContent([
@@ -284,9 +274,7 @@ class AuthenticationController extends Controller
             // this should never happen in reality.
 
             // and lets forget this invalid auth cookie and/or token
-            Cookie::forget($config['auth_token_cookie_name']);
-
-            return AuthResponses::notAuthenticated();
+            return AuthResponses::notAuthenticated()->withoutCookie($config['auth_token_cookie_name']);
         }
 
 
@@ -302,8 +290,26 @@ class AuthenticationController extends Controller
         $user->name = $request->input('name');
         $user->email = $request->input('email');
         $user->password = Hash::make($request->input('password'));
-        $user->save();
 
+        try {
+            $user->save();
+        } catch (\Throwable $th) {
+            //TODO: log event
+            return AuthResponses::registerFailed();
+        }
+
+        $emailConfirmationTokenExpirationDatetime = Carbon::now()->addRealMinutes(
+            $config['email_confirmation_token_lifetime']
+        );
+        $emailConfirmationToken = $user->createToken(
+            'email_confirmation_token',
+            ['confirm_email'],
+            $emailConfirmationTokenExpirationDatetime
+        )->plainTextToken;
+
+        Mail::to(
+            $user->email
+        )->queue(new EmailConfirmation($user, $emailConfirmationToken));
 
         $userAbilities = ['logged_in'];
 
@@ -338,9 +344,6 @@ class AuthenticationController extends Controller
             false,
             $config['same_site'] ?? null
         );
-
-        // forget 'guest' authentication cookie/token
-        Cookie::forget($config['auth_token_cookie_name']);
 
 
         return $response
