@@ -75,6 +75,11 @@ return [
     */
     'email_confirmation_token_lifetime' => env('EMAIL_CONFIRMATION_TOKEN_LIFETIME', 1440),
 
+    /**
+     * life time for email confirmation token when user 'Resends' the confirmation email
+     */
+    'resent_email_confirmation_token_lifetime' => env('RESENT_EMAIL_CONFIRMATION_TOKEN_LIFETIME', 60),
+
     /*
     |--------------------------------------------------------------------------
     | Session Encryption

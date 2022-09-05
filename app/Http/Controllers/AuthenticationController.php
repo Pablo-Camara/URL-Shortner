@@ -179,6 +179,10 @@ class AuthenticationController extends Controller
             return AuthResponses::incorrectCredentials();
         }
 
+        if (!$user->hasVerifiedEmail()) {
+            return AuthResponses::unverifiedAccount();
+        }
+
         $userAbilities = $user->abilities->all();
         $userAbilities = array_map(function($ability){
             return $ability['name'];
@@ -298,20 +302,9 @@ class AuthenticationController extends Controller
             return AuthResponses::registerFailed();
         }
 
-        $emailConfirmationTokenExpirationDatetime = Carbon::now()->addRealMinutes(
-            $config['email_confirmation_token_lifetime']
-        );
-        $emailConfirmationToken = $user->createToken(
-            'email_confirmation_token',
-            ['confirm_email'],
-            $emailConfirmationTokenExpirationDatetime
-        )->plainTextToken;
+        $this->sendVerificationEmail($user);
 
-        Mail::to(
-            $user->email
-        )->queue(new EmailConfirmation($user, $emailConfirmationToken));
-
-        $userAbilities = ['logged_in'];
+        /*$userAbilities = ['logged_in'];
 
         $userTokenExpirationDatetime = Carbon::now()->addRealMinutes(
             $config['auth_token_cookie_lifetime']
@@ -321,7 +314,7 @@ class AuthenticationController extends Controller
             'stay_logged_in_token',
             $userAbilities,
             $userTokenExpirationDatetime
-        )->plainTextToken;
+        )->plainTextToken;*/
 
         // move shortlinks generated as guest
         // to the now newly created (and now logged in) user account
@@ -329,6 +322,7 @@ class AuthenticationController extends Controller
             'user_id', '=', $authCookie['user_id']
         )->update(['user_id' => $user->id]);
 
+        /*
         $authCookie = Cookie::make(
             $config['auth_token_cookie_name'],
             encrypt([
@@ -343,16 +337,111 @@ class AuthenticationController extends Controller
             false,
             false,
             $config['same_site'] ?? null
-        );
+        );*/
 
 
         return $response
-            ->setContent([
+            /* ->setContent([
                 'at' => $userToken,
                 'guest' => 0
+            ]) */
+            ->setContent([
+                'success' => 1,
             ])
-            ->setStatusCode(Response::HTTP_CREATED)
-            ->withCookie($authCookie);
+            ->setStatusCode(Response::HTTP_CREATED);
+            //->withCookie($authCookie);
+
+    }
+
+    /**
+     * Resends a verification email
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Response  $response
+     * @return \Illuminate\Http\Response
+     */
+    public function resendVerificationEmail(Request $request, Response $response)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'g-recaptcha-response' => 'required|captcha'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            // we will not let people exploit this endpoint
+            // to find out which emails are registered
+            // so we just return 200 and fool the users that are attempting
+            // to spam this endpoint
+            return new Response('', 200);
+        }
+
+        return $this->sendVerificationEmail($user, true);
+
+        return new Response('', 200);
+
+    }
+
+    private function sendVerificationEmail(User $user, $resending = false) {
+
+        $config = config('session');
+
+        if ($user->hasVerifiedEmail()) {
+            return;
+        }
+
+        $confirmEmailTokens = $user->tokens()
+                ->where('abilities', 'like' , '%confirm_email%')
+                ->orderBy('id', 'ASC') // older tokens first
+                ->get();
+
+        $emailConfirmationToken = null;
+
+        // if this user already has an email confirmation token
+        // we will not create a new token
+        // and in the process we will delete the expired tokens for email confirmation
+        foreach ($confirmEmailTokens as $token) {
+            $hasTokenExpired = Carbon::now() >= $token->expires_at;
+            if ($hasTokenExpired) {
+                $token->delete();
+                continue;
+            }
+            $emailConfirmationToken = $token;
+            break;
+        }
+
+        if (is_null($emailConfirmationToken)) {
+            $emailConfirmationTokenExpirationDatetime = Carbon::now()->addRealMinutes(
+                $resending ? $config['resent_email_confirmation_token_lifetime'] : $config['email_confirmation_token_lifetime']
+            );
+            $emailConfirmationToken = $user->createToken(
+                'email_confirmation_token',
+                ['confirm_email'],
+                $emailConfirmationTokenExpirationDatetime
+            );
+        }
+
+
+
+        // lets only allow Resending a verification email every 15min
+        // to avoid mass spam
+        if ($resending)
+        {
+            $totalMinutesSinceLastTokenWasUpdated = $emailConfirmationToken->updated_at->diffInMinutes(Carbon::now());
+            if ( $totalMinutesSinceLastTokenWasUpdated <= 15 ) {
+                return;
+            }
+        }
+
+        Mail::to(
+            $user->email
+        )->queue(new EmailConfirmation($user, $emailConfirmationToken->plainTextToken));
+
+        if ($resending) {
+            $emailConfirmationToken->updated_at = Carbon::now();
+            $emailConfirmationToken->save();
+        }
 
     }
 }

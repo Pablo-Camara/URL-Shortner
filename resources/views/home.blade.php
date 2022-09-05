@@ -155,6 +155,10 @@
                 display: block;
             }
 
+            #resend-verification-email-link {
+                margin-bottom: 5px;
+            }
+
             #my-account-link {
                 text-align: center;
             }
@@ -203,15 +207,17 @@
                         authentication: "/authenticate",
                         login: "/login",
                         register: "/register",
-                        logout: "/logout"
+                        logout: "/logout",
+                        resendVerificationEmail: "/resend-verification-email"
                     },
                 },
 
                 customEvents: {
                     userAuthenticatedEvent: null,
                     userLoggedInEvent: null,
-                    userLoginFailed: null,
-                    userRegisterFailed: null,
+                    userLoginFailedEvent: null,
+                    userRegisterFailedEvent: null,
+                    userRegisterSuccessEvent: null
                 },
 
                 initialize: function () {
@@ -243,6 +249,14 @@
                         document.createEvent("Event");
                     this.customEvents.userRegisterFailedEvent.initEvent(
                         "userRegisterFailed",
+                        true,
+                        true
+                    );
+
+                    this.customEvents.userRegisterSuccessEvent =
+                        document.createEvent("Event");
+                    this.customEvents.userRegisterSuccessEvent.initEvent(
+                        "userRegisterSuccess",
                         true,
                         true
                     );
@@ -341,6 +355,8 @@
                                 window._authManager.customEvents.userLoginFailedEvent.reason =
                                     resObj.message;
                                 window._authManager.customEvents.userLoginFailedEvent.isError = true;
+                                window._authManager.customEvents.userLoginFailedEvent.error_id = resObj.error_id;
+
                                 document.dispatchEvent(
                                     window._authManager.customEvents
                                         .userLoginFailedEvent
@@ -365,7 +381,6 @@
                     xhr.setRequestHeader("Authorization", "Bearer " + this.at);
                     xhr.send();
                 },
-
                 register: function (
                     name,
                     email,
@@ -387,16 +402,42 @@
                             const resObj = JSON.parse(this.response); //TODO: Catch exception
 
                             if (this.status === 201) {
-                                window._authManager.at = resObj.at;
-                                window._authManager.isLoggedIn = resObj.guest
-                                    ? false
-                                    : true;
 
-                                // trigger userLoggedIn event
-                                document.dispatchEvent(
-                                    window._authManager.customEvents
-                                        .userLoggedInEvent
-                                );
+                                if(
+                                    typeof resObj.at !== 'undefined'
+                                    &&
+                                    typeof resObj.isLoggedIn !== 'undefined'
+                                ) {
+                                    window._authManager.at = resObj.at;
+                                    window._authManager.isLoggedIn = resObj.guest
+                                        ? false
+                                        : true;
+
+                                    // trigger userLoggedIn event
+                                    document.dispatchEvent(
+                                        window._authManager.customEvents
+                                            .userLoggedInEvent
+                                    );
+                                    return;
+                                }
+
+                                if (
+                                    typeof resObj.success !== 'undefined'
+                                ) {
+                                    if (resObj.success == 1) {
+                                        document.dispatchEvent(
+                                            window._authManager.customEvents
+                                                .userRegisterSuccessEvent
+                                        );
+                                    } else {
+                                        document.dispatchEvent(
+                                            window._authManager.customEvents
+                                                .userRegisterFailedEvent
+                                        );
+                                    }
+
+                                    return;
+                                }
                             }
 
                             if (
@@ -438,6 +479,28 @@
                     xhr.setRequestHeader("Authorization", "Bearer " + this.at);
                     xhr.send();
                 },
+                resendVerificationEmail: function (email, captchaToken) {
+                    if (this.isAuthenticated !== true) {
+                        // must authenticate as guest first
+                        return;
+                    }
+
+                    var xhr = new XMLHttpRequest();
+                    xhr.withCredentials = true;
+                    email = encodeURIComponent(email);
+
+                    const credentialsQueryStr =
+                        "?email=" + email + '&g-recaptcha-response=' + captchaToken;
+
+                    xhr.open(
+                        "POST",
+                        this.api.url +
+                            this.api.endpoints.resendVerificationEmail +
+                            credentialsQueryStr
+                    );
+                    xhr.setRequestHeader("Authorization", "Bearer " + this.at);
+                    xhr.send();
+                }
             };
 
             window._authManager.initialize();
@@ -1122,6 +1185,50 @@
                                     el.style.display = 'block';
                                 },
 
+                            },
+                            ResendVerificationEmail: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('resend-verification-email-link');
+                                },
+                                show: function () {
+                                    this.initialize();
+                                    this.el().style.display = 'block';
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+
+                                        this.el().onclick = function (e) {
+                                            const loginEmailInput = window.App.Views.Login.Components.Email.el();
+
+                                            if (loginEmailInput.value.length == 0) {
+                                                loginEmailInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                loginEmailInput.classList.remove('has-error');
+                                            }
+
+                                            grecaptcha.ready(function() {
+                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                    function(token) {
+                                                        window._authManager.resendVerificationEmail(
+                                                            loginEmailInput.value,
+                                                            token
+                                                        );
+                                                    }
+                                                );
+                                            });
+
+                                            window.App.Views.Login.Components.ResendVerificationEmail.hide();
+
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
                             }
                         },
                         initialize: function () {
@@ -1485,6 +1592,17 @@
                         }
 
                     },
+                    RegisterSuccess: {
+                        el: function () {
+                            return document.getElementById('form-box-account-registered');
+                        },
+                        show: function () {
+                            this.el().style.display = 'block';
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        }
+                    },
                     MyAccount: {
                         hasInitialized: false,
                         el: function () {
@@ -1763,6 +1881,13 @@
             </div>
 
             <div id="form-box-login-feedback" class="form-box-feedback" style="display: none"></div>
+            <a
+                href="javascript:void(0);"
+                class="form-link"
+                id="resend-verification-email-link"
+                style="display: none">
+                Reenviar email de confirmação
+            </a>
 
             <div class="button disabled" id="login-button">Entrar</div>
             <a href="javascript:void(0);" id="create-account-link" class="form-link">Ainda não tenho uma conta</a>
@@ -1814,6 +1939,14 @@
 
             <div class="button disabled" id="register-button">Continuar</div>
             <a href="javascript:void(0);" id="login-to-account-link" class="form-link">Já tenho uma conta</a>
+        </div>
+
+        <div
+            class="form-box"
+            id="form-box-account-registered" style="display: none"
+        >
+            <div class="form-box-title">Conta criada com successo!</div>
+            <p>Verifique o seu email pois acabamos de lhe enviar um email para que possa confirmar que o email fornecido lhe pertence.<br/><br/>Muito obrigado.</p>
         </div>
 
 
@@ -1899,6 +2032,10 @@
 
                 if (e.isError) {
                     window.App.Views.Login.Components.Feedback.showError(e.reason);
+
+                    if(e.error_id === 'unverified_account') {
+                        window.App.Views.Login.Components.ResendVerificationEmail.show();
+                    }
                 } else {
                     window.App.Views.Login.Components.Feedback.showInfo(e.reason);
                 }
@@ -1916,6 +2053,11 @@
                 }
 
                 window.App.Views.Register.Components.RegisterBtn.enable();
+            }, false);
+
+            document.addEventListener('userRegisterSuccess', (e) => {
+                window.App.Views.Register.hide();
+                window.App.Views.RegisterSuccess.show();
             }, false);
 
 

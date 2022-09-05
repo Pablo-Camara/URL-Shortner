@@ -29,6 +29,11 @@ Route::post('/register', [AuthenticationController::class, 'registerAttempt'])
         ->middleware(['auth:sanctum'])
         ->name('register-attempt');
 
+Route::post('/resend-verification-email', [AuthenticationController::class, 'resendVerificationEmail'])
+        ->middleware(['auth:sanctum'])
+        ->name('resend-verification-email');
+
+
 Route::post('/links', [ShortlinkController::class, 'index'])
         ->middleware(['auth:sanctum', 'abilities:logged_in'])
         ->name('my-link');

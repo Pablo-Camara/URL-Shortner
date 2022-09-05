@@ -36,4 +36,13 @@ class AuthResponses {
             'message' => 'Não foi possível criar a sua conta de utilizador.'
         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
+
+    public static function unverifiedAccount() {
+        return response()->json([
+            //TODO: translate msg str
+            'error_id' => 'unverified_account',
+            // TODO: translate
+            'message' => 'Ainda não verificou o seu email. Verifique a sua caixa de entrada e/ou caixa de spam no seu provedor de email.'
+        ], Response::HTTP_UNAUTHORIZED);
+    }
 }
