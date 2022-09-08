@@ -9,10 +9,13 @@ class HomeComposer
     {
         $captchaSitekey = config('captcha.sitekey');
 
-        $withCoffee = rand(0,1) == 1 ? true : false;
+        $withCoffee = 1;//rand(0,1) == 1 ? true : false;
         $currentBackground = asset('/img/bg_' . ($withCoffee ? 'with' : 'without') . '_coffee.jpeg');
 
+        $logoTop = asset('/img/logo.png');
+
         $view->with('captchaSitekey', $captchaSitekey)
-                ->with('currentBackground', $currentBackground);
+                ->with('currentBackground', $currentBackground)
+                ->with('logoTop', $logoTop);
     }
 }

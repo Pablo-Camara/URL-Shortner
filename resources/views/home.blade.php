@@ -38,6 +38,18 @@
                 position: relative;
             }
 
+            .form-box.overlay {
+                display: block;
+                position: absolute;
+                top: 34px;
+                right: 2%;
+            }
+
+            .form-box.overlay .form-box-title {
+                margin-top: 12px;
+                text-transform: uppercase;
+            }
+
             .form-box .close-form-box {
                 position: absolute;
                 top: 10px;
@@ -159,8 +171,8 @@
                 margin-bottom: 5px;
             }
 
-            #my-account-link {
-                text-align: center;
+            #my-links-view {
+                width: 50%;
             }
 
             #form-box-login-feedback,
@@ -192,10 +204,173 @@
                 overflow: hidden;
                 word-break: break-word;
             }
+
+            #logo-top {
+                max-width: 60px;
+            }
+
+            #logo-top-container {
+                margin-top: 40px;
+                text-align: center;
+            }
+
+            #current-presentation {
+                display: none;
+            }
+
+            #shorten-urls {
+                padding-top: 24px;
+            }
+
+            @media (min-width: 768px) {
+
+                #logo-top-container {
+                    margin-left: 10%;
+                    text-align: left;
+                    display: inline-block;
+                }
+
+                #menu-top {
+                    position: absolute;
+                    top: 10px;
+                    right: 9%;
+                    background: #ffffff;
+                    -webkit-border-radius: 12px;
+                    -moz-border-radius: 12px;
+                    border-radius: 12px;
+
+                    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
+                }
+
+                #menu-top .menu-item {
+                    display: inline-block;
+                    padding: 10px;
+                    font-size: 14px;
+                    border-right: 1px solid #EEE;
+                    padding-right: 16px;
+
+                    cursor: pointer;
+                }
+
+                #menu-top .menu-item:last-child {
+                    border-right: 0;
+                }
+
+                #menu-top .menu-item:hover,
+                #menu-top-acc .menu-item:hover {
+                    text-decoration: underline;
+                }
+
+
+                #menu-top-acc {
+                    width: 70px;
+                    position: absolute;
+                    top: 10px;
+                    right: 2%;
+                    background: #ffffff;
+                    -webkit-border-radius: 12px;
+                    -moz-border-radius: 12px;
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
+                    height: 38px;
+
+                    cursor: pointer;
+                }
+
+                #menu-top-acc .settings-icon {
+                    display: inline-block;
+                    max-width: 24px;
+                    margin-top: 7px;
+                    margin-left: 8px;
+                }
+
+                #menu-top-acc .settings-icon img {
+                    width: 100%;
+                }
+
+                #menu-top-acc .profile-pic  {
+                    display: inline-block;
+                    background: gray;
+                    width: 24px;
+                    height: 24px;
+                    -webkit-border-radius: 30px;
+                    -moz-border-radius: 30px;
+                    border-radius: 30px;
+                    margin-left: 0px;
+
+                    font-size: 16px;
+                    overflow: hidden;
+                    text-align: center;
+                    line-height: 24px;
+                    color: #FFFFFF;
+                }
+
+                #menu-top-acc #menu-acc-items {
+                    background: white;
+                    width: 200px;
+                    position: absolute;
+                    right: 2%;
+                    margin-top: 12px;
+                    -webkit-border-radius: 12px;
+                    -moz-border-radius: 12px;
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
+                }
+
+                #menu-top-acc #menu-acc-items .menu-item
+                {
+                    padding: 10px;
+                    border-bottom: 1px solid #EEE;
+                    font-size: 14px;
+                }
+
+                #menu-top-acc #menu-acc-items .menu-item:last-child
+                {
+                    border-bottom: 0;
+                }
+
+                #current-presentation {
+                    display: block;
+                    position: absolute;
+                    left: 43%;
+                }
+
+                #cp-title {
+                    font-size: 100px;
+                    font-weight: bold;
+                    line-height: 80px;
+                    letter-spacing: -6px;
+                }
+
+                #cp-desc {
+                    font-size: 34px;
+                    font-weight: lighter;
+                    line-height: 31px;
+                    margin-top: 20px;
+                    font-family: system-ui;
+                }
+
+                #shorten-urls,
+                #form-box-with-shortlink,
+                #form-box-shortlink-requested {
+                    margin-left: 10%;
+                    margin-top: 60px;
+                }
+            }
+
+            .grecaptcha-badge {
+                display: none !important;
+            }
+
         </style>
 
 
         <script>
+
+            Array.prototype.diff = function(a) {
+                return this.filter(function(i) {return a.indexOf(i) < 0;});
+            };
+
             window._authManager = {
                 at: null,
 
@@ -608,14 +783,239 @@
 
             window._authManager.initialize();
 
-
-
-
             window.App = {
-                Views: {
+                showComponents: function(componentNamesArr, conditionCallback = null) {
+                    for (var i = 0; i < componentNamesArr.length; i++) {
+                        const componentName = componentNamesArr[i];
+
+                        if(
+                            conditionCallback === null
+                        ) {
+                            window.App.Components[componentName].show();
+                        } else {
+                            if(
+                                typeof conditionCallback === 'function'
+                                &&
+                                conditionCallback(
+                                    window.App.Components[componentName]
+                                ) === true
+                            ) {
+                                window.App.Components[componentName].show();
+                            }
+                        }
+
+                    }
+                },
+                hideComponents: function(componentNamesArr, conditionCallback = null) {
+                    for (var i = 0; i < componentNamesArr.length; i++) {
+                        const componentName = componentNamesArr[i];
+
+                        if(
+                            conditionCallback === null
+                        ) {
+                            window.App.Components[componentName].hide();
+                        } else {
+                            if(
+                                typeof conditionCallback === 'function'
+                                &&
+                                conditionCallback(
+                                    window.App.Components[componentName]
+                                ) === true
+                            ) {
+                                window.App.Components[componentName].hide();
+                            }
+                        }
+                    }
+                },
+                getCurrentView: function() {
+                    return this.Views[this.currentView];
+                },
+                getCurrentViewStickyComponents: function(viewName) {
+                    return this.getCurrentView().components.sticky;
+                },
+                hideNonStickyComponents: function() {
+                    this.hideComponents(
+                        Object.keys(window.App.Components).diff(window.App.getCurrentViewStickyComponents())
+                    );
+                },
+                Components: {
+                    MenuTop: {
+                        el: function () {
+                            return document.getElementById('menu-top');
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        Items: {
+                            MyLinks: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('menu-item-my-links');
+                                },
+                                show: function () {
+                                    this.el().style.display = 'inline-block';
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.MyLinks.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
+                        },
+                        initialize: function () {
+                            this.Items.MyLinks.initialize();
+                        }
+                    },
+                    MenuAccTop: {
+                        hasInitialized: false,
+                        isOpen: false,
+                        el: function () {
+                            return document.getElementById('menu-top-acc');
+                        },
+                        itemsEl: function () {
+                            return document.getElementById('menu-acc-items');
+                        },
+                        open: function () {
+                            this.itemsEl().style.display = 'block';
+                            this.isOpen = true;
+                        },
+                        close: function () {
+                            this.itemsEl().style.display = 'none';
+                            this.isOpen = false;
+                        },
+                        show: function (){
+                            this.initialize();
+                            this.el().style.display = 'block';
+
+                            if (this.isOpen) {
+                                this.close();
+                            }
+                        },
+                        hide: function (){
+                            this.el().style.display = 'none';
+                        },
+                        GuestItems: {
+                            el: function () {
+                                return document.getElementById('menu-acc-items-guest');
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.el().style.display = 'block';
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            Items: {
+                                Login: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('menu-top-acc-login');
+                                    },
+                                    initialize: function () {
+                                        if ( this.hasInitialized == false ) {
+
+                                            this.el().onclick = function (e) {
+                                                window.App.hideNonStickyComponents();
+                                                window.App.Components.Login.show();
+                                            };
+
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                                Register: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('menu-top-acc-register');
+                                    },
+                                    initialize: function () {
+                                        if ( this.hasInitialized == false ) {
+
+                                            this.el().onclick = function (e) {
+                                                window.App.hideNonStickyComponents();
+                                                window.App.Components.Register.show();
+                                            };
+
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                            },
+                            initialize: function () {
+                                this.Items.Login.initialize();
+                                this.Items.Register.initialize();
+                            }
+                        },
+                        UserItems: {
+                            el: function () {
+                                return document.getElementById('menu-acc-items-user');
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.el().style.display = 'block';
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            Items: {
+                                LogoutBtn: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('menu-top-acc-logout');
+                                    },
+                                    initialize: function () {
+                                        if (this.hasInitialized === false) {
+                                            this.el().onclick = function (e) {
+                                                window._authManager.logout();
+                                            };
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                            },
+                            initialize: function () {
+                                this.Items.LogoutBtn.initialize();
+                            }
+                        },
+                        initialize: function () {
+                            if (this.hasInitialized == false) {
+                                const $this = this;
+                                this.el().onclick = function (e) {
+
+                                    if ($this.isOpen) {
+                                        $this.close();
+                                        return;
+                                    }
+
+                                    window.App.hideNonStickyComponents();
+                                    $this.open();
+                                    if (
+                                        window._authManager.isLoggedIn
+                                    ) {
+                                        $this.GuestItems.hide();
+                                        $this.UserItems.show();
+                                    } else {
+                                        $this.UserItems.hide();
+                                        $this.GuestItems.show();
+                                    }
+                                };
+
+                                this.hasInitialized = true;
+                            }
+                        }
+                    },
                     ShortenUrl: {
                         el: function () {
-                            return document.getElementById("form-box");
+                            return document.getElementById("shorten-urls");
                         },
                         show: function () {
                             this.initialize();
@@ -672,21 +1072,21 @@
                                         const $this = this;
                                         this.labelEl().onclick = function (e) {
                                             e.target.parentNode.classList.add("active");
-                                            window.App.Views.ShortenUrl.el().classList.add("has-active-input");
+                                            window.App.Components.ShortenUrl.el().classList.add("has-active-input");
                                             $this.el().focus();
                                         }
 
                                         this.el().onfocus = function (e) {
                                             e.target.parentNode.classList.add("active");
                                             e.target.value = e.target.value.trim();
-                                            window.App.Views.ShortenUrl.el().classList.add("has-active-input");
+                                            window.App.Components.ShortenUrl.el().classList.add("has-active-input");
                                         };
 
                                         this.el().addEventListener("focusout", function (e) {
                                             e.target.value = e.target.value.trim();
                                             if (e.target.value.length == 0) {
                                                 $this.labelEl().parentNode.classList.remove("active");
-                                                window.App.Views.ShortenUrl.el().classList.remove("has-active-input");
+                                                window.App.Components.ShortenUrl.el().classList.remove("has-active-input");
                                             }
                                         });
 
@@ -695,32 +1095,55 @@
                                 }
                             },
                             DestinationEmail: {
+                                hasInitialized: false,
                                 el: function () {
                                     return document.getElementById("destination-email");
                                 },
                                 labelEl: function () {
                                     return document.getElementById("destination-email-label");
                                 },
+                                containerEl: function () {
+                                    return document.getElementById("destination-email-container");
+                                },
+                                show: function () {
+                                    if (
+                                        !window._authManager.isAuthenticated
+                                        ||
+                                        !window._authManager.isLoggedIn
+                                    ) {
+                                        return false;
+                                    }
+
+                                    this.initialize();
+                                    this.containerEl().style.display = 'block';
+                                },
+                                hide: function () {
+                                    this.containerEl().style.display = 'none';
+                                },
                                 initialize: function () {
-                                    const $this = this;
-                                    this.labelEl().onclick = function (e) {
-                                        e.target.parentNode.classList.add("active");
-                                        $this.el().focus();
-                                    };
+                                    if (this.hasInitialized == false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
 
-                                    this.el().onfocus = function (e) {
-                                        e.target.parentNode.classList.add("active");
-                                        e.target.parentNode.classList.add("mtop-22");
-                                        e.target.value = e.target.value.trim();
-                                    };
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
 
-                                    this.el().addEventListener("focusout", function (e) {
-                                        e.target.value = e.target.value.trim();
-                                        if (e.target.value.length == 0) {
-                                            $this.labelEl().parentNode.classList.remove("active");
-                                            $this.labelEl().parentNode.classList.remove("mtop-22");
-                                        }
-                                    });
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
                                 }
                             },
                             GenerateBtn: {
@@ -745,8 +1168,8 @@
                                             return false;
                                         }
 
-                                        const longUrlInput = window.App.Views.ShortenUrl.Components.LongUrl.el();
-                                        const destinationEmailInput = window.App.Views.ShortenUrl.Components.DestinationEmail.el();
+                                        const longUrlInput = window.App.Components.ShortenUrl.Components.LongUrl.el();
+                                        const destinationEmailInput = window.App.Components.ShortenUrl.Components.DestinationEmail.el();
 
                                         if (longUrlInput.value.length == 0) {
                                             longUrlInput.classList.add('has-error');
@@ -766,24 +1189,24 @@
                                                             const jsonResObj = JSON.parse(this.responseText);
 
                                                             if (this.status === 201) {
-                                                                window.App.Views.ShortenUrl.hide();
-                                                                window.App.Views.ShortlinkResult.Components.Shortlink.set(
+                                                                window.App.Components.ShortenUrl.hide();
+                                                                window.App.Components.ShortlinkResult.Components.Shortlink.set(
                                                                     jsonResObj.shortlink
                                                                 );
-                                                                window.App.Views.ShortlinkResult.show();
+                                                                window.App.Components.ShortlinkResult.show();
                                                                 return;
                                                             }
 
                                                             if(typeof jsonResObj.message !== 'undefined') {
-                                                                window.App.Views.ShortenUrl.Components.Feedback.showError(jsonResObj.message);
+                                                                window.App.Components.ShortenUrl.Components.Feedback.showError(jsonResObj.message);
                                                             } else {
-                                                                window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                                window.App.Components.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                             }
 
                                                             e.target.classList.remove('disabled');
                                                         } catch (e) {
                                                             // invalid json something went wrong
-                                                            window.App.Views.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                            window.App.Components.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                         }
                                                     }
                                                 });
@@ -803,31 +1226,12 @@
                                                 // disable generate button to prevent double requests
                                                 e.target.classList.add('disabled');
 
-                                                window.App.Views.ShortenUrl.Components.Feedback.showInfo('por favor espere..');
+                                                window.App.Components.ShortenUrl.Components.Feedback.showInfo('por favor espere..');
                                                 xhr.send();
                                             });
                                         });
                                     };
                                     this.hasInitialized = true;
-                                }
-                            },
-                            MyAccountLink: {
-                                hasInitialized: false,
-                                el: function () {
-                                    return document.getElementById("my-account-link");
-                                },
-                                show: function () {
-                                    this.el().style.display = 'block';
-                                },
-                                initialize: function () {
-                                    if (this.hasInitialized === false) {
-                                        this.el().onclick = function (e) {
-                                            window.App.Views.ShortenUrl.hide();
-                                            window.App.Views.MyAccount.show();
-                                        };
-
-                                        this.hasInitialized = true;
-                                    }
                                 }
                             }
                         },
@@ -835,7 +1239,6 @@
                             this.Components.LongUrl.initialize();
                             this.Components.DestinationEmail.initialize();
                             this.Components.GenerateBtn.initialize();
-                            this.Components.MyAccountLink.initialize();
                         }
                     },
                     ShortlinkResult: {
@@ -844,6 +1247,7 @@
                         },
                         show: function () {
                             this.initialize();
+                            window.App.Components.MyLinks.Components.Links.Components.List.fetch();
                             this.el().style.display = "block";
 
                             if (window._authManager.isLoggedIn) {
@@ -890,9 +1294,9 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.Views.ShortlinkResult.hide();
-                                            window.App.Views.Login.show();
-                                            window.App.previousView = window.App.Views.ShortlinkResult.el().id;
+                                            window.App.hideNonStickyComponents();
+                                            window.App.Components.Login.show();
+                                            window.App.previousView = window.App.Components.ShortlinkResult.el().id;
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -913,8 +1317,10 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function () {
-                                            window.App.Views.ShortlinkResult.hide();
-                                            window.App.Views.MyAccount.show();
+                                            window.App.hideNonStickyComponents();
+                                            window.App.Components.ShortlinkResult.hide();
+                                            window.App.Components.ShortenUrl.show();
+                                            window.App.Components.MyLinks.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -928,8 +1334,8 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function () {
-                                            window.App.Views.ShortenUrl.show();
-                                            window.App.Views.ShortlinkResult.hide();
+                                            window.App.Components.ShortenUrl.show();
+                                            window.App.Components.ShortlinkResult.hide();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -1015,8 +1421,8 @@
                                                 return false;
                                             }
 
-                                            const shortStr = window.App.Views.RegisterAvailableShortlink.Components.RequestedShortlink.getShortstring();
-                                            const longUrlField = window.App.Views.RegisterAvailableShortlink.Components.RequestedShortlinkLongUrl.el();
+                                            const shortStr = window.App.Components.RegisterAvailableShortlink.Components.RequestedShortlink.getShortstring();
+                                            const longUrlField = window.App.Components.RegisterAvailableShortlink.Components.RequestedShortlinkLongUrl.el();
 
                                             if (longUrlField.value.length == 0) {
                                                 longUrlField.classList.add('has-error');
@@ -1028,7 +1434,7 @@
                                             // disable generate button to prevent double requests
                                             e.target.classList.add('disabled');
 
-                                            window.App.Views.RegisterAvailableShortlink.Components.Feedback.showInfo('por favor espere..');
+                                            window.App.Components.RegisterAvailableShortlink.Components.Feedback.showInfo('por favor espere..');
 
                                             grecaptcha.ready(function() {
                                                 grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
@@ -1042,24 +1448,24 @@
                                                                     const jsonResObj = JSON.parse(this.responseText);
 
                                                                     if (this.status === 201) {
-                                                                        window.App.Views.RegisterAvailableShortlink.hide();
-                                                                        window.App.Views.ShortlinkResult.Components.Shortlink.set(
+                                                                        window.App.Components.RegisterAvailableShortlink.hide();
+                                                                        window.App.Components.ShortlinkResult.Components.Shortlink.set(
                                                                             jsonResObj.shortlink
                                                                         );
-                                                                        window.App.Views.ShortlinkResult.show();
+                                                                        window.App.Components.ShortlinkResult.show();
                                                                         return;
                                                                     }
 
                                                                     if(typeof jsonResObj.message !== 'undefined') {
-                                                                        window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError(jsonResObj.message);
+                                                                        window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError(jsonResObj.message);
                                                                     } else {
-                                                                        window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                                        window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                                     }
 
                                                                     e.target.classList.remove('disabled');
                                                                 } catch (e) {
                                                                     // invalid json something went wrong
-                                                                    window.App.Views.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                                    window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                                 }
                                                             }
                                                         });
@@ -1195,8 +1601,8 @@
                                                 return false;
                                             }
 
-                                            const loginEmailInput = window.App.Views.Login.Components.Email.el();
-                                            const loginPasswordInput = window.App.Views.Login.Components.Password.el();
+                                            const loginEmailInput = window.App.Components.Login.Components.Email.el();
+                                            const loginPasswordInput = window.App.Components.Login.Components.Password.el();
 
                                             if (loginEmailInput.value.length == 0) {
                                                 loginEmailInput.classList.add('has-error');
@@ -1213,7 +1619,7 @@
                                             }
 
                                             $this.disable();
-                                            window.App.Views.Login.Components.Feedback.showInfo('por favor espere..');
+                                            window.App.Components.Login.Components.Feedback.showInfo('por favor espere..');
                                             grecaptcha.ready(function() {
                                                 grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
                                                     function(token) {
@@ -1235,14 +1641,15 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.Views.Login.hide();
+                                            window.App.Components.Login.hide();
 
-                                            if (window.App.previousView == window.App.Views.ShortlinkResult.el().id) {
-                                                window.App.Views.ShortlinkResult.show();
+                                            if (window.App.previousView == window.App.Components.ShortlinkResult.el().id) {
+                                                window.App.Components.ShortenUrl.hide();
+                                                window.App.Components.ShortlinkResult.show();
                                                 return;
                                             }
 
-                                            window.App.Views.ShortenUrl.show();
+                                            window.App.Components.ShortenUrl.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -1257,8 +1664,8 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.Views.Login.hide();
-                                            window.App.Views.Register.show();
+                                            window.App.Components.Login.hide();
+                                            window.App.Components.Register.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -1305,7 +1712,7 @@
                                     if (this.hasInitialized === false) {
 
                                         this.el().onclick = function (e) {
-                                            const loginEmailInput = window.App.Views.Login.Components.Email.el();
+                                            const loginEmailInput = window.App.Components.Login.Components.Email.el();
 
                                             if (loginEmailInput.value.length == 0) {
                                                 loginEmailInput.classList.add('has-error');
@@ -1325,7 +1732,7 @@
                                                 );
                                             });
 
-                                            window.App.Views.Login.Components.ResendVerificationEmail.hide();
+                                            window.App.Components.Login.Components.ResendVerificationEmail.hide();
 
                                         };
 
@@ -1342,8 +1749,8 @@
                                     if (this.hasInitialized == false) {
 
                                         this.el().onclick = function (e) {
-                                            window.App.Views.Login.hide();
-                                            window.App.Views.PasswordRecovery.show();
+                                            window.App.Components.Login.hide();
+                                            window.App.Components.PasswordRecovery.show();
                                         };
 
                                         this.hasInitialized = true;
@@ -1576,11 +1983,11 @@
                                             ) {
                                                 return false;
                                             }
-                                            const registerNameInput = window.App.Views.Register.Components.Name.el();
-                                            const registerEmailInput = window.App.Views.Register.Components.Email.el();
-                                            const registerEmailConfInput = window.App.Views.Register.Components.EmailConfirmation.el();
-                                            const registerPasswordInput = window.App.Views.Register.Components.Password.el();
-                                            const registerPasswordConfInput = window.App.Views.Register.Components.PasswordConfirmation.el();
+                                            const registerNameInput = window.App.Components.Register.Components.Name.el();
+                                            const registerEmailInput = window.App.Components.Register.Components.Email.el();
+                                            const registerEmailConfInput = window.App.Components.Register.Components.EmailConfirmation.el();
+                                            const registerPasswordInput = window.App.Components.Register.Components.Password.el();
+                                            const registerPasswordConfInput = window.App.Components.Register.Components.PasswordConfirmation.el();
 
                                             if (registerNameInput.value.length == 0) {
                                                 registerNameInput.classList.add('has-error');
@@ -1618,7 +2025,7 @@
                                             }
 
                                             $this.disable();
-                                            window.App.Views.Register.Components.Feedback.showInfo('por favor espere..');
+                                            window.App.Components.Register.Components.Feedback.showInfo('por favor espere..');
                                             grecaptcha.ready(function() {
                                                 grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
                                                     function(token) {
@@ -1647,8 +2054,8 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.Views.Register.hide();
-                                            window.App.Views.Login.show();
+                                            window.App.Components.Register.hide();
+                                            window.App.Components.Login.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -1662,14 +2069,14 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.Views.Register.hide();
+                                            window.App.Components.Register.hide();
 
-                                            if (window.App.previousView == window.App.Views.ShortlinkResult.el().id) {
-                                                window.App.Views.ShortlinkResult.show();
+                                            if (window.App.previousView == window.App.Components.ShortlinkResult.el().id) {
+                                                window.App.Components.ShortlinkResult.show();
                                                 return;
                                             }
 
-                                            window.App.Views.ShortenUrl.show();
+                                            window.App.Components.ShortenUrl.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -1745,8 +2152,8 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.Views.PasswordRecovery.hide();
-                                            window.App.Views.Login.show();
+                                            window.App.Components.PasswordRecovery.hide();
+                                            window.App.Components.Login.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -1835,7 +2242,7 @@
                                                 return false;
                                             }
 
-                                            const emailInput = window.App.Views.PasswordRecovery.Components.Email.el();
+                                            const emailInput = window.App.Components.PasswordRecovery.Components.Email.el();
 
                                             if (emailInput.value.length == 0) {
                                                 emailInput.classList.add('has-error');
@@ -1852,10 +2259,10 @@
                                                             token
                                                         );
 
-                                                        window.App.Views.PasswordRecovery.Components.Feedback.showInfo(
+                                                        window.App.Components.PasswordRecovery.Components.Feedback.showInfo(
                                                             'Acabamos de lhe enviar um email para que possa criar uma nova palavra-passe.'
                                                         );
-                                                        window.App.Views.PasswordRecovery.Components.SendPwdRecoveryBtn.disable();
+                                                        window.App.Components.PasswordRecovery.Components.SendPwdRecoveryBtn.disable();
                                                     }
                                                 );
                                             });
@@ -2007,8 +2414,8 @@
                                                 return false;
                                             }
 
-                                            const newPassword = window.App.Views.ChangePassword.Components.NewPassword.el();
-                                            const newPasswordConfirmation = window.App.Views.ChangePassword.Components.NewPasswordConfirmation.el();
+                                            const newPassword = window.App.Components.ChangePassword.Components.NewPassword.el();
+                                            const newPasswordConfirmation = window.App.Components.ChangePassword.Components.NewPasswordConfirmation.el();
 
                                             if (newPassword.value.length == 0) {
                                                 newPassword.classList.add('has-error');
@@ -2025,7 +2432,7 @@
                                             }
 
                                             $this.disable();
-                                            window.App.Views.ChangePassword.Components.Feedback.showInfo('por favor espere..');
+                                            window.App.Components.ChangePassword.Components.Feedback.showInfo('por favor espere..');
                                             grecaptcha.ready(function() {
                                                 grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
                                                     function(token) {
@@ -2071,8 +2478,8 @@
                                     if (this.hasInitialized == false) {
 
                                         this.el().onclick = function(e) {
-                                            window.App.Views.PasswordHasChanged.hide();
-                                            window.App.Views.Login.show();
+                                            window.App.Components.PasswordHasChanged.hide();
+                                            window.App.Components.Login.show();
                                         };
 
                                         this.hasInitialized = true;
@@ -2086,57 +2493,39 @@
                         }
 
                     },
-                    MyAccount: {
+                    MyLinks: {
                         hasInitialized: false,
                         el: function () {
-                            return document.getElementById('form-box-account');
+                            return document.getElementById('my-links-view');
                         },
                         hide: function () {
                             this.el().style.display = 'none';
                         },
                         show: function () {
-                            if (!window._authManager.isLoggedIn) {
-                                window.App.Views.Login.show();
-                                return;
-                            }
-
                             this.initialize();
                             this.el().style.display = 'block';
                         },
                         Components: {
-                            ShortenNewBtn: {
+                            CloseBtn: {
                                 hasInitialized: false,
                                 el: function () {
-                                    return document.getElementById('account-shorten-new');
+                                    return document.getElementById('my-links-view-close-btn');
                                 },
                                 initialize: function () {
-                                    if (this.hasInitialized === false) {
+                                    if ( this.hasInitialized == false ) {
+
                                         this.el().onclick = function (e) {
-                                            window.App.Views.MyAccount.hide();
-                                            window.App.Views.ShortenUrl.show();
+                                            window.App.Components.MyLinks.hide();
                                         };
+
                                         this.hasInitialized = true;
                                     }
                                 }
                             },
-                            LogoutBtn: {
-                                hasInitialized: false,
-                                el: function () {
-                                    return document.getElementById('account-logout');
-                                },
-                                initialize: function () {
-                                    if (this.hasInitialized === false) {
-                                        this.el().onclick = function (e) {
-                                            window._authManager.logout();
-                                        };
-                                        this.hasInitialized = true;
-                                    }
-                                }
-                            },
-                            MyLinks: {
+                            Links: {
                                 initialize: function () {
                                     this.Components.Loading.show();
-                                    this.Components.Links.show();
+                                    this.Components.List.show();
                                 },
                                 Components: {
                                     Loading: {
@@ -2150,7 +2539,7 @@
                                             this.el().style.display = 'none';
                                         },
                                     },
-                                    Links: {
+                                    List: {
                                         api: "{{ url('/api/links') }}",
                                         el: function () {
                                             return document.getElementById('form-box-acc-links');
@@ -2186,7 +2575,7 @@
                                                 return;
                                             }
                                             this.clear();
-                                            window.App.Views.MyAccount.Components.MyLinks.Components.Loading.show();
+                                            window.App.Components.MyLinks.Components.Links.Components.Loading.show();
 
                                             var $this = this;
 
@@ -2198,7 +2587,7 @@
                                                     const resObj = JSON.parse(this.response); //TODO: Catch exception
 
                                                     if (this.status === 200) {
-                                                        window.App.Views.MyAccount.Components.MyLinks.Components.Loading.hide();
+                                                        window.App.Components.MyLinks.Components.Links.Components.Loading.hide();
                                                         for (var i = 0; i < resObj.length; i++) {
                                                             $this.addLink(
                                                                 resObj[i].id,
@@ -2220,9 +2609,8 @@
                             }
                         },
                         initialize: function () {
-                            this.Components.ShortenNewBtn.initialize();
-                            this.Components.LogoutBtn.initialize();
-                            this.Components.MyLinks.initialize();
+                            this.Components.Links.initialize();
+                            this.Components.CloseBtn.initialize();
                         }
 
                     },
@@ -2238,26 +2626,148 @@
                             this.el().style.display = 'none';
                         },
                         Components: {
-                            MyAccountBtn: {
+                            CloseBtn: {
                                 hasInitialized: false,
                                 el: function () {
-                                    return document.getElementById('email-confirmed-login-btn');
+                                    return document.getElementById('email-confirmed-close-btn');
                                 },
                                 initialize: function () {
-                                    if ( this.hasInitialized === false ) {
+                                    if ( this.hasInitialized == false ) {
 
                                         this.el().onclick = function (e) {
-                                            window.App.Views.EmailConfirmed.hide();
-                                            window.App.Views.Login.show();
+                                            window.App.Components.EmailConfirmed.hide();
                                         };
 
                                         this.hasInitialized = true;
                                     }
                                 }
-                            }
+                            },
+                            LoginBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('email-confirmed-login');
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Components.EmailConfirmed.hide();
+                                            window.App.Components.Login.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                         },
                         initialize: function () {
-                            this.Components.MyAccountBtn.initialize();
+                            this.Components.CloseBtn.initialize();
+                            this.Components.LoginBtn.initialize();
+                        }
+                    }
+                },
+                Views: {
+                    HomePage: {
+                        components: {
+                            initiallyVisible:  ['MenuTop', 'MenuAccTop', 'ShortenUrl'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
+                        }
+                    },
+                    MyLinks: {
+                        hasInitialized: false,
+                        components: {
+                            initiallyVisible:  ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'MyLinks'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
+                        },
+                        initialize: function () {
+                            if (this.hasInitialized == false) {
+
+                                document.addEventListener('userAuthenticated', (e) => {
+                                    if (window.App.currentView == 'MyLinks') {
+                                        window.App.Components.MyLinks.Components.Links.Components.List.fetch();
+                                    }
+                                }, false);
+
+                                this.hasInitialized = true;
+                            }
+                        }
+                    },
+                    Login: {
+                        components: {
+                            initiallyVisible:  ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'Login'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
+                        }
+                    },
+                    Register: {
+                        components: {
+                            initiallyVisible:  ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'Register'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
+                        }
+                    },
+                    EmailConfirmed: {
+                        components: {
+                            initiallyVisible: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'EmailConfirmed'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
+                        }
+                    },
+                    ChangePassword: {
+                        components: {
+                            initiallyVisible: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ChangePassword'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
                         }
                     }
                 }
@@ -2282,15 +2792,46 @@
             background-repeat: no-repeat;
         "
     >
-        <div style="text-align: center; margin-top: 10px">
+        <div id="logo-top-container">
             <img
-                src="https://www.inideia.com/wp-content/uploads/2019/01/logo_white.png"
-                style="max-width: 300px"
+                id="logo-top"
+                src="{{ $logoTop }}"
             />
         </div>
 
-        <div class="form-box" id="form-box" style="display: none">
-            <h1>Encurtador de URLs</h1>
+        <div id="menu-top" style="display: none">
+            <div class="menu-item" id="menu-item-my-links" style="display: none">Os meus links</div>
+            <div class="menu-item">Publicidade</div>
+            <div class="menu-item">Conheça</div>
+            <div class="menu-item">Contacte</div>
+        </div>
+
+        <div id="menu-top-acc" style="display: none">
+            <div class="settings-icon">
+                <img src="{{ asset('/img/acc-settings.png') }}" />
+            </div>
+            <div class="profile-pic">?</div>
+            <div id="menu-acc-items" style="display: none">
+                <div id="menu-acc-items-guest" style="display: none">
+                    <div class="menu-item" id="menu-top-acc-login">Entrar</div>
+                    <div class="menu-item" id="menu-top-acc-register">Criar conta</div>
+                </div>
+                <div id="menu-acc-items-user" style="display: none">
+                    <div class="menu-item" id="menu-top-acc-logout">Sair</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="current-presentation">
+            <div id="cp-title">
+                web<br/>into<br/>link
+            </div>
+            <div id="cp-desc">
+                url shortner<br/>em português
+            </div>
+        </div>
+
+        <div class="form-box" id="shorten-urls" style="display: none">
             <div class="input-container">
                 <div class="input-label" id="long-url-label">
                     Cole aqui o seu URL loongo..
@@ -2298,7 +2839,7 @@
                 <input type="text" id="long-url" />
             </div>
 
-            <div class="input-container">
+            <div class="input-container" style="display: none" id="destination-email-container">
                 <div class="input-label" id="destination-email-label">
                     Email destino
                 </div>
@@ -2306,7 +2847,6 @@
             </div>
 
             <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
-            <a href="javascript:void(0);" id="my-account-link" class="form-link" style="display: none">Minha conta</a>
 
             <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
         </div>
@@ -2332,7 +2872,7 @@
             style="display: none"
         >
             <div class="form-box-title">
-                Este link curto está disponível!
+                Link disponível!
             </div>
             @if(isset($shortlink) && isset($shortlink_shortstring))
                 <div class="input-container">
@@ -2350,7 +2890,7 @@
         </div>
 
         <div
-            class="form-box"
+            class="form-box overlay"
             id="form-box-login" style="display: none"
         >
             <div class="form-box-title">Minha conta</div>
@@ -2385,7 +2925,7 @@
 
 
         <div
-            class="form-box"
+            class="form-box overlay"
             id="password-recovery" style="display: none"
         >
             <div class="form-box-title">Recuperar conta</div>
@@ -2404,7 +2944,7 @@
 
 
         <div
-            class="form-box"
+            class="form-box overlay"
             id="change-password" style="display: none"
         >
             <div class="form-box-title">Alterar palavra-passe</div>
@@ -2428,16 +2968,16 @@
             <div class="button disabled" id="change-password-button">Continuar</div>
         </div>
 
-        <div class="form-box" id="password-has-changed-view" style="display: none">
-            <div class="form-box-title">A sua password foi alterada!</div>
+        <div class="form-box overlay" id="password-has-changed-view" style="display: none">
+            <div class="form-box-title">Palavra-passe alterada!</div>
             <p>
-                Agora já pode entrar na sua conta com a sua nova password!
+                Agora já pode entrar na sua conta com a sua nova palavra-passe!
             </p>
             <div class="button" id="changed-password-login">Entrar</div>
         </div>
 
         <div
-            class="form-box"
+            class="form-box overlay"
             id="form-box-register" style="display: none"
         >
             <div class="form-box-title">Criar conta</div>
@@ -2484,35 +3024,32 @@
         </div>
 
         <div
-            class="form-box"
+            class="form-box overlay"
             id="form-box-account-registered" style="display: none"
         >
             <div class="form-box-title">Conta criada com successo!</div>
-            <p>Verifique o seu email pois acabamos de lhe enviar um email para que possa confirmar que o email fornecido lhe pertence.<br/><br/>Muito obrigado.</p>
+            <p>Verifique a sua caixa de correio pois acabamos de lhe enviar um email para que possa ativar a sua conta.<br/><br/>Muito obrigado.</p>
         </div>
 
 
         <div
-            class="form-box"
-            id="form-box-account" style="display: none"
+            class="form-box overlay"
+            id="my-links-view" style="display: none"
         >
-            <div class="form-box-title">Minha conta</div>
-            <div class="button" id="account-shorten-new">Criar novo link curto</div>
-            <div class="button red" id="account-logout" style="margin-top: 10px">Sair</div>
-            <hr/>
-            <div id="form-box-account-my-links">
-                <div class="form-box-title" style="margin-top: 12px">Os meus links curtos:</div>
-                <div id="form-box-acc-links-loading">A carregar links..</div>
-                <div id="form-box-acc-links" class="list-container" style="display: none"></div>
-            </div>
+            <div class="form-box-title">Os meus links</div>
+            <div class="close-form-box" id="my-links-view-close-btn">X</div>
+            <div id="form-box-acc-links-loading">A carregar links..</div>
+            <div id="form-box-acc-links" class="list-container" style="display: none"></div>
         </div>
 
         <div
-            class="form-box"
+            class="form-box overlay"
             id="email-confirmed" style="display: none"
         >
             <div class="form-box-title">Email confirmado!</div>
-            <div class="button" id="email-confirmed-login-btn">Minha conta</div>
+            <p>A sua conta agora está activa.</p>
+            <div class="close-form-box" id="email-confirmed-close-btn">X</div>
+            <div class="button" id="email-confirmed-login">Entrar na minha conta</div>
         </div>
 
         @if(isset($shortlink) && (isset($shortlink_available) && $shortlink_available === true))
@@ -2525,88 +3062,112 @@
             </script>
         @endif
 
-        @if(isset($page))
+        @if(isset($view))
             <script>
-                window.App.currentPage = '{{ $page }}';
+                window.App.currentView = '{{ $view }}';
             </script>
         @endif
 
         <script>
 
-
-
             function enableAuthenticationDependentButtons() {
-                window.App.Views.ShortenUrl.Components.GenerateBtn.enable();
-                window.App.Views.ShortenUrl.Components.MyAccountLink.show();
-                window.App.Views.Login.Components.LoginBtn.enable();
-                window.App.Views.Register.Components.RegisterBtn.enable();
-                window.App.Views.RegisterAvailableShortlink.Components.ContinueBtn.enable();
-                window.App.Views.PasswordRecovery.Components.SendPwdRecoveryBtn.enable();
-                window.App.Views.ChangePassword.Components.ChangePasswordBtn.enable();
+                window.App.Components.ShortenUrl.Components.GenerateBtn.enable();
+                // DestinationEmail will only show if logged in:
+                window.App.Components.ShortenUrl.Components.DestinationEmail.show();
+
+                window.App.Components.MenuTop.Items.MyLinks.show();
+                window.App.Components.Login.Components.LoginBtn.enable();
+
+                if (window._authManager.isLoggedIn) {
+                    window.App.Components.Login.hide();
+                    window.App.Components.Register.hide();
+                }
+
+                window.App.Components.Register.Components.RegisterBtn.enable();
+                window.App.Components.RegisterAvailableShortlink.Components.ContinueBtn.enable();
+                window.App.Components.PasswordRecovery.Components.SendPwdRecoveryBtn.enable();
+                window.App.Components.ChangePassword.Components.ChangePasswordBtn.enable();
             }
 
             if (window.App.isUserRequestingAvailableShortstring) {
-                window.App.Views.ShortenUrl.hide();
-                window.App.Views.RegisterAvailableShortlink.show();
+                window.App.Components.ShortenUrl.hide();
+                window.App.Components.RegisterAvailableShortlink.show();
             } else {
                 if (
-                    typeof window.App.currentPage !== 'undefined'
+                    typeof window.App.currentView !== 'undefined'
                     &&
-                    typeof window.App.Views[window.App.currentPage] !== 'undefined'
+                    typeof window.App.Views[window.App.currentView] !== 'undefined'
                     &&
-                    typeof window.App.Views[window.App.currentPage].show === 'function'
+                    typeof window.App.Views[window.App.currentView].show === 'function'
                 ) {
-                    window.App.Views[window.App.currentPage].show();
+                    window.App.Views[window.App.currentView].show();
                 } else {
-                    window.App.Views.ShortenUrl.show();
+                    alert('view not found');
                 }
+
             }
+
+
 
             document.addEventListener('userAuthenticated', (e) => {
                 enableAuthenticationDependentButtons();
             }, false);
 
             document.addEventListener('userLoggedIn', (e) => {
-                window.App.Views.Login.hide();
-                window.App.Views.Register.hide();
-                window.App.Views.MyAccount.show();
+                window.App.Components.Login.hide();
+                window.App.Components.ShortenUrl.Components.DestinationEmail.show();
+                if (
+                    typeof window.App.viewToShowAfterLogin !== 'undefined'
+                    &&
+                    typeof window.App.Views[
+                        window.App.viewToShowAfterLogin
+                    ] !== 'undefined'
+                    &&
+                    typeof window.App.Views[
+                        window.App.viewToShowAfterLogin
+                    ].show === 'function'
+                ) {
+                    window.App.Views[
+                        window.App.viewToShowAfterLogin
+                    ].show();
+                }
             }, false);
 
             document.addEventListener('userLoginFailed', (e) => {
 
                 if (e.isError) {
-                    window.App.Views.Login.Components.Feedback.showError(e.reason);
+                    window.App.Components.Login.Components.Feedback.showError(e.reason);
 
                     if(e.error_id === 'unverified_account') {
-                        window.App.Views.Login.Components.ResendVerificationEmail.show();
+                        window.App.Components.Login.Components.ResendVerificationEmail.show();
                     }
                 } else {
-                    window.App.Views.Login.Components.Feedback.showInfo(e.reason);
+                    window.App.Components.Login.Components.Feedback.showInfo(e.reason);
                 }
 
-                window.App.Views.Login.Components.LoginBtn.enable();
+                window.App.Components.Login.Components.LoginBtn.enable();
             }, false);
 
 
             document.addEventListener('userRegisterFailed', (e) => {
 
                 if (e.isError) {
-                    window.App.Views.Register.Components.Feedback.showError(e.reason);
+                    window.App.Components.Register.Components.Feedback.showError(e.reason);
                 } else {
-                    window.App.Views.Register.Components.Feedback.showInfo(e.reason);
+                    window.App.Components.Register.Components.Feedback.showInfo(e.reason);
                 }
 
-                window.App.Views.Register.Components.RegisterBtn.enable();
+                window.App.Components.Register.Components.RegisterBtn.enable();
             }, false);
 
             document.addEventListener('userRegisterSuccess', (e) => {
-                window.App.Views.Register.hide();
-                window.App.Views.RegisterSuccess.show();
+                window.App.Components.Register.hide();
+                window.App.Components.RegisterSuccess.show();
             }, false);
 
             document.addEventListener('userPasswordChanged', (e) => {
-                window.App.Views.ChangePassword.hide();
-                window.App.Views.PasswordHasChanged.show();
+                window.App.Components.ChangePassword.hide();
+                window.App.Components.PasswordHasChanged.show();
             }, false);
 
 

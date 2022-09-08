@@ -13,7 +13,7 @@ class HomeController extends Controller
      */
     public function index() {
         return view('home', [
-            'page' => 'ShortenUrl'
+            'view' => 'HomePage'
         ]);
     }
 
@@ -22,7 +22,25 @@ class HomeController extends Controller
      */
     public function login() {
         return view('home', [
-            'page' => 'Login'
+            'view' => 'Login'
+        ]);
+    }
+
+    /**
+     * Display register page
+     */
+    public function register() {
+        return view('home', [
+            'view' => 'Register'
+        ]);
+    }
+
+    /**
+     * Display home page with my links open
+     */
+    public function myLinks() {
+        return view('home', [
+            'view' => 'MyLinks'
         ]);
     }
 
@@ -46,7 +64,7 @@ class HomeController extends Controller
 
         // TODO: Send welcome email?
         return view('home', [
-            'page' => 'EmailConfirmed'
+            'view' => 'EmailConfirmed'
         ]);
     }
 
@@ -79,7 +97,7 @@ class HomeController extends Controller
         }
 
         return view('home', [
-            'page' => 'ChangePassword',
+            'view' => 'ChangePassword',
             'passwordRecoveryToken' => $request->bearerToken()
         ]);
     }

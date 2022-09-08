@@ -41,9 +41,9 @@ Route::post('/change-password', [AuthenticationController::class, 'changePasswor
         ->middleware(['auth:sanctum', 'abilities:change_password'])
         ->name('recover-password');
 
-Route::post('/links', [ShortlinkController::class, 'index'])
-        ->middleware(['auth:sanctum', 'abilities:logged_in'])
-        ->name('my-link');
+Route::post('/links', [ShortlinkController::class, 'myLinks'])
+        ->middleware(['auth:sanctum'])
+        ->name('get-my-links');
 
 Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkController::class, 'shorten']);
 Route::middleware('auth:sanctum')->post('/register-available', [ShortlinkController::class, 'registerAvailable']);

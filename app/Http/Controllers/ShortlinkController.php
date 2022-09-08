@@ -50,12 +50,12 @@ class ShortlinkController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Returns the users links ( be him a guest or not )
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function myLinks(Request $request)
     {
         //TODO: pagination
         $userShortlinks = $request->user()->shortlinks()
