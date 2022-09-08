@@ -12,9 +12,7 @@ class HomeController extends Controller
      * Display homepage
      */
     public function index() {
-        $captchaSitekey = config('captcha.sitekey');
         return view('home', [
-            'captchaSitekey' => $captchaSitekey,
             'page' => 'ShortenUrl'
         ]);
     }
@@ -23,9 +21,7 @@ class HomeController extends Controller
      * Display login page
      */
     public function login() {
-        $captchaSitekey = config('captcha.sitekey');
         return view('home', [
-            'captchaSitekey' => $captchaSitekey,
             'page' => 'Login'
         ]);
     }
@@ -49,11 +45,42 @@ class HomeController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         // TODO: Send welcome email?
-
-        $captchaSitekey = config('captcha.sitekey');
         return view('home', [
-            'captchaSitekey' => $captchaSitekey,
             'page' => 'EmailConfirmed'
+        ]);
+    }
+
+    /**
+     * Route to change password
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function changePassword(Request $request) {
+        // if the user got here..
+        // then his token was already checked by sanctum
+
+        // if the user got here
+        // it is because he clicked in a link in his email
+        // meaning, we can set his email_verified_at
+        // in case the account is not yet verified
+
+        // this is a cool feature I thought would be nice to have :D
+        $user = User::findOrFail($request->user()->id);
+
+        if ( !$user->hasVerifiedEmail() ) {
+            try {
+                $user->email_verified_at = Carbon::now();
+                $user->save();
+                // TODO: log this event in the future?
+            } catch (\Throwable $th) {
+                // TODO: log this event in the future?
+            }
+        }
+
+        return view('home', [
+            'page' => 'ChangePassword',
+            'passwordRecoveryToken' => $request->bearerToken()
         ]);
     }
 }

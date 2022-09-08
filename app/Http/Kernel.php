@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\EmailConfirmationToken;
+use App\Http\Middleware\PasswordRecoveryToken;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Routing\Router;
@@ -70,6 +71,7 @@ class Kernel extends HttpKernel
         'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         'email.confirm' => \App\Http\Middleware\EmailConfirmationToken::class,
+        'password.change' => \App\Http\Middleware\PasswordRecoveryToken::class,
     ];
 
     /**
@@ -84,5 +86,6 @@ class Kernel extends HttpKernel
         parent::__construct($app, $router);
 
         $this->prependToMiddlewarePriority(EmailConfirmationToken::class);
+        $this->prependToMiddlewarePriority(PasswordRecoveryToken::class);
     }
 }

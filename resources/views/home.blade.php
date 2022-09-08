@@ -194,6 +194,7 @@
             }
         </style>
 
+
         <script>
             window._authManager = {
                 at: null,
@@ -208,7 +209,9 @@
                         login: "/login",
                         register: "/register",
                         logout: "/logout",
-                        resendVerificationEmail: "/resend-verification-email"
+                        resendVerificationEmail: "/resend-verification-email",
+                        recoverPassword: "/recover-password",
+                        changePassword: "/change-password"
                     },
                 },
 
@@ -217,7 +220,8 @@
                     userLoggedInEvent: null,
                     userLoginFailedEvent: null,
                     userRegisterFailedEvent: null,
-                    userRegisterSuccessEvent: null
+                    userRegisterSuccessEvent: null,
+                    userPasswordChangedEvent: null
                 },
 
                 initialize: function () {
@@ -257,6 +261,14 @@
                         document.createEvent("Event");
                     this.customEvents.userRegisterSuccessEvent.initEvent(
                         "userRegisterSuccess",
+                        true,
+                        true
+                    );
+
+                    this.customEvents.userPasswordChangedEvent =
+                        document.createEvent("Event");
+                    this.customEvents.userPasswordChangedEvent.initEvent(
+                        "userPasswordChanged",
                         true,
                         true
                     );
@@ -499,6 +511,97 @@
                             credentialsQueryStr
                     );
                     xhr.setRequestHeader("Authorization", "Bearer " + this.at);
+                    xhr.send();
+                },
+                sendPasswordRecoveryEmail: function (email, captchaToken) {
+                    if (this.isAuthenticated !== true) {
+                        // must authenticate as guest first
+                        return;
+                    }
+
+                    var xhr = new XMLHttpRequest();
+                    xhr.withCredentials = true;
+                    email = encodeURIComponent(email);
+
+                    const credentialsQueryStr =
+                        "?email=" + email + '&g-recaptcha-response=' + captchaToken;
+
+                    xhr.open(
+                        "POST",
+                        this.api.url +
+                            this.api.endpoints.recoverPassword +
+                            credentialsQueryStr
+                    );
+                    xhr.setRequestHeader("Authorization", "Bearer " + this.at);
+                    xhr.send();
+                },
+                changePassword: function (newPassword, newPasswordConfirmation, captchaToken) {
+                    if (this.isAuthenticated !== true) {
+                        // must authenticate as guest first
+                        return;
+                    }
+
+                    if(typeof this.passwordRecoveryToken === 'undefined') {
+                        // pwd recovery token needed
+                        return;
+                    }
+
+                    var xhr = new XMLHttpRequest();
+                    xhr.withCredentials = true;
+
+                    newPassword = encodeURIComponent(newPassword);
+                    newPasswordConfirmation = encodeURIComponent(newPasswordConfirmation);
+
+                    const credentialsQueryStr =
+                        "?new_password=" + newPassword + '&new_password_confirmation=' + newPasswordConfirmation + '&g-recaptcha-response=' + captchaToken;
+
+
+                    xhr.addEventListener("readystatechange", function () {
+                        if (this.readyState === 4) {
+
+                            if (this.status === 200) {
+
+                                // trigger userLoggedIn event
+                                document.dispatchEvent(
+                                    window._authManager.customEvents
+                                        .userPasswordChangedEvent
+                                );
+                                return;
+                            }
+
+                            const resObj = JSON.parse(this.response); //TODO: Catch exception
+
+                            if (
+                                typeof resObj.message !== 'undefined'
+                                &&
+                                (
+                                    typeof resObj.errors !== 'undefined'
+                                    ||
+                                    typeof resObj.error_id !== 'undefined'
+                                )
+                            ) {
+                                // trigger userLoginFailed event
+                                /*window._authManager.customEvents.userLoginFailedEvent.reason =
+                                    resObj.message;
+                                window._authManager.customEvents.userLoginFailedEvent.isError = true;
+                                window._authManager.customEvents.userLoginFailedEvent.error_id = resObj.error_id;
+
+                                document.dispatchEvent(
+                                    window._authManager.customEvents
+                                        .userLoginFailedEvent
+                                );*/
+
+                            }
+                        }
+                    });
+
+                    xhr.open(
+                        "POST",
+                        this.api.url +
+                            this.api.endpoints.changePassword +
+                            credentialsQueryStr
+                    );
+                    xhr.setRequestHeader("Authorization", "Bearer " + this.passwordRecoveryToken);
                     xhr.send();
                 }
             };
@@ -1229,6 +1332,23 @@
                                         this.hasInitialized = true;
                                     }
                                 }
+                            },
+                            ForgotPasswordLink: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('forgot-pwd-link');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized == false) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.Login.hide();
+                                            window.App.Views.PasswordRecovery.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
                             }
                         },
                         initialize: function () {
@@ -1237,6 +1357,7 @@
                             this.Components.LoginBtn.initialize();
                             this.Components.CloseBtn.initialize();
                             this.Components.CreateAccLink.initialize();
+                            this.Components.ForgotPasswordLink.initialize();
                         }
 
                     },
@@ -1603,6 +1724,368 @@
                             this.el().style.display = 'none';
                         }
                     },
+                    PasswordRecovery: {
+                        el: function () {
+                            return document.getElementById('password-recovery');
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                            this.Components.Email.el().focus();
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        Components: {
+                            CloseBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('pwd-recovery-close-btn');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.PasswordRecovery.hide();
+                                            window.App.Views.Login.show();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Email: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("pwd-recovery-email");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("pwd-recovery-email-label");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Feedback: {
+                                el: function () {
+                                    return document.getElementById('pwd-recovery-feedback');
+                                },
+                                hide: function () {
+                                    const el = this.el();
+                                    el.style.display = 'none';
+                                    el.innerText = '';
+                                },
+                                showInfo: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('error');
+                                    el.classList.add('info');
+                                    el.style.display = 'block';
+                                },
+                                showError: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('info');
+                                    el.classList.add('error');
+                                    el.style.display = 'block';
+                                },
+
+                            },
+                            SendPwdRecoveryBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('pwd-recovery-button');
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            const emailInput = window.App.Views.PasswordRecovery.Components.Email.el();
+
+                                            if (emailInput.value.length == 0) {
+                                                emailInput.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                emailInput.classList.remove('has-error');
+                                            }
+
+                                            grecaptcha.ready(function() {
+                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                    function(token) {
+                                                        window._authManager.sendPasswordRecoveryEmail(
+                                                            emailInput.value,
+                                                            token
+                                                        );
+
+                                                        window.App.Views.PasswordRecovery.Components.Feedback.showInfo(
+                                                            'Acabamos de lhe enviar um email para que possa criar uma nova palavra-passe.'
+                                                        );
+                                                        window.App.Views.PasswordRecovery.Components.SendPwdRecoveryBtn.disable();
+                                                    }
+                                                );
+                                            });
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+
+                            }
+                        },
+                        initialize: function () {
+                            this.Components.CloseBtn.initialize();
+                            this.Components.Email.initialize();
+                            this.Components.SendPwdRecoveryBtn.initialize();
+                        }
+                    },
+                    ChangePassword: {
+                        el: function () {
+                            return document.getElementById('change-password');
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        Components: {
+                            NewPassword: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("new-password");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("new-password-label");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+
+                                        this.hasInitialized = true;
+                                    }
+
+                                }
+                            },
+                            NewPasswordConfirmation: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("new-password-confirmation");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("new-password-confirmation-label");
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+
+                                        this.hasInitialized = true;
+                                    }
+
+                                }
+                            },
+                            Feedback: {
+                                el: function () {
+                                    return document.getElementById('change-password-feedback');
+                                },
+                                hide: function () {
+                                    const el = this.el();
+                                    el.style.display = 'none';
+                                    el.innerText = '';
+                                },
+                                showInfo: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('error');
+                                    el.classList.add('info');
+                                    el.style.display = 'block';
+                                },
+                                showError: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('info');
+                                    el.classList.add('error');
+                                    el.style.display = 'block';
+                                },
+
+                            },
+                            ChangePasswordBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("change-password-button");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            const newPassword = window.App.Views.ChangePassword.Components.NewPassword.el();
+                                            const newPasswordConfirmation = window.App.Views.ChangePassword.Components.NewPasswordConfirmation.el();
+
+                                            if (newPassword.value.length == 0) {
+                                                newPassword.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                newPassword.classList.remove('has-error');
+                                            }
+
+                                            if (newPasswordConfirmation.value.length == 0) {
+                                                newPasswordConfirmation.classList.add('has-error');
+                                                return false;
+                                            } else {
+                                                newPasswordConfirmation.classList.remove('has-error');
+                                            }
+
+                                            $this.disable();
+                                            window.App.Views.ChangePassword.Components.Feedback.showInfo('por favor espere..');
+                                            grecaptcha.ready(function() {
+                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                    function(token) {
+                                                        window._authManager.changePassword(
+                                                            newPassword.value,
+                                                            newPasswordConfirmation.value,
+                                                            token
+                                                        );
+                                                    }
+                                                );
+                                            });
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                        },
+                        initialize: function () {
+                            this.Components.NewPassword.initialize();
+                            this.Components.NewPasswordConfirmation.initialize();
+                            this.Components.ChangePasswordBtn.initialize();
+                        }
+                    },
+                    PasswordHasChanged: {
+                        el: function () {
+                            return document.getElementById('password-has-changed-view');
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        Components: {
+                            LoginBtn: {
+                                hasInitialized: false,
+                                el: function() {
+                                    return document.getElementById('changed-password-login');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized == false) {
+
+                                        this.el().onclick = function(e) {
+                                            window.App.Views.PasswordHasChanged.hide();
+                                            window.App.Views.Login.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+
+                            }
+                        },
+                        initialize: function () {
+                            this.Components.LoginBtn.initialize();
+                        }
+
+                    },
                     MyAccount: {
                         hasInitialized: false,
                         el: function () {
@@ -1783,12 +2266,18 @@
 
         </script>
 
+        @if (isset($passwordRecoveryToken))
+            <script>
+                window._authManager.passwordRecoveryToken = '{{ $passwordRecoveryToken }}';
+            </script>
+        @endif
+
         <script src="https://www.google.com/recaptcha/api.js?render={{ $captchaSitekey }}"></script>
     </head>
     <body
         class="antialiased"
         style="
-            background: url('https://www.inideia.com/wp-content/uploads/2019/11/fundo_2.jpg');
+            background: url('{{ $currentBackground }}');
             background-size: 100%;
             background-repeat: no-repeat;
         "
@@ -1891,8 +2380,61 @@
 
             <div class="button disabled" id="login-button">Entrar</div>
             <a href="javascript:void(0);" id="create-account-link" class="form-link">Ainda não tenho uma conta</a>
+            <a href="javascript:void(0);" id="forgot-pwd-link" class="form-link">Esqueci-me da palavra-passe</a>
         </div>
 
+
+        <div
+            class="form-box"
+            id="password-recovery" style="display: none"
+        >
+            <div class="form-box-title">Recuperar conta</div>
+            <div class="close-form-box" id="pwd-recovery-close-btn">X</div>
+            <div class="input-container">
+                <div class="input-label" id="pwd-recovery-email-label">
+                    Email
+                </div>
+                <input type="text" id="pwd-recovery-email" />
+            </div>
+
+            <div id="pwd-recovery-feedback" class="form-box-feedback" style="display: none; margin-bottom: 10px;"></div>
+
+            <div class="button disabled" id="pwd-recovery-button">Alterar palavra-passe</div>
+        </div>
+
+
+        <div
+            class="form-box"
+            id="change-password" style="display: none"
+        >
+            <div class="form-box-title">Alterar palavra-passe</div>
+
+            <div class="input-container">
+                <div class="input-label" id="new-password-label">
+                    Digite a sua nova palavra-passe
+                </div>
+                <input type="password" id="new-password" />
+            </div>
+
+            <div class="input-container">
+                <div class="input-label" id="new-password-confirmation-label">
+                    Confirmar palavra-passe
+                </div>
+                <input type="password" id="new-password-confirmation" />
+            </div>
+
+            <div id="change-password-feedback" class="form-box-feedback" style="display: none"></div>
+
+            <div class="button disabled" id="change-password-button">Continuar</div>
+        </div>
+
+        <div class="form-box" id="password-has-changed-view" style="display: none">
+            <div class="form-box-title">A sua password foi alterada!</div>
+            <p>
+                Agora já pode entrar na sua conta com a sua nova password!
+            </p>
+            <div class="button" id="changed-password-login">Entrar</div>
+        </div>
 
         <div
             class="form-box"
@@ -1916,21 +2458,21 @@
 
             <div class="input-container">
                 <div class="input-label" id="register-email-confirmation-label">
-                    Digite novamente o seu email
+                    Confirmar email
                 </div>
                 <input type="text" id="register-email-confirmation" />
             </div>
 
             <div class="input-container">
                 <div class="input-label" id="register-password-label">
-                    Crie uma password
+                    Crie uma palavra-passe
                 </div>
                 <input type="password" id="register-password" />
             </div>
 
             <div class="input-container">
                 <div class="input-label" id="register-password-confirmation-label">
-                    Digite novamente a sua password
+                    Confirmar palavra-passe
                 </div>
                 <input type="password" id="register-password-confirmation" />
             </div>
@@ -1999,6 +2541,8 @@
                 window.App.Views.Login.Components.LoginBtn.enable();
                 window.App.Views.Register.Components.RegisterBtn.enable();
                 window.App.Views.RegisterAvailableShortlink.Components.ContinueBtn.enable();
+                window.App.Views.PasswordRecovery.Components.SendPwdRecoveryBtn.enable();
+                window.App.Views.ChangePassword.Components.ChangePasswordBtn.enable();
             }
 
             if (window.App.isUserRequestingAvailableShortstring) {
@@ -2058,6 +2602,11 @@
             document.addEventListener('userRegisterSuccess', (e) => {
                 window.App.Views.Register.hide();
                 window.App.Views.RegisterSuccess.show();
+            }, false);
+
+            document.addEventListener('userPasswordChanged', (e) => {
+                window.App.Views.ChangePassword.hide();
+                window.App.Views.PasswordHasChanged.show();
             }, false);
 
 

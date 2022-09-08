@@ -33,6 +33,13 @@ Route::post('/resend-verification-email', [AuthenticationController::class, 'res
         ->middleware(['auth:sanctum'])
         ->name('resend-verification-email');
 
+ Route::post('/recover-password', [AuthenticationController::class, 'recoverPassword'])
+        ->middleware(['auth:sanctum'])
+        ->name('recover-password');
+
+Route::post('/change-password', [AuthenticationController::class, 'changePassword'])
+        ->middleware(['auth:sanctum', 'abilities:change_password'])
+        ->name('recover-password');
 
 Route::post('/links', [ShortlinkController::class, 'index'])
         ->middleware(['auth:sanctum', 'abilities:logged_in'])

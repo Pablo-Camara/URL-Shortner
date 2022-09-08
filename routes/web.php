@@ -22,4 +22,8 @@ Route::get('/confirm-email/{token}', [HomeController::class, 'confirmEmail'])
         ->middleware(['email.confirm', 'auth:sanctum', 'abilities:confirm_email'])
         ->name('emailConfirmationLink');
 
+Route::get('/change-password/{token}', [HomeController::class, 'changePassword'])
+        ->middleware(['password.change', 'auth:sanctum', 'abilities:change_password'])
+        ->name('changePasswordLink');
+
 Route::get('/{shortstring}', [ShortlinkController::class, 'visit']);

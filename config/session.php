@@ -80,6 +80,12 @@ return [
      */
     'resent_email_confirmation_token_lifetime' => env('RESENT_EMAIL_CONFIRMATION_TOKEN_LIFETIME', 60),
 
+    /**
+     * life time for the password recovery token
+     */
+    'password_recovery_token_lifetime' => env('PASSWORD_RECOVERY_TOKEN_LIFETIME', 30),
+
+
     /*
     |--------------------------------------------------------------------------
     | Session Encryption

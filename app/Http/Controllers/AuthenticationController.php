@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\InteractsWithTime;
 use App\Helpers\Responses\AuthResponses;
-use App\Mail\EmailConfirmation;
+use App\Mail\Auth\EmailConfirmation;
+use App\Mail\Auth\PasswordRecovery;
 use App\Models\Shortlink;
 use Illuminate\Support\Facades\Mail;
 
@@ -377,7 +378,7 @@ class AuthenticationController extends Controller
             return new Response('', 200);
         }
 
-        return $this->sendVerificationEmail($user, true);
+        $this->sendVerificationEmail($user, true);
 
         return new Response('', 200);
 
@@ -443,5 +444,93 @@ class AuthenticationController extends Controller
             $emailConfirmationToken->save();
         }
 
+    }
+
+    /**
+     * Validates email/captcha and sends password recovery email
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Response  $response
+     * @return \Illuminate\Http\Response
+     */
+    public function recoverPassword(Request $request, Response $response)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'g-recaptcha-response' => 'required|captcha'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            // we will not let people exploit this endpoint
+            // to find out which emails are registered
+            // so we just return 200 and fool the users that are attempting
+            // to spam this endpoint
+            return new Response('', 200);
+        }
+
+        $config = config('session');
+
+        // delete expired pwd token
+        $user->tokens()
+            ->where('abilities', 'like' , '%change_password%')
+            ->where('expires_at', '<=', Carbon::now())
+            ->delete();
+
+        // before counting the user tokens for changing pwd
+        $totalPwdRecoveryTokens = $user->tokens()
+                ->where('abilities', 'like' , '%change_password%')
+                ->orderBy('id', 'ASC') // older tokens first
+                ->count();
+
+        if ( $totalPwdRecoveryTokens > 0 ) {
+            // if the user already has a pwd recovery token
+            // we will not create another nor send another email
+            // these tokens already have an expires_at date/time
+            // and the token is deleted after consumption.
+
+            // avoiding spammers..
+            return new Response('', 200);
+        }
+
+        $pwdRecoveryTokenExpirationDatetime = Carbon::now()->addRealMinutes(
+            $config['password_recovery_token_lifetime']
+        );
+        $pwdRecoveryToken = $user->createToken(
+            'password_recovery_token',
+            ['change_password'],
+            $pwdRecoveryTokenExpirationDatetime
+        );
+
+        Mail::to(
+            $user->email
+        )->queue(new PasswordRecovery($user, $pwdRecoveryToken->plainTextToken));
+
+        return new Response('', 200);
+
+    }
+
+    /**
+     * Validates email/captcha and sends password recovery email
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Response  $response
+     * @return \Illuminate\Http\Response
+     */
+    public function changePassword(Request $request) {
+
+        $request->validate([
+            'new_password' => 'required|confirmed',
+            'g-recaptcha-response' => 'required|captcha'
+        ]);
+
+        $user = $request->user();
+        $user->password = Hash::make($request->input('new_password'));
+        $user->save();
+
+        $user->currentAccessToken()->delete();
+
+        return new Response('', 200);
     }
 }
