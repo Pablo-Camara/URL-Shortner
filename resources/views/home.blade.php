@@ -39,10 +39,7 @@
             }
 
             .form-box.overlay {
-                display: block;
-                position: absolute;
-                top: 34px;
-                right: 2%;
+                /** mobile */
             }
 
             .form-box.overlay .form-box-title {
@@ -172,7 +169,8 @@
             }
 
             #my-links-view {
-                width: 50%;
+                width: 100%;
+                max-width: 260px;
             }
 
             #form-box-login-feedback,
@@ -205,8 +203,12 @@
                 word-break: break-word;
             }
 
+            #logo-top-mobile {
+                max-width: 115px;
+            }
+
             #logo-top {
-                max-width: 60px;
+                display: none;
             }
 
             #logo-top-container {
@@ -222,7 +224,93 @@
                 padding-top: 24px;
             }
 
+            #mobile-menu-toggle {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+            }
+
+            #mobile-menu-toggle .menu-bar {
+                height: 4px;
+                width: 30px;
+                background: #000000;
+                margin-bottom: 4px;
+            }
+
+            #menu-top,
+            #menu-top-acc {
+                display: none;
+            }
+
+            #menu-mobile {
+                position: absolute;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: #ffffff;
+                z-index: 99999;
+                padding-top: 50px;
+                overflow: auto;
+                bottom: 0;
+            }
+
+            #menu-mobile .close-btn {
+                position: absolute;
+                top: 0;
+                text-align: center;
+                display: block;
+                width: 100%;
+                color: #888;
+                padding: 10px 0;
+                background: #EEE;
+            }
+
+            #menu-mobile .menu-group-title {
+                margin-top: 10px;
+                font-weight: bold;
+                padding-left: 6px;
+            }
+
+            #menu-top .menu-item,
+            #menu-mobile .menu-item {
+                display: block;
+                padding: 10px;
+                font-size: 14px;
+                border-bottom: 1px solid #EEE;
+            }
+
             @media (min-width: 768px) {
+                #my-links-view {
+                    width: 50%;
+                    max-width: unset;
+                }
+
+                #menu-top,
+                #menu-top-acc {
+                    display: block;
+                }
+
+
+                #mobile-menu-toggle {
+                    display: none;
+                }
+
+                .form-box.overlay {
+                    display: block;
+                    position: absolute;
+                    top: 34px;
+                    right: 2%;
+                }
+
+                #logo-top-mobile,
+                #logo-top-mobile-desc {
+                    display: none;
+                }
+
+                #logo-top {
+                    display: block;
+                    max-width: 60px;
+                }
 
                 #logo-top-container {
                     margin-left: 10%;
@@ -244,8 +332,6 @@
 
                 #menu-top .menu-item {
                     display: inline-block;
-                    padding: 10px;
-                    font-size: 14px;
                     border-right: 1px solid #EEE;
                     padding-right: 16px;
 
@@ -838,14 +924,199 @@
                         Object.keys(window.App.Components).diff(window.App.getCurrentViewStickyComponents())
                     );
                 },
+                isMobileSize: function () {
+                    var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+                    return width < 768;
+                },
                 Components: {
+                    MenuToggleMobile: {
+                        hasInitialized: false,
+                        el: function () {
+                            return document.getElementById('mobile-menu-toggle');
+                        },
+                        hide: function () {
+                            if (!window.App.isMobileSize()) {
+                                this.el().style.display = 'none';
+                            }
+                        },
+                        show: function () {
+                            this.initialize();
+
+                            // menu hidden by default in mobile view
+                            if (window.App.isMobileSize()) {
+                                this.el().style.display = 'block';
+                            }
+                        },
+                        initialize: function () {
+                            if (this.hasInitialized == false) {
+
+                                this.el().onclick = function(e) {
+
+                                    if (
+                                        window._authManager.isLoggedIn
+                                    ) {
+                                        window.App.Components.MenuMobile.GuestItems.hide();
+                                        window.App.Components.MenuMobile.UserItems.show();
+                                    } else {
+                                        window.App.Components.MenuMobile.UserItems.hide();
+                                        window.App.Components.MenuMobile.GuestItems.show();
+                                    }
+
+                                    window.App.Components.MenuMobile.show();
+                                };
+
+                                this.hasInitialized = true;
+                            }
+                        }
+                    },
+                    MenuMobile: {
+                        el: function () {
+                            return document.getElementById('menu-mobile');
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        Items: {
+                            CloseMenu: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('close-menu-mobile');
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Components.MenuMobile.hide();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            MyLinks: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('menu-mobile-item-my-links');
+                                },
+                                show: function () {
+                                    this.el().style.display = 'inline-block';
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Components.MenuMobile.hide();
+                                            window.App.Views.MyLinks.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
+                        },
+                        GuestItems: {
+                            el: function () {
+                                return document.getElementById('menu-mobile-acc-items-guest');
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.el().style.display = 'block';
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            Items: {
+                                Login: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('menu-mobile-acc-login');
+                                    },
+                                    initialize: function () {
+                                        if ( this.hasInitialized == false ) {
+
+                                            this.el().onclick = function (e) {
+                                                window.App.hideNonStickyComponents();
+                                                window.App.Components.Login.show();
+                                            };
+
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                                Register: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('menu-mobile-acc-register');
+                                    },
+                                    initialize: function () {
+                                        if ( this.hasInitialized == false ) {
+
+                                            this.el().onclick = function (e) {
+                                                window.App.hideNonStickyComponents();
+                                                window.App.Components.Register.show();
+                                            };
+
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                            },
+                            initialize: function () {
+                                this.Items.Login.initialize();
+                                this.Items.Register.initialize();
+                            }
+                        },
+                        UserItems: {
+                            el: function () {
+                                return document.getElementById('menu-mobile-acc-items-user');
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.el().style.display = 'block';
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            Items: {
+                                LogoutBtn: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('menu-mobile-acc-logout');
+                                    },
+                                    initialize: function () {
+                                        if (this.hasInitialized === false) {
+                                            this.el().onclick = function (e) {
+                                                window._authManager.logout();
+                                            };
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                            },
+                            initialize: function () {
+                                this.Items.LogoutBtn.initialize();
+                            }
+                        },
+                        initialize: function () {
+                            this.Items.CloseMenu.initialize();
+                            this.Items.MyLinks.initialize();
+                        }
+                    },
                     MenuTop: {
                         el: function () {
                             return document.getElementById('menu-top');
                         },
                         show: function () {
                             this.initialize();
-                            this.el().style.display = 'block';
+
+                            // menu hidden by default in mobile view
+                            if (!window.App.isMobileSize()) {
+                                this.el().style.display = 'block';
+                            }
                         },
                         hide: function () {
                             this.el().style.display = 'none';
@@ -894,7 +1165,11 @@
                         },
                         show: function (){
                             this.initialize();
-                            this.el().style.display = 'block';
+
+                            // menu hidden by default in mobile view
+                            if (!window.App.isMobileSize()) {
+                                this.el().style.display = 'block';
+                            }
 
                             if (this.isOpen) {
                                 this.close();
@@ -2669,7 +2944,7 @@
                 Views: {
                     HomePage: {
                         components: {
-                            initiallyVisible:  ['MenuTop', 'MenuAccTop', 'ShortenUrl'],
+                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl'],
                             initiallyHidden: ['ShortlinkResult'],
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
@@ -2685,11 +2960,12 @@
                     MyLinks: {
                         hasInitialized: false,
                         components: {
-                            initiallyVisible:  ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'MyLinks'],
+                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'MyLinks'],
                             initiallyHidden: ['ShortlinkResult'],
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            this.initialize();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                         },
@@ -2699,7 +2975,6 @@
                         },
                         initialize: function () {
                             if (this.hasInitialized == false) {
-
                                 document.addEventListener('userAuthenticated', (e) => {
                                     if (window.App.currentView == 'MyLinks') {
                                         window.App.Components.MyLinks.Components.Links.Components.List.fetch();
@@ -2712,7 +2987,7 @@
                     },
                     Login: {
                         components: {
-                            initiallyVisible:  ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'Login'],
+                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Login'],
                             initiallyHidden: ['ShortlinkResult'],
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
@@ -2727,7 +3002,7 @@
                     },
                     Register: {
                         components: {
-                            initiallyVisible:  ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'Register'],
+                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Register'],
                             initiallyHidden: ['ShortlinkResult'],
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
@@ -2742,7 +3017,7 @@
                     },
                     EmailConfirmed: {
                         components: {
-                            initiallyVisible: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'EmailConfirmed'],
+                            initiallyVisible: ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'EmailConfirmed'],
                             initiallyHidden: ['ShortlinkResult'],
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
@@ -2757,7 +3032,7 @@
                     },
                     ChangePassword: {
                         components: {
-                            initiallyVisible: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ChangePassword'],
+                            initiallyVisible: ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ChangePassword'],
                             initiallyHidden: ['ShortlinkResult'],
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
@@ -2797,6 +3072,33 @@
                 id="logo-top"
                 src="{{ $logoTop }}"
             />
+            <img id="logo-top-mobile"
+                src="{{ $logoTopMobile }}"
+            >
+            <div id="logo-top-mobile-desc">url shortner<br/>em português</div>
+        </div>
+
+        <div id="mobile-menu-toggle">
+            <div class="menu-bar"></div>
+            <div class="menu-bar"></div>
+            <div class="menu-bar"></div>
+        </div>
+
+        <div id="menu-mobile" style="display: none">
+            <div class="close-btn" id="close-menu-mobile">Fechar menu</div>
+            <div class="menu-group-title">Menu Principal</div>
+            <div class="menu-item" id="menu-mobile-item-my-links">Os meus links</div>
+            <div class="menu-item">Publicidade</div>
+            <div class="menu-item">Conheça</div>
+            <div class="menu-item">Contacte</div>
+            <div class="menu-group-title">Conta</div>
+            <div id="menu-mobile-acc-items-guest" style="display: none">
+                <div class="menu-item" id="menu-mobile-acc-login">Entrar</div>
+                <div class="menu-item" id="menu-mobile-acc-register">Criar</div>
+            </div>
+            <div id="menu-mobile-acc-items-user" style="display: none">
+                <div class="menu-item" id="menu-mobile-acc-logout">Sair</div>
+            </div>
         </div>
 
         <div id="menu-top" style="display: none">
@@ -2829,64 +3131,6 @@
             <div id="cp-desc">
                 url shortner<br/>em português
             </div>
-        </div>
-
-        <div class="form-box" id="shorten-urls" style="display: none">
-            <div class="input-container">
-                <div class="input-label" id="long-url-label">
-                    Cole aqui o seu URL loongo..
-                </div>
-                <input type="text" id="long-url" />
-            </div>
-
-            <div class="input-container" style="display: none" id="destination-email-container">
-                <div class="input-label" id="destination-email-label">
-                    Email destino
-                </div>
-                <input type="text" id="destination-email" />
-            </div>
-
-            <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
-
-            <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
-        </div>
-
-        <div
-            class="form-box"
-            id="form-box-with-shortlink"
-            style="display: none"
-        >
-            <div class="form-box-title">O seu link curto está pronto!</div>
-            <div class="input-container">
-                <input type="text" id="shortlink" readonly />
-            </div>
-
-            <div class="button" id="save-shortlink" style="display: none">Guardar na minha lista de links</div>
-            <div class="button" id="go-to-my-links" style="display: none">Ver minha lista de links</div>
-            <a href="javascript:void(0);" id="generate-another-shortlink" class="form-link">Encurtar outro link</a>
-        </div>
-
-        <div
-            class="form-box"
-            id="form-box-shortlink-requested"
-            style="display: none"
-        >
-            <div class="form-box-title">
-                Link disponível!
-            </div>
-            @if(isset($shortlink) && isset($shortlink_shortstring))
-                <div class="input-container">
-                    <input type="text" id="requested-shortlink" data-shortstring="{{$shortlink_shortstring}}" value="{{ $shortlink}}" readonly />
-                </div>
-            @endif
-            <div>Para onde quer apontar este link?</div>
-            <div class="input-container">
-                <input type="text" id="requested-shortlink-long-url"/>
-            </div>
-
-            <div id="requested-shortlink-register-feedback" class="form-box-feedback" style="display: none"></div>
-
-            <div class="button disabled" id="shortlink-register">Continuar</div>
         </div>
 
         <div
@@ -3031,7 +3275,6 @@
             <p>Verifique a sua caixa de correio pois acabamos de lhe enviar um email para que possa ativar a sua conta.<br/><br/>Muito obrigado.</p>
         </div>
 
-
         <div
             class="form-box overlay"
             id="my-links-view" style="display: none"
@@ -3040,6 +3283,64 @@
             <div class="close-form-box" id="my-links-view-close-btn">X</div>
             <div id="form-box-acc-links-loading">A carregar links..</div>
             <div id="form-box-acc-links" class="list-container" style="display: none"></div>
+        </div>
+
+        <div class="form-box" id="shorten-urls" style="display: none">
+            <div class="input-container">
+                <div class="input-label" id="long-url-label">
+                    Cole aqui o seu URL loongo..
+                </div>
+                <input type="text" id="long-url" />
+            </div>
+
+            <div class="input-container" style="display: none" id="destination-email-container">
+                <div class="input-label" id="destination-email-label">
+                    Email destino
+                </div>
+                <input type="text" id="destination-email" />
+            </div>
+
+            <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
+
+            <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
+        </div>
+
+        <div
+            class="form-box"
+            id="form-box-with-shortlink"
+            style="display: none"
+        >
+            <div class="form-box-title">O seu link curto está pronto!</div>
+            <div class="input-container">
+                <input type="text" id="shortlink" readonly />
+            </div>
+
+            <div class="button" id="save-shortlink" style="display: none">Guardar na minha lista de links</div>
+            <div class="button" id="go-to-my-links" style="display: none">Ver minha lista de links</div>
+            <a href="javascript:void(0);" id="generate-another-shortlink" class="form-link">Encurtar outro link</a>
+        </div>
+
+        <div
+            class="form-box"
+            id="form-box-shortlink-requested"
+            style="display: none"
+        >
+            <div class="form-box-title">
+                Link disponível!
+            </div>
+            @if(isset($shortlink) && isset($shortlink_shortstring))
+                <div class="input-container">
+                    <input type="text" id="requested-shortlink" data-shortstring="{{$shortlink_shortstring}}" value="{{ $shortlink}}" readonly />
+                </div>
+            @endif
+            <div>Para onde quer apontar este link?</div>
+            <div class="input-container">
+                <input type="text" id="requested-shortlink-long-url"/>
+            </div>
+
+            <div id="requested-shortlink-register-feedback" class="form-box-feedback" style="display: none"></div>
+
+            <div class="button disabled" id="shortlink-register">Continuar</div>
         </div>
 
         <div
@@ -3070,6 +3371,8 @@
 
         <script>
 
+            //TODO: depracate this function
+            // add event listener per component, on initialize
             function enableAuthenticationDependentButtons() {
                 window.App.Components.ShortenUrl.Components.GenerateBtn.enable();
                 // DestinationEmail will only show if logged in:
@@ -3174,6 +3477,8 @@
             if (window._authManager.isAuthenticated) {
                 enableAuthenticationDependentButtons();
             }
+
+            window.App.Components.MenuToggleMobile.initialize();
         </script>
     </body>
 </html>

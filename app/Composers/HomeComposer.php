@@ -13,9 +13,11 @@ class HomeComposer
         $currentBackground = asset('/img/bg_' . ($withCoffee ? 'with' : 'without') . '_coffee.jpeg');
 
         $logoTop = asset('/img/logo.png');
+        $logoTopMobile = asset('/img/logo-full-mobile.png');
 
         $view->with('captchaSitekey', $captchaSitekey)
                 ->with('currentBackground', $currentBackground)
-                ->with('logoTop', $logoTop);
+                ->with('logoTop', $logoTop)
+                ->with('logoTopMobile', $logoTopMobile);
     }
 }
