@@ -190,11 +190,26 @@
             .form-box .list-container .list-item {
                 margin-bottom: 10px;
                 border-bottom: 1px solid #EEEEEE;
-                padding-bottom: 4px;
+
+                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
+                padding: 10px;
             }
 
-            .form-box .list-container .list-item .short-url {
+            .form-box .list-container .list-item .short-url-label {
+                margin-top: 14px;
+            }
 
+            .form-box .list-container .list-item .info-row .info-col {
+                display: inline-block;
+                margin-right: 16px;
+                margin-top: 10px;
+            }
+            .form-box .list-container .list-item .short-url input {
+                color: #333333;
+                width: 100%;
+                padding: 12px 6px;
+                box-sizing: border-box;
+                border: 1px solid #EEE;
             }
 
             .form-box .list-container .list-item .long-url {
@@ -2814,6 +2829,17 @@
                                             this.el().style.display = 'none';
                                         },
                                     },
+                                    NotFound: {
+                                        el: function () {
+                                            return document.getElementById('form-box-acc-links-not-found');
+                                        },
+                                        show: function () {
+                                            this.el().style.display = 'block';
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                    },
                                     List: {
                                         api: "{{ url('/api/links') }}",
                                         el: function () {
@@ -2829,21 +2855,84 @@
                                         clear: function () {
                                             this.el().innerHTML = '';
                                         },
-                                        addLink: function (id, long_url, shortlink, destination_email) {
+                                        addLink: function (id, long_url, shortlink, destinationEmail, createdAt) {
                                             const listItem = document.createElement("div");
                                             listItem.classList.add('list-item');
 
+                                            const shortlinkLabel = document.createElement("div");
+                                            shortlinkLabel.classList.add('short-url-label');
+                                            shortlinkLabel.innerText = 'Wil link:';
+
+
+
                                             const shortlinkContainer = document.createElement("div");
                                             shortlinkContainer.classList.add('short-url');
-                                            shortlinkContainer.innerText = shortlink;
+
+                                            const shortlinkInputContainer = document.createElement('input');
+                                            shortlinkInputContainer.readOnly = true;
+                                            shortlinkInputContainer.value = shortlink;
+
+                                            shortlinkInputContainer.onclick = function (e) {
+                                                e.target.focus();
+                                                e.target.select();
+                                            };
+
+                                            shortlinkContainer.appendChild(shortlinkInputContainer);
+
+                                            const longUrlLabel = document.createElement("div");
+                                            longUrlLabel.classList.add('long-url-label');
+                                            longUrlLabel.innerText = 'Link original:';
 
                                             const longUrlContainer = document.createElement("div");
                                             longUrlContainer.classList.add('long-url');
                                             longUrlContainer.innerText = long_url;
 
+
+                                            const infoRow = document.createElement('div');
+                                            infoRow.classList.add('info-row');
+
+                                            const createdAtCol = document.createElement('div');
+                                            createdAtCol.classList.add('info-col');
+                                            createdAtCol.innerHTML = '<small>Data criação:</small> ' + (new Date(createdAt)).toLocaleString('pt-PT');
+
+
+                                            const totalViewsCol = document.createElement('div');
+                                            totalViewsCol.classList.add('info-col');
+                                            totalViewsCol.innerHTML = '<small>Visualizações:</small> 12';
+
+
+                                            infoRow.appendChild(createdAtCol);
+                                            infoRow.appendChild(totalViewsCol);
+
                                             this.el().appendChild(listItem);
-                                            listItem.appendChild(shortlinkContainer);
+
+                                            listItem.appendChild(longUrlLabel);
                                             listItem.appendChild(longUrlContainer);
+                                            listItem.appendChild(shortlinkLabel);
+                                            listItem.appendChild(shortlinkContainer);
+                                            listItem.appendChild(infoRow);
+
+                                            if (
+                                                typeof destinationEmail !== 'undefined'
+                                                &&
+                                                destinationEmail != null
+                                                &&
+                                                destinationEmail.length > 0
+                                            ) {
+                                                const destinationEmailRow = document.createElement('div');
+                                                destinationEmailRow.classList.add('info-row');
+
+                                                const destinationEmailCol = document.createElement('div');
+                                                destinationEmailCol.classList.add('info-col');
+                                                destinationEmailCol.innerHTML = '<small>Email destino:</small> ' + destinationEmail;
+
+                                                destinationEmailRow.appendChild(destinationEmailCol);
+
+                                                listItem.appendChild(destinationEmailRow);
+                                            }
+
+
+
                                         },
                                         fetch: function () {
                                             if (window._authManager.isAuthenticated !== true) {
@@ -2863,12 +2952,18 @@
 
                                                     if (this.status === 200) {
                                                         window.App.Components.MyLinks.Components.Links.Components.Loading.hide();
+                                                        if (resObj.length == 0) {
+                                                            window.App.Components.MyLinks.Components.Links.Components.NotFound.show();
+                                                        } else  {
+                                                            window.App.Components.MyLinks.Components.Links.Components.NotFound.hide();
+                                                        }
                                                         for (var i = 0; i < resObj.length; i++) {
                                                             $this.addLink(
                                                                 resObj[i].id,
                                                                 resObj[i].long_url,
                                                                 resObj[i].shortlink,
-                                                                resObj[i].email
+                                                                resObj[i].destination_email,
+                                                                resObj[i].created_at
                                                             );
                                                         }
                                                     }
@@ -3282,6 +3377,7 @@
             <div class="form-box-title">Os meus links</div>
             <div class="close-form-box" id="my-links-view-close-btn">X</div>
             <div id="form-box-acc-links-loading">A carregar links..</div>
+            <div id="form-box-acc-links-not-found" style="display: none">Ainda não gerou nenhum link..</div>
             <div id="form-box-acc-links" class="list-container" style="display: none"></div>
         </div>
 

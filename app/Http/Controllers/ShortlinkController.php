@@ -59,7 +59,7 @@ class ShortlinkController extends Controller
     {
         //TODO: pagination
         $userShortlinks = $request->user()->shortlinks()
-        ->select(['id', 'long_url', 'destination_email', 'shortstring_id'])
+        ->select(['id', 'long_url', 'destination_email', 'shortstring_id', 'created_at'])
         ->with(
             [
                 'shortstring' => function ($query) {
@@ -76,7 +76,8 @@ class ShortlinkController extends Controller
                     'id' => $row['id'],
                     'long_url' => $row['long_url'],
                     'shortlink' => URL::to('/' . $row['shortstring']['shortstring']),
-                    'destination_email' => $row['destination_email']
+                    'destination_email' => $row['destination_email'],
+                    'created_at' => $row['created_at']
                 ];
             }, $userShortlinks
         );
