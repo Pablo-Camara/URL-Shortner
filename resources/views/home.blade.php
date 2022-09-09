@@ -2924,7 +2924,7 @@
 
                                                 const destinationEmailCol = document.createElement('div');
                                                 destinationEmailCol.classList.add('info-col');
-                                                destinationEmailCol.innerHTML = '<small>Email destino:</small> ' + destinationEmail;
+                                                destinationEmailCol.innerHTML = '<small>Enviado para:</small> ' + destinationEmail;
 
                                                 destinationEmailRow.appendChild(destinationEmailCol);
 
