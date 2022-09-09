@@ -463,6 +463,12 @@
                 display: none !important;
             }
 
+            .form-box .gray-note {
+                color: #999;
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+
         </style>
 
 
@@ -2840,6 +2846,17 @@
                                             this.el().style.display = 'none';
                                         },
                                     },
+                                    GuestMsg: {
+                                        el: function () {
+                                            return document.getElementById('my-links-guest-msg');
+                                        },
+                                        show: function () {
+                                            this.el().style.display = 'block';
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        }
+                                    },
                                     List: {
                                         api: "{{ url('/api/links') }}",
                                         el: function () {
@@ -2939,6 +2956,7 @@
                                                 return;
                                             }
                                             this.clear();
+                                            window.App.Components.MyLinks.Components.Links.Components.GuestMsg.hide();
                                             window.App.Components.MyLinks.Components.Links.Components.Loading.show();
 
                                             var $this = this;
@@ -2965,6 +2983,10 @@
                                                                 resObj[i].destination_email,
                                                                 resObj[i].created_at
                                                             );
+                                                        }
+
+                                                        if (!window._authManager.isLoggedIn) {
+                                                            window.App.Components.MyLinks.Components.Links.Components.GuestMsg.show();
                                                         }
                                                     }
                                                 }
@@ -3375,6 +3397,7 @@
             id="my-links-view" style="display: none"
         >
             <div class="form-box-title">Os meus links</div>
+            <div class="gray-note" id="my-links-guest-msg" style="display: none">Atenção, estás a utilizar a plataforma como convidado.<br>Entra na tua conta, ou cria uma, para poderes guardar ou editar os teus links.</div>
             <div class="close-form-box" id="my-links-view-close-btn">X</div>
             <div id="form-box-acc-links-loading">A carregar links..</div>
             <div id="form-box-acc-links-not-found" style="display: none">Ainda não gerou nenhum link..</div>
