@@ -2893,12 +2893,12 @@
 
                                             const createdAtCol = document.createElement('div');
                                             createdAtCol.classList.add('info-col');
-                                            createdAtCol.innerHTML = '<small>Data criação:</small> ' + (new Date(createdAt)).toLocaleString('pt-PT');
+                                            createdAtCol.innerHTML = 'Data criação: <small>' + (new Date(createdAt)).toLocaleString('pt-PT') + '</small>';
 
 
                                             const totalViewsCol = document.createElement('div');
                                             totalViewsCol.classList.add('info-col');
-                                            totalViewsCol.innerHTML = '<small>Visualizações:</small> 12';
+                                            totalViewsCol.innerHTML = 'Visualizações: <small>12</small>';
 
 
                                             infoRow.appendChild(createdAtCol);
@@ -2924,7 +2924,7 @@
 
                                                 const destinationEmailCol = document.createElement('div');
                                                 destinationEmailCol.classList.add('info-col');
-                                                destinationEmailCol.innerHTML = '<small>Enviado para:</small> ' + destinationEmail;
+                                                destinationEmailCol.innerHTML = 'Enviado para: <small>' + destinationEmail + '</small>';
 
                                                 destinationEmailRow.appendChild(destinationEmailCol);
 
