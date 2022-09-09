@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Actions\ShortlinkActions;
+use App\Helpers\Auth\Traits\InteractsWithAuthCookie;
 use App\Mail\ShortlinkReady;
 use App\Models\Shortlink;
 use App\Models\Shortstring;
+use App\Models\UserAction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +17,8 @@ use Illuminate\Support\Facades\URL;
 
 class ShortlinkController extends Controller
 {
+
+    use InteractsWithAuthCookie;
      /**
      * Display a listing of the resource.
      *
@@ -81,6 +86,10 @@ class ShortlinkController extends Controller
                 ];
             }, $userShortlinks
         );
+
+        if (!is_null($this->userId)) {
+            UserAction::logAction($this->userId, ShortlinkActions::VIEWED_LINKS_LIST);
+        }
         return new Response($userShortlinks);
     }
 
@@ -104,6 +113,9 @@ class ShortlinkController extends Controller
         $shortstring = Shortstring::where('shortstring', '=', $shortstring)->first();
 
         if (!$shortstring) {
+            if (!is_null($this->userId)) {
+                UserAction::logAction($this->userId, ShortlinkActions::ATTEMPTED_TO_REGISTER_UNEXISTING_SHORTSTRING);
+            }
             return new Response([
                 //TODO: translate
                 'message' => 'Este link não está disponível!'
@@ -111,6 +123,11 @@ class ShortlinkController extends Controller
         }
 
         if (!$shortstring->is_available) {
+
+            if (!is_null($this->userId)) {
+                UserAction::logAction($this->userId, ShortlinkActions::ATTEMPTED_TO_REGISTER_UNAVAILABLE_SHORTSTRING);
+            }
+
             return new Response([
                 //TODO: translate
                 'message' => 'Este link já não está disponível!'
@@ -129,6 +146,10 @@ class ShortlinkController extends Controller
             $newShortlink->save();
             $shortstring->is_available = 0;
             $shortstring->save();
+
+            if (!is_null($this->userId)) {
+                UserAction::logAction($this->userId, ShortlinkActions::REGISTERED_CUSTOM_AVAILABLE_SHORTSTRING);
+            }
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;
@@ -172,6 +193,9 @@ class ShortlinkController extends Controller
                 &&
                 $useBcIfPreseededShortstringsEnd
             ) {
+                if (!is_null($this->userId)) {
+                    UserAction::logAction($this->userId, ShortlinkActions::DID_NOT_FIND_AVAILABLE_PRESEEDED_SHORTSTRING);
+                }
                 $useBcToGenerateShortstring = true;
             }
         } else {
@@ -179,6 +203,10 @@ class ShortlinkController extends Controller
         }
 
         if ($useBcToGenerateShortstring) {
+            if (!is_null($this->userId)) {
+                UserAction::logAction($this->userId, ShortlinkActions::WILL_TRY_GENERATING_SHORTSTRING_WITH_BC);
+            }
+
             $nextAvailableShortstring = $this->tryGeneratingShortstringWithBaseConvert();
         }
 
@@ -188,6 +216,9 @@ class ShortlinkController extends Controller
             // we should be notified.
 
             //TODO: Send email notification.
+            if (!is_null($this->userId)) {
+                UserAction::logAction($this->userId, ShortlinkActions::FOUND_NO_AVAILABLE_SHORTSTRING);
+            }
 
             return new Response(
                 [
@@ -201,7 +232,15 @@ class ShortlinkController extends Controller
         $newShortlink->user_id = $request->user()->id;
         $newShortlink->shortstring_id = $nextAvailableShortstring->id;
         $newShortlink->long_url = $request->input('long_url');
-        $newShortlink->destination_email = $request->input('destination_email');
+
+        if (
+            !is_null($request->input('destination_email'))
+            &&
+            !is_null($this->userId) && $this->guest === 0
+        ) {
+            $newShortlink->destination_email = $request->input('destination_email');
+        }
+
         $newShortlink->status_id = Shortlink::STATUS_ACTIVE;
 
         DB::beginTransaction();
@@ -209,16 +248,25 @@ class ShortlinkController extends Controller
             $newShortlink->save();
             $nextAvailableShortstring->is_available = 0;
             $nextAvailableShortstring->save();
+
+            UserAction::logAction($newShortlink->user_id, ShortlinkActions::GENERATED_SHORTLINK);
+
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;
         }
         DB::commit();
 
-        if (!is_null($newShortlink->destination_email)) {
+        if (
+            !is_null($newShortlink->destination_email)
+            &&
+            !is_null($this->userId) && $this->guest === 0
+        ) {
             Mail::to(
                 $newShortlink->destination_email
             )->queue(new ShortlinkReady($newShortlink));
+
+            UserAction::logAction($this->userId, ShortlinkActions::SENT_SHORTLINK_TO_EMAIL);
         }
 
         return new Response(
@@ -328,9 +376,12 @@ class ShortlinkController extends Controller
 
             // TODO: set max attempts in env variable / app config
             // avoid infinite loop
-            if ($totalAttempts >= 100) {
+            if ($totalAttempts >= 20) {
                 //TODO: log event ( to monitor if this ever happens )
                 // should never happen but just in case..
+                if (!is_null($this->userId)) {
+                    UserAction::logAction($this->userId, ShortlinkActions::REACHED_MAX_GENERATE_ATTEMPTS_WITH_BC);
+                }
                 break;
             }
         }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Actions\AuthActions;
 use App\Helpers\Auth\AuthValidator;
+use App\Helpers\Auth\Traits\InteractsWithAuthCookie;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Carbon\Carbon;
@@ -20,7 +21,11 @@ use Illuminate\Support\Facades\Mail;
 
 class AuthenticationController extends Controller
 {
-    use InteractsWithTime;
+    use InteractsWithTime, InteractsWithAuthCookie;
+
+    public function __construct() {
+        $this->getUserIdFromCookie();
+    }
     /**
      * Authenticates the user
      * if no auth token cookie, creates guest user and generates guest token
@@ -34,36 +39,23 @@ class AuthenticationController extends Controller
     {
         $config = config('session');
 
-        $authCookie = Cookie::get($config['auth_token_cookie_name']);
-
         if (
-            !is_null($authCookie)
+            !is_null($this->userId)
         ) {
-            $authCookie = decrypt($authCookie);
-
-            $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
-            $isAuthTokenValid = false;
-
-            if($isAuthCookieValid) {
-                $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
-            }
-
-            if ($isAuthCookieValid && $isAuthTokenValid) {
-                // if auth cookie is valid
-                // if auth token is valid / not expired
-                // send the auth token from the cookie
-                $response->setContent([
-                    'at' => $authCookie['auth_token'],
-                    'guest' => $authCookie['guest']
-                ]);
+            // if auth cookie is valid
+            // if auth token is valid / not expired
+            // send the auth token from the cookie
+            $response->setContent([
+                'at' => $this->authToken,
+                'guest' => $this->guest,
+            ]);
 
 
-                $actionName = $authCookie['guest'] == 0 ?
-                    AuthActions::AUTHENTICATED_AS_USER : AuthActions::AUTHENTICATED_AS_GUEST;
-                UserAction::logAction($authCookie['user_id'], $actionName);
+            $actionName = $this->guest == 0 ?
+                AuthActions::AUTHENTICATED_AS_USER : AuthActions::AUTHENTICATED_AS_GUEST;
+            UserAction::logAction($this->userId, $actionName);
 
-                return $response;
-            }
+            return $response;
         }
 
         // creates new guest user
@@ -122,23 +114,10 @@ class AuthenticationController extends Controller
     {
         $config = config('session');
 
-        $authCookie = Cookie::get($config['auth_token_cookie_name']);
-
         if (
-            !is_null($authCookie)
+            !is_null($this->userId)
         ) {
-            $authCookie = decrypt($authCookie);
-
-            $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
-            $isAuthTokenValid = false;
-
-            if($isAuthCookieValid) {
-                $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
-            }
-
-            if ($isAuthCookieValid && $isAuthTokenValid) {
-                UserAction::logAction($authCookie['user_id'], AuthActions::LOGGED_OUT);
-            }
+            UserAction::logAction($this->userId, AuthActions::LOGGED_OUT);
         }
 
         $response->withoutCookie($config['auth_token_cookie_name'])->setStatusCode(200);
@@ -157,48 +136,25 @@ class AuthenticationController extends Controller
     {
         $config = config('session');
 
-        $authCookie = Cookie::get($config['auth_token_cookie_name']);
+
 
         // when logging in, users must always have an Auth Cookie (with guest token)
-        if (is_null($authCookie)) {
+        if (is_null($this->userId)) {
             return AuthResponses::notAuthenticated();
         }
 
-        $authCookie = decrypt($authCookie);
 
-        $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
-        $isAuthTokenValid = false;
+        if ($this->guest === 0) {
 
-        if($isAuthCookieValid) {
-            $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
+            UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WHILE_LOGGED_IN);
+
+            return $response
+                    ->setContent([
+                        'at' => $this->authToken,
+                        'guest' => 0
+                    ]);
         }
 
-        if (
-            $isAuthCookieValid && $isAuthTokenValid
-        ) {
-            // if auth cookie is valid
-            // if auth token is valid / not expired
-            // and the auth cookie is for a logged in user (non guest)
-            // the user is already logged in
-            // lets return the current auth cookie data
-
-            if ($authCookie['guest'] === 0) {
-
-                UserAction::logAction($authCookie['user_id'], AuthActions::ATTEMPTED_TO_LOGIN_WHILE_LOGGED_IN);
-
-                return $response
-                        ->setContent([
-                            'at' => $authCookie['auth_token'],
-                            'guest' => 0
-                        ]);
-            }
-        } else {
-            // auth cookie or token is invalid
-            // lets forbid the login. Must authenticate as guest first.
-
-            // and lets forget this invalid auth cookie and/or token
-            return AuthResponses::notAuthenticated()->withoutCookie($config['auth_token_cookie_name']);
-        }
 
         $request->validate([
             'email' => 'required|email',
@@ -208,17 +164,19 @@ class AuthenticationController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || ! Hash::check($request->password, $user->password)) {
-            UserAction::logAction($authCookie['user_id'], AuthActions::ATTEMPTED_TO_LOGIN_WITH_INVALID_CREDENTIALS);
+        if (!$user) {
+            UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_UNEXISTING_EMAIL);
+            return AuthResponses::incorrectCredentials();
+        }
 
-            if($user) {
-                UserAction::logAction($user->id, AuthActions::ATTEMPTED_TO_LOGIN_WITH_INVALID_CREDENTIALS);
-            }
+        if ( !Hash::check($request->password, $user->password) ) {
+            UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_WRONG_PASSWORD);
+            UserAction::logAction($user->id, AuthActions::ATTEMPTED_TO_LOGIN_WITH_WRONG_PASSWORD);
             return AuthResponses::incorrectCredentials();
         }
 
         if (!$user->hasVerifiedEmail()) {
-            UserAction::logAction($authCookie['user_id'], AuthActions::ATTEMPTED_TO_LOGIN_WITH_UNVERIFIED_EMAIL);
+            UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_UNVERIFIED_EMAIL);
             UserAction::logAction($user->id, AuthActions::ATTEMPTED_TO_LOGIN_WITH_UNVERIFIED_EMAIL);
             return AuthResponses::unverifiedAccount();
         }
@@ -242,15 +200,15 @@ class AuthenticationController extends Controller
         // move shortlinks generated as guest
         // to the now logged in user account.
         $totalGeneratedLinksAsGuest = Shortlink::where(
-            'user_id', '=', $authCookie['user_id']
+            'user_id', '=', $this->userId
         )->update(['user_id' => $user->id]);
 
         if ($totalGeneratedLinksAsGuest > 0) {
-            UserAction::logAction($authCookie['user_id'], AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
+            UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
             UserAction::logAction($user->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
         }
 
-        UserAction::logAction($authCookie['user_id'], AuthActions::LOGGED_IN);
+        UserAction::logAction($this->userId, AuthActions::LOGGED_IN);
         UserAction::logAction($user->id, AuthActions::LOGGED_IN);
 
         $authCookie = Cookie::make(
@@ -285,52 +243,20 @@ class AuthenticationController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function registerAttempt(Request $request, Response $response) {
-        $config = config('session');
-
-        $authCookie = Cookie::get($config['auth_token_cookie_name']);
 
         // when registering in, users must always have an Auth Cookie (with guest token)
-        if (is_null($authCookie)) {
+        if (is_null($this->userId)) {
             return AuthResponses::notAuthenticated();
         }
 
-        $authCookie = decrypt($authCookie);
-
-        $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
-        $isAuthTokenValid = false;
-
-        if($isAuthCookieValid) {
-            $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
+        if ($this->guest === 0) {
+            UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_REGISTER_WHILE_LOGGED_IN);
+            return $response
+                    ->setContent([
+                        'at' => $this->authToken,
+                        'guest' => 0
+                    ]);
         }
-
-        if (
-            $isAuthCookieValid && $isAuthTokenValid
-        ) {
-            // if auth cookie is valid
-            // if auth token is valid / not expired
-            // and the auth cookie is for a logged in user (non guest)
-            // the user is already logged in
-            // lets return the current auth cookie data
-            if ($authCookie['guest'] === 0) {
-
-                UserAction::logAction($authCookie['user_id'], AuthActions::ATTEMPTED_TO_REGISTER_WHILE_LOGGED_IN);
-
-                return $response
-                        ->setContent([
-                            'at' => $authCookie['auth_token'],
-                            'guest' => 0
-                        ]);
-            }
-        } else {
-            // auth cookie or token is invalid
-            // lets forbid this action. Must authenticate as guest first.
-
-            // this should never happen in reality.
-
-            // and lets forget this invalid auth cookie and/or token
-            return AuthResponses::notAuthenticated()->withoutCookie($config['auth_token_cookie_name']);
-        }
-
 
         $request->validate([
             'name' => 'required',
@@ -347,7 +273,7 @@ class AuthenticationController extends Controller
 
         try {
             $user->save();
-            UserAction::logAction($authCookie['user_id'], AuthActions::REGISTERED);
+            UserAction::logAction($this->userId, AuthActions::REGISTERED);
         } catch (\Throwable $th) {
             //TODO: log event
             return AuthResponses::registerFailed();
@@ -358,42 +284,20 @@ class AuthenticationController extends Controller
         // move shortlinks generated as guest
         // to the now newly created (and now logged in) user account
         $totalGeneratedLinksAsGuest = Shortlink::where(
-            'user_id', '=', $authCookie['user_id']
+            'user_id', '=', $this->userId
         )->update(['user_id' => $user->id]);
 
         if ($totalGeneratedLinksAsGuest > 0) {
-            UserAction::logAction($authCookie['user_id'], AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
+            UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
             UserAction::logAction($user->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
         }
 
-        /*
-        $authCookie = Cookie::make(
-            $config['auth_token_cookie_name'],
-            encrypt([
-                'auth_token' => $userToken,
-                'guest' => 0,
-                'user_id' => $user->id
-            ]),
-            $config['auth_token_cookie_lifetime'],
-            $config['path'],
-            $config['domain'],
-            $config['secure'],
-            false,
-            false,
-            $config['same_site'] ?? null
-        );*/
-
 
         return $response
-            /* ->setContent([
-                'at' => $userToken,
-                'guest' => 0
-            ]) */
             ->setContent([
                 'success' => 1,
             ])
             ->setStatusCode(Response::HTTP_CREATED);
-            //->withCookie($authCookie);
 
     }
 
@@ -406,29 +310,6 @@ class AuthenticationController extends Controller
      */
     public function resendVerificationEmail(Request $request, Response $response)
     {
-        $config = config('session');
-
-        $authCookie = Cookie::get($config['auth_token_cookie_name']);
-
-        $isAuthCookieValid = false;
-        $isAuthTokenValid = false;
-
-        if (
-            !is_null($authCookie)
-        ) {
-            $authCookie = decrypt($authCookie);
-
-            $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
-
-            if($isAuthCookieValid) {
-                $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
-            }
-
-            if ($isAuthCookieValid && $isAuthTokenValid) {
-                UserAction::logAction($authCookie['user_id'], AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL);
-            }
-        }
-
         $request->validate([
             'email' => 'required|email',
             'g-recaptcha-response' => 'required|captcha'
@@ -441,13 +322,16 @@ class AuthenticationController extends Controller
             // to find out which emails are registered
             // so we just return 200 and fool the users that are attempting
             // to spam this endpoint
-            if ($isAuthCookieValid && $isAuthTokenValid) {
-                UserAction::logAction($authCookie['user_id'], AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL_FOR_UNEXISTING_EMAIL);
+            if (!is_null($this->userId)) {
+                UserAction::logAction($this->userId, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL_FOR_UNEXISTING_EMAIL);
             }
 
             return new Response('', 200);
         }
 
+        if (!is_null($this->userId)) {
+            UserAction::logAction($this->userId, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL);
+        }
         UserAction::logAction($user->id, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL);
         $this->sendVerificationEmail($user, true);
 
@@ -532,27 +416,10 @@ class AuthenticationController extends Controller
             'g-recaptcha-response' => 'required|captcha'
         ]);
 
-        $config = config('session');
-
-        $authCookie = Cookie::get($config['auth_token_cookie_name']);
-
-        $isAuthCookieValid = false;
-        $isAuthTokenValid = false;
-
         if (
-            !is_null($authCookie)
+            !is_null($this->userId)
         ) {
-            $authCookie = decrypt($authCookie);
-
-            $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
-
-            if($isAuthCookieValid) {
-                $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
-            }
-
-            if ($isAuthCookieValid && $isAuthTokenValid) {
-                UserAction::logAction($authCookie['user_id'], AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL);
-            }
+            UserAction::logAction($this->userId, AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL);
         }
 
         $user = User::where('email', $request->email)->first();
@@ -562,8 +429,10 @@ class AuthenticationController extends Controller
             // to find out which emails are registered
             // so we just return 200 and fool the users that are attempting
             // to spam this endpoint
-            if ($isAuthCookieValid && $isAuthTokenValid) {
-                UserAction::logAction($authCookie['user_id'], AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL_FOR_UNEXISTING_EMAIL);
+            if (
+                !is_null($this->userId)
+            ) {
+                UserAction::logAction($this->userId, AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL_FOR_UNEXISTING_EMAIL);
             }
             return new Response('', 200);
         }
@@ -592,6 +461,8 @@ class AuthenticationController extends Controller
             // avoiding spammers..
             return new Response('', 200);
         }
+
+        $config = config('session');
 
         $pwdRecoveryTokenExpirationDatetime = Carbon::now()->addRealMinutes(
             $config['password_recovery_token_lifetime']

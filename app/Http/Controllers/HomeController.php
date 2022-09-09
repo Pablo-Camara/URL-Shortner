@@ -4,47 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Actions\AuthActions;
 use App\Helpers\Actions\HomeControllerActions;
-use App\Helpers\Auth\AuthValidator;
+use App\Helpers\Auth\Traits\InteractsWithAuthCookie;
 use App\Models\User;
 use App\Models\UserAction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
 
 class HomeController extends Controller
 {
 
-    public $userId = null;
+    use InteractsWithAuthCookie;
 
     public function __construct() {
-
-        $config = config('session');
-
-        $authCookie = Cookie::get($config['auth_token_cookie_name']);
-
-        $isAuthCookieValid = false;
-        $isAuthTokenValid = false;
-
-        if (
-            !is_null($authCookie)
-        ) {
-            $authCookie = decrypt($authCookie);
-
-            $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
-
-            if($isAuthCookieValid) {
-                $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
-            }
-
-            if ($isAuthCookieValid && $isAuthTokenValid) {
-                $this->userId = $authCookie['user_id'];
-            }
-        }
+        $this->getUserIdFromCookie();
     }
     /**
      * Display homepage
      */
     public function index() {
+
+        if (!is_null($this->userId)) {
+            UserAction::logAction($this->userId, HomeControllerActions::OPENED_HOME_PAGE_DIRECTLY);
+        }
+
         return view('home', [
             'view' => 'HomePage'
         ]);
