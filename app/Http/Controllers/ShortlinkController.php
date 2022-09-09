@@ -19,6 +19,11 @@ class ShortlinkController extends Controller
 {
 
     use InteractsWithAuthCookie;
+
+    public function __construct() {
+        $this->getUserDataFromCookie();
+    }
+
      /**
      * Display a listing of the resource.
      *

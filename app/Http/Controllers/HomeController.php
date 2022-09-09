@@ -16,7 +16,7 @@ class HomeController extends Controller
     use InteractsWithAuthCookie;
 
     public function __construct() {
-        $this->getUserIdFromCookie();
+        $this->getUserDataFromCookie();
     }
     /**
      * Display homepage

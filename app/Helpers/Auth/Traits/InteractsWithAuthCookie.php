@@ -13,7 +13,7 @@ trait InteractsWithAuthCookie
     private $guest = 1;
 
 
-    private function getUserIdFromCookie() {
+    private function getUserDataFromCookie() {
         $config = config('session');
 
         $authCookie = Cookie::get($config['auth_token_cookie_name']);

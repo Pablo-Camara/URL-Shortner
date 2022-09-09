@@ -24,7 +24,7 @@ class AuthenticationController extends Controller
     use InteractsWithTime, InteractsWithAuthCookie;
 
     public function __construct() {
-        $this->getUserIdFromCookie();
+        $this->getUserDataFromCookie();
     }
     /**
      * Authenticates the user
