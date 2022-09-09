@@ -4,7 +4,9 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <title>InIdeia.com - Encurtador de Urls</title>
+        <title>web into link - url shortner português</title>
+        <meta name="description" content="Encurtador de links Português">
+        <meta name="keywords" content="url shortner, encurtador de links, encurtador de urls, português, free, grátis">
 
         <!-- Fonts -->
         <link
@@ -2955,6 +2957,7 @@
                                                 return;
                                             }
                                             this.clear();
+                                            window.App.Components.MyLinks.Components.Links.Components.NotFound.hide();
                                             window.App.Components.MyLinks.Components.Links.Components.GuestMsg.hide();
                                             window.App.Components.MyLinks.Components.Links.Components.Loading.show();
 
