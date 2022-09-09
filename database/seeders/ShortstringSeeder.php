@@ -10,7 +10,7 @@ class ShortstringSeeder extends Seeder
 
     private $totalInsertions = 0;
 
-    private $maxShortstringsToInsertRecursively = 100000;
+    private $maxShortstringsToInsertRecursively = null;
 
     private function generateAllKLength($set, $k)
     {
@@ -26,7 +26,11 @@ class ShortstringSeeder extends Seeder
         int $k
     )
     {
-        if ($this->totalInsertions >= $this->maxShortstringsToInsertRecursively) {
+        if (
+            !is_null($this->maxShortstringsToInsertRecursively)
+            &&
+            $this->totalInsertions >= $this->maxShortstringsToInsertRecursively
+        ) {
             die('done! Inserted ' . $this->totalInsertions . ' rows');
         }
         if ($k == 0)
