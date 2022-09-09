@@ -205,7 +205,7 @@
                 margin-top: 10px;
             }
             .form-box .list-container .list-item .short-url input {
-                color: #333333;
+                color: #0077c8;
                 width: 100%;
                 padding: 12px 6px;
                 box-sizing: border-box;
