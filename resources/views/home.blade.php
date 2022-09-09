@@ -169,8 +169,7 @@
             }
 
             #my-links-view {
-                width: 100%;
-                max-width: 260px;
+                width: 85%;
             }
 
             #form-box-login-feedback,
@@ -294,7 +293,7 @@
                 border-bottom: 1px solid #EEE;
             }
 
-            @media (min-width: 768px) {
+            @media (min-width: 1024px) {
                 #my-links-view {
                     width: 50%;
                     max-width: unset;
@@ -947,7 +946,7 @@
                 },
                 isMobileSize: function () {
                     var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
-                    return width < 768;
+                    return width < 1024;
                 },
                 Components: {
                     MenuToggleMobile: {
