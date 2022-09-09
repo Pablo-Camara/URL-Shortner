@@ -3407,6 +3407,16 @@
             <div id="form-box-acc-links" class="list-container" style="display: none"></div>
         </div>
 
+        <div
+            class="form-box overlay"
+            id="email-confirmed" style="display: none"
+        >
+            <div class="form-box-title">Email confirmado!</div>
+            <p>A sua conta agora está activa.</p>
+            <div class="close-form-box" id="email-confirmed-close-btn">X</div>
+            <div class="button" id="email-confirmed-login">Entrar na minha conta</div>
+        </div>
+
         <div class="form-box" id="shorten-urls" style="display: none">
             <div class="input-container">
                 <div class="input-label" id="long-url-label">
@@ -3463,16 +3473,6 @@
             <div id="requested-shortlink-register-feedback" class="form-box-feedback" style="display: none"></div>
 
             <div class="button disabled" id="shortlink-register">Continuar</div>
-        </div>
-
-        <div
-            class="form-box overlay"
-            id="email-confirmed" style="display: none"
-        >
-            <div class="form-box-title">Email confirmado!</div>
-            <p>A sua conta agora está activa.</p>
-            <div class="close-form-box" id="email-confirmed-close-btn">X</div>
-            <div class="button" id="email-confirmed-login">Entrar na minha conta</div>
         </div>
 
         @if(isset($shortlink) && (isset($shortlink_available) && $shortlink_available === true))
