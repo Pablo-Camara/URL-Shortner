@@ -2985,7 +2985,7 @@
                                                             );
                                                         }
 
-                                                        if (!window._authManager.isLoggedIn) {
+                                                        if (resObj.length > 0 && !window._authManager.isLoggedIn) {
                                                             window.App.Components.MyLinks.Components.Links.Components.GuestMsg.show();
                                                         }
                                                     }
