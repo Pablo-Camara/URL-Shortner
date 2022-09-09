@@ -33,6 +33,11 @@ class ShortlinkController extends Controller
             $shortlink = $shortstring['shortlink'];
 
             if (!is_null($shortlink)) {
+
+                if (!is_null($this->userId)) {
+                    UserAction::logAction($this->userId, ShortlinkActions::VISITED_ACTIVE_SHORTLINK);
+                }
+
                 return Redirect::to(
                     $shortlink->long_url, 301
                 );
@@ -40,6 +45,10 @@ class ShortlinkController extends Controller
 
             if ($shortstring->is_available) {
                 $captchaSitekey = config('captcha.sitekey');
+
+                if (!is_null($this->userId)) {
+                    UserAction::logAction($this->userId, ShortlinkActions::VISITED_AVAILABLE_SHORTLINK);
+                }
 
                 return view('home', [
                     'shortlink' => url('/' . $shortstring->shortstring),
@@ -49,6 +58,10 @@ class ShortlinkController extends Controller
                 ]);
             }
 
+        }
+
+        if (!is_null($this->userId)) {
+            UserAction::logAction($this->userId, ShortlinkActions::VISITED_UNEXISTING_AND_UNAVAILABLE_SHORTLINK);
         }
         // shortstring not available
         return redirect('/');
@@ -249,7 +262,11 @@ class ShortlinkController extends Controller
             $nextAvailableShortstring->is_available = 0;
             $nextAvailableShortstring->save();
 
-            UserAction::logAction($newShortlink->user_id, ShortlinkActions::GENERATED_SHORTLINK);
+            if ($useBcToGenerateShortstring) {
+                UserAction::logAction($newShortlink->user_id, ShortlinkActions::GENERATED_SHORTLINK_WITH_BC);
+            } else {
+                UserAction::logAction($newShortlink->user_id, ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING);
+            }
 
         } catch (\Throwable $th) {
             DB::rollBack();
