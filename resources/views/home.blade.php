@@ -114,6 +114,7 @@
             }
 
             .form-box .button {
+                position: relative;
                 padding: 10px;
                 background: linear-gradient(
                     120deg,
@@ -143,8 +144,19 @@
                 );
             }
 
+            .form-box .button.blue {
+                background: linear-gradient(
+                    120deg,
+                    rgb(1 101 225) 0%,
+                    rgb(22 166 251) 25%,
+                    rgb(244 244 244) 100%
+                )
+            }
+
             .form-box .button img {
-                float: right;
+                position: absolute;
+                top: 7px;
+                right: 10px;
             }
 
             .form-box .button:hover {
@@ -196,6 +208,18 @@
 
             .mtop-22 {
                 margin-top: 22px;
+            }
+
+            .mtop-10 {
+                margin-top: 10px;
+            }
+
+            .form-box .external-logins {
+                margin-top: 22px;
+            }
+
+            .form-box .external-logins .button {
+                margin-bottom: 10px;
             }
 
             .form-box .list-container {
@@ -613,7 +637,7 @@
                     xhr.addEventListener("readystatechange", function () {
                         if (this.readyState === 4) {
                             if (this.status === 200) {
-                                window.location.reload();
+                                window.location.href = '/';
                             }
                         }
                     });
@@ -1974,6 +1998,36 @@
                                     }
                                 }
                             },
+                            LoginWithFacebookBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("login-with-facebook-button");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/facebook/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                             CloseBtn: {
                                 hasInitialized: false,
                                 el: function () {
@@ -2104,6 +2158,7 @@
                             this.Components.Password.initialize();
                             this.Components.LoginBtn.initialize();
                             this.Components.LoginWithGithubBtn.initialize();
+                            this.Components.LoginWithFacebookBtn.initialize();
                             this.Components.CloseBtn.initialize();
                             this.Components.CreateAccLink.initialize();
                             this.Components.ForgotPasswordLink.initialize();
@@ -3349,7 +3404,10 @@
             <a href="javascript:void(0);" id="create-account-link" class="form-link">Ainda não tenho uma conta</a>
             <a href="javascript:void(0);" id="forgot-pwd-link" class="form-link">Esqueci-me da palavra-passe</a>
 
-            <div class="button dark disabled mtop-22" id="login-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
+            <div class="external-logins">
+                <div class="button blue disabled" id="login-with-facebook-button"><img src="{{ asset('img/facebook-logo.png') }}" width="26"/>Entrar com o Facebook</div>
+                <div class="button dark disabled" id="login-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
+            </div>
         </div>
 
 
@@ -3568,6 +3626,7 @@
                 window.App.Components.MenuTop.Items.MyLinks.show();
                 window.App.Components.Login.Components.LoginBtn.enable();
                 window.App.Components.Login.Components.LoginWithGithubBtn.enable();
+                window.App.Components.Login.Components.LoginWithFacebookBtn.enable();
 
                 if (window._authManager.isLoggedIn) {
                     window.App.Components.Login.hide();
