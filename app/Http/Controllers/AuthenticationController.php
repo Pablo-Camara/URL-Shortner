@@ -28,6 +28,57 @@ class AuthenticationController extends Controller
     public function __construct() {
         $this->getUserDataFromCookie();
     }
+
+    public function setAuthCookie(User $user)
+    {
+        $config = config('session');
+
+        // creates new guest token
+        $tokenExpirationDatetime = Carbon::now()->addRealMinutes(
+            $config['auth_token_cookie_lifetime']
+        );
+
+        $tokenName = 'guest_token';
+        $userAbilities = ['guest'];
+
+        if ($user->guest === 0) {
+
+            $tokenName = 'stay_logged_in_token';
+            $userAbilities = $user->abilities->all();
+            $userAbilities = array_map(function($ability){
+                return $ability['name'];
+            }, $userAbilities);
+            $userAbilities = array_merge(['logged_in'], $userAbilities);
+
+        }
+
+        $userToken = $user->createToken(
+            $tokenName,
+            $userAbilities,
+            $tokenExpirationDatetime
+        )->plainTextToken;
+
+        // creates new authCookie
+        $authCookie = Cookie::make(
+            $config['auth_token_cookie_name'],
+            encrypt([
+                'auth_token' => $userToken,
+                'guest' => $user->guest,
+                'user_id' => $user->id
+            ]),
+            $config['auth_token_cookie_lifetime'],
+            $config['path'],
+            $config['domain'],
+            $config['secure'],
+            false,
+            false,
+            $config['same_site'] ?? null
+        );
+
+        Cookie::queue($authCookie);
+        return $userToken;
+    }
+
     /**
      * Authenticates the user
      * if no auth token cookie, creates guest user and generates guest token
@@ -39,8 +90,6 @@ class AuthenticationController extends Controller
      */
     public function authenticationAttempt(Request $request, Response $response)
     {
-        $config = config('session');
-
         if (
             !is_null($this->userId)
         ) {
@@ -51,7 +100,6 @@ class AuthenticationController extends Controller
                 'at' => $this->authToken,
                 'guest' => $this->guest,
             ]);
-
 
             $actionName = $this->guest == 0 ?
                 AuthActions::AUTHENTICATED_AS_USER : AuthActions::AUTHENTICATED_AS_GUEST;
@@ -65,44 +113,16 @@ class AuthenticationController extends Controller
         $user->guest = 1;
         $user->save();
 
-        // creates new guest token
-        $guestTokenExpirationDatetime = Carbon::now()->addRealMinutes(
-            $config['auth_token_cookie_lifetime']
-        );
-
-        $userToken = $user->createToken(
-            'guest_token',
-            ['guest'],
-            $guestTokenExpirationDatetime
-        )->plainTextToken;
+        $userToken = $this->setAuthCookie($user);
 
         $response->setContent([
             'at' => $userToken,
             'guest' => 1
         ]);
 
-        // creates new authCookie
-        $authCookie = Cookie::make(
-            $config['auth_token_cookie_name'],
-            encrypt([
-                'auth_token' => $userToken,
-                'guest' => 1,
-                'user_id' => $user->id
-            ]),
-            $config['auth_token_cookie_lifetime'],
-            $config['path'],
-            $config['domain'],
-            $config['secure'],
-            false,
-            false,
-            $config['same_site'] ?? null
-        );
-
         UserAction::logAction($user->id, AuthActions::AUTHENTICATED_AS_GUEST);
 
-        // send response with the new cookie
-        return $response
-            ->withCookie($authCookie);
+        return $response;
     }
 
     /**
@@ -143,7 +163,6 @@ class AuthenticationController extends Controller
             return AuthResponses::notAuthenticated();
         }
 
-
         if ($this->guest === 0) {
 
             UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WHILE_LOGGED_IN);
@@ -154,7 +173,6 @@ class AuthenticationController extends Controller
                         'guest' => 0
                     ]);
         }
-
 
         $request->validate([
             'email' => 'required|email',
@@ -181,21 +199,7 @@ class AuthenticationController extends Controller
             return AuthResponses::unverifiedAccount();
         }
 
-        $userAbilities = $user->abilities->all();
-        $userAbilities = array_map(function($ability){
-            return $ability['name'];
-        }, $userAbilities);
-        $userAbilities = array_merge(['logged_in'], $userAbilities);
-
-        $userTokenExpirationDatetime = Carbon::now()->addRealMinutes(
-            $config['auth_token_cookie_lifetime']
-        );
-
-        $userToken = $user->createToken(
-            'stay_logged_in_token',
-            $userAbilities,
-            $userTokenExpirationDatetime
-        )->plainTextToken;
+        $userToken = $this->setAuthCookie($user);
 
         // move shortlinks generated as guest
         // to the now logged in user account.
@@ -211,28 +215,11 @@ class AuthenticationController extends Controller
         UserAction::logAction($this->userId, AuthActions::LOGGED_IN);
         UserAction::logAction($user->id, AuthActions::LOGGED_IN);
 
-        $authCookie = Cookie::make(
-            $config['auth_token_cookie_name'],
-            encrypt([
-                'auth_token' => $userToken,
-                'guest' => 0,
-                'user_id' => $user->id
-            ]),
-            $config['auth_token_cookie_lifetime'],
-            $config['path'],
-            $config['domain'],
-            $config['secure'],
-            false,
-            false,
-            $config['same_site'] ?? null
-        );
-
         return $response
             ->setContent([
                 'at' => $userToken,
                 'guest' => 0
-            ])
-            ->withCookie($authCookie);
+            ]);
     }
 
     /**
@@ -378,8 +365,6 @@ class AuthenticationController extends Controller
             );
         }
 
-
-
         // lets only allow Resending a verification email every 15min
         // to avoid mass spam
         if ($resending)
@@ -459,6 +444,7 @@ class AuthenticationController extends Controller
             // and the token is deleted after consumption.
 
             // avoiding spammers..
+            UserAction::logAction($user->id, AuthActions::USER_ALREADY_HAS_PASSWORD_RECOVERY_TOKEN);
             return new Response('', 200);
         }
 
@@ -525,6 +511,8 @@ class AuthenticationController extends Controller
             return redirect()->route('login-page');
         }
 
+        UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_GITHUB);
+
         try {
             $user = Socialite::driver('github')->user();
 
@@ -558,7 +546,6 @@ class AuthenticationController extends Controller
             );
 
             // login user using github email
-
             $existingUser = User::where('email', '=', $user->email)->first();
 
             $usedGuestAcc = false;
@@ -570,7 +557,6 @@ class AuthenticationController extends Controller
                 $existingUser->save();
 
                 $usedGuestAcc = true;
-
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_GITHUB);
             }
 
@@ -586,50 +572,18 @@ class AuthenticationController extends Controller
                 }
             }
 
-            $config = config('session');
-
-            $userAbilities = $existingUser->abilities->all();
-            $userAbilities = array_map(function($ability){
-                return $ability['name'];
-            }, $userAbilities);
-            $userAbilities = array_merge(['logged_in'], $userAbilities);
-
-            $userTokenExpirationDatetime = Carbon::now()->addRealMinutes(
-                $config['auth_token_cookie_lifetime']
-            );
-
-            $userToken = $existingUser->createToken(
-                'stay_logged_in_token',
-                $userAbilities,
-                $userTokenExpirationDatetime
-            )->plainTextToken;
-
-
-            $authCookie = Cookie::make(
-                $config['auth_token_cookie_name'],
-                encrypt([
-                    'auth_token' => $userToken,
-                    'guest' => 0,
-                    'user_id' => $existingUser->id
-                ]),
-                $config['auth_token_cookie_lifetime'],
-                $config['path'],
-                $config['domain'],
-                $config['secure'],
-                false,
-                false,
-                $config['same_site'] ?? null
-            );
+            $this->setAuthCookie($existingUser);
 
             UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_GITHUB);
             if (!$usedGuestAcc) {
                 UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_GITHUB);
             }
 
-            return redirect()->route('my-links-page')->withCookie($authCookie);
+            return redirect()->route('my-links-page');
 
         } catch (\Throwable $th) {
             // TODO: log github login attempt failed
+            UserAction::logAction($this->userId, AuthActions::FAILED_TO_LOGIN_WITH_GITHUB);
             return redirect()->route('login-page');
         }
 
