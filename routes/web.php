@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShortlinkController;
 use Illuminate\Support\Facades\Route;
@@ -27,5 +28,16 @@ Route::get('/confirmar-email/{token}', [HomeController::class, 'confirmEmail'])
 Route::get('/alterar-palavra-passe/{token}', [HomeController::class, 'changePassword'])
         ->middleware(['password.change', 'auth:sanctum', 'abilities:change_password'])
         ->name('changePasswordLink');
+
+
+/**
+ * routes for Login with External services
+ */
+
+Route::get('/auth/github/redirect', [AuthenticationController::class, 'githubRedirect']);
+Route::get('/auth/github/callback', [AuthenticationController::class, 'githubCallback']);
+
+ /** -- */
+
 
 Route::get('/{shortstring}', [ShortlinkController::class, 'visit']);

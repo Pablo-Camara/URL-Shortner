@@ -15,9 +15,11 @@ use Illuminate\Support\InteractsWithTime;
 use App\Helpers\Responses\AuthResponses;
 use App\Mail\Auth\EmailConfirmation;
 use App\Mail\Auth\PasswordRecovery;
+use App\Models\GithubAccount;
 use App\Models\Shortlink;
 use App\Models\UserAction;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthenticationController extends Controller
 {
@@ -135,8 +137,6 @@ class AuthenticationController extends Controller
     public function loginAttempt(Request $request, Response $response)
     {
         $config = config('session');
-
-
 
         // when logging in, users must always have an Auth Cookie (with guest token)
         if (is_null($this->userId)) {
@@ -504,5 +504,134 @@ class AuthenticationController extends Controller
         $user->currentAccessToken()->delete();
 
         return new Response('', 200);
+    }
+
+
+    public function githubRedirect(){
+        if (is_null($this->userId) || $this->guest == 0) {
+            return redirect()->route('login-page');
+        }
+
+        return Socialite::driver('github')->redirect();
+    }
+
+     /**
+     * Registers and/or login user with Github
+     *
+     */
+    public function githubCallback() {
+
+        if (is_null($this->userId) || $this->guest == 0) {
+            return redirect()->route('login-page');
+        }
+
+        try {
+            $user = Socialite::driver('github')->user();
+
+            // store or update github data
+            GithubAccount::updateOrCreate(
+                [
+                    'github_user_id' => $user->id
+                ],
+                [
+                    'nickname' => $user->nickname,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar,
+                    'user_token' => $user->token,
+                    'user_refresh_token' => $user->refreshToken,
+                    'expires_in' => $user->expiresIn,
+                    'approved_scopes' => json_encode($user->approvedScopes),
+                    'user_url' => $user->user['html_url'],
+                    'user_type' => $user->user['type'],
+                    'user_is_site_admin' => $user->user['site_admin'],
+                    'user_company' => $user->user['company'],
+                    'user_blog_link' => $user->user['blog'],
+                    'user_location' => $user->user['location'],
+                    'user_hireable' => $user->user['hireable'],
+                    'user_bio' => $user->user['bio'],
+                    'user_twitter_username' => $user->user['twitter_username'],
+                    'user_total_public_repos' => $user->user['public_repos'],
+                    'user_total_followers' => $user->user['followers'],
+                    'user_acc_created_at' => $user->user['created_at'],
+                ]
+            );
+
+            // login user using github email
+
+            $existingUser = User::where('email', '=', $user->email)->first();
+
+            $usedGuestAcc = false;
+            if (!$existingUser) {
+                $existingUser = User::find($this->userId);
+                $existingUser->guest = 0;
+                $existingUser->name = $user->name;
+                $existingUser->email = $user->email;
+                $existingUser->save();
+
+                $usedGuestAcc = true;
+
+                UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_GITHUB);
+            }
+
+            if (!$usedGuestAcc) {
+                // move shortlinks generated as guest to acc
+                $totalGeneratedLinksAsGuest = Shortlink::where(
+                    'user_id', '=', $this->userId
+                )->update(['user_id' => $existingUser->id]);
+
+                if ($totalGeneratedLinksAsGuest > 0) {
+                    UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
+                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
+                }
+            }
+
+            $config = config('session');
+
+            $userAbilities = $existingUser->abilities->all();
+            $userAbilities = array_map(function($ability){
+                return $ability['name'];
+            }, $userAbilities);
+            $userAbilities = array_merge(['logged_in'], $userAbilities);
+
+            $userTokenExpirationDatetime = Carbon::now()->addRealMinutes(
+                $config['auth_token_cookie_lifetime']
+            );
+
+            $userToken = $existingUser->createToken(
+                'stay_logged_in_token',
+                $userAbilities,
+                $userTokenExpirationDatetime
+            )->plainTextToken;
+
+
+            $authCookie = Cookie::make(
+                $config['auth_token_cookie_name'],
+                encrypt([
+                    'auth_token' => $userToken,
+                    'guest' => 0,
+                    'user_id' => $existingUser->id
+                ]),
+                $config['auth_token_cookie_lifetime'],
+                $config['path'],
+                $config['domain'],
+                $config['secure'],
+                false,
+                false,
+                $config['same_site'] ?? null
+            );
+
+            UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_GITHUB);
+            if (!$usedGuestAcc) {
+                UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_GITHUB);
+            }
+
+            return redirect()->route('my-links-page')->withCookie($authCookie);
+
+        } catch (\Throwable $th) {
+            // TODO: log github login attempt failed
+            return redirect()->route('login-page');
+        }
+
     }
 }

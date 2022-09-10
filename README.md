@@ -11,6 +11,9 @@ we must run:
 
 SHORTSTRINGS_LENGTH=3 php artisan db:seed --class=ShortstringSeeder
 
+other examples (using/set multiple env variables/settings):
+SHORTSTRING_SEED_METHOD=recursive SHORTSTRINGS_LENGTH=5 TOTAL_SHORTSTRINGS_TO_SEED=1 php artisan db:seed --class=ShortstringSeeder
+
 Where the SHORTSTRINGS_LENGTH value is the length of the strings to be generated.
 
 ## Post install application data seeding

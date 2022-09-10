@@ -47,6 +47,7 @@
             .form-box.overlay .form-box-title {
                 margin-top: 12px;
                 text-transform: uppercase;
+                margin-bottom: 22px;
             }
 
             .form-box .close-form-box {
@@ -131,6 +132,19 @@
                     rgb(255 65 65) 25%,
                     rgb(255 204 204) 100%
                 );
+            }
+
+            .form-box .button.dark {
+                background: linear-gradient(
+                    120deg,
+                    rgb(44 44 44) 0%,
+                    rgb(79 79 79) 25%,
+                    rgb(88 88 88) 100%
+                );
+            }
+
+            .form-box .button img {
+                float: right;
             }
 
             .form-box .button:hover {
@@ -1930,6 +1944,36 @@
                                     }
                                 }
                             },
+                            LoginWithGithubBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("login-with-github-button");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/github/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                             CloseBtn: {
                                 hasInitialized: false,
                                 el: function () {
@@ -2059,6 +2103,7 @@
                             this.Components.Email.initialize();
                             this.Components.Password.initialize();
                             this.Components.LoginBtn.initialize();
+                            this.Components.LoginWithGithubBtn.initialize();
                             this.Components.CloseBtn.initialize();
                             this.Components.CreateAccLink.initialize();
                             this.Components.ForgotPasswordLink.initialize();
@@ -3300,8 +3345,11 @@
             </a>
 
             <div class="button disabled" id="login-button">Entrar</div>
+
             <a href="javascript:void(0);" id="create-account-link" class="form-link">Ainda não tenho uma conta</a>
             <a href="javascript:void(0);" id="forgot-pwd-link" class="form-link">Esqueci-me da palavra-passe</a>
+
+            <div class="button dark disabled mtop-22" id="login-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
         </div>
 
 
@@ -3519,6 +3567,7 @@
 
                 window.App.Components.MenuTop.Items.MyLinks.show();
                 window.App.Components.Login.Components.LoginBtn.enable();
+                window.App.Components.Login.Components.LoginWithGithubBtn.enable();
 
                 if (window._authManager.isLoggedIn) {
                     window.App.Components.Login.hide();
