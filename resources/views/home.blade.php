@@ -3137,6 +3137,21 @@
                             window.App.hideComponents(this.components.initiallyHidden);
                         }
                     },
+                    RegisterAvailableShortlink: {
+                        components: {
+                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'RegisterAvailableShortlink'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'RegisterAvailableShortlink', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
+                        }
+                    },
                     EmailConfirmed: {
                         components: {
                             initiallyVisible: ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'EmailConfirmed'],
@@ -3517,8 +3532,7 @@
             }
 
             if (window.App.isUserRequestingAvailableShortstring) {
-                window.App.Components.ShortenUrl.hide();
-                window.App.Components.RegisterAvailableShortlink.show();
+                window.App.Views.RegisterAvailableShortlink.show();
             } else {
                 if (
                     typeof window.App.currentView !== 'undefined'
@@ -3529,7 +3543,7 @@
                 ) {
                     window.App.Views[window.App.currentView].show();
                 } else {
-                    alert('view not found');
+                    //console.log('view not found');
                 }
 
             }

@@ -59,6 +59,7 @@ class ShortlinkController extends Controller
                 }
 
                 return view('home', [
+                    'view' => 'RegisterAvailableShortlink',
                     'shortlink' => url('/' . $shortstring->shortstring),
                     'shortlink_available' => true,
                     'shortlink_shortstring' => $shortstring->shortstring,
@@ -131,10 +132,38 @@ class ShortlinkController extends Controller
     {
         // url validation, read below ( about max length )
         // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
-        $request->validate([
-            'long_url' => 'required|url|max:2048', //TODO: also log when max validation fails
-            'g-recaptcha-response' => 'required|captcha'
-        ]);
+
+        $maxUrlLength = 2048;
+
+        try {
+            Validator::make(
+                $request->all(),
+                [
+                    // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
+                    'long_url' => 'required|url|max:' . $maxUrlLength,
+                    'g-recaptcha-response' => 'required|captcha'
+                ],
+                [],
+                ['long_url' => 'URL']
+            )->validate();
+
+        } catch (ValidationException $ve) {
+            if (
+                $request->input('long_url', '')
+                &&
+                strlen($request->input('long_url')) > $maxUrlLength
+                &&
+                !is_null($this->userId)
+            ) {
+                UserAction::logAction(
+                    $this->userId,
+                    ShortlinkActions::ATTEMPTED_TO_GENERATE_SHORTLINK_FOR_URL_THAT_IS_TOO_LONG
+                );
+            }
+            throw $ve;
+        } catch (\Throwable $th) {
+            throw $th;
+        }
 
         $shortstring = $request->input('shortstring');
 
@@ -212,7 +241,6 @@ class ShortlinkController extends Controller
         $maxUrlLength = 2048;
 
         try {
-
             Validator::make(
                 $request->all(),
                 [

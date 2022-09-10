@@ -2,14 +2,13 @@ Olá {{ $firstName }} ,
 
 Seja bem vindo!
 
-Confirme o seu email clicando no seguinte link:
+Clique no seguinte link para confirmar o seu email:
 
 {{ $emailConfirmationLink }}
 
-Desta forma poderá disfrutar de funcionalidades
-extras do nosso serviço links curtos!
+Com uma conta na nossa plataforma poderá disfrutar
+de algumas funcionalidades extras..como por exemplo:
 
-Como por exemplo..
- - Guardar os seus links na sua conta
- - Editar o url de destino dos seus links curtos
+ - Guardar links na sua conta
+ - Editar/corrigir os links que criou
  - Visualizar estatísticas de acesso dos seus links
