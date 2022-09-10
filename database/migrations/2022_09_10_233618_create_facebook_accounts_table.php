@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('email');
             $table->string('avatar')->nullable();
             $table->string('avatar_original')->nullable();
-            $table->string('user_token');
-            $table->string('user_refresh_token')->nullable();
+            $table->text('user_token');
+            $table->text('user_refresh_token')->nullable();
             $table->string('expires_in')->nullable();
             $table->string('approved_scopes');
             $table->string('profile_url')->nullable();
