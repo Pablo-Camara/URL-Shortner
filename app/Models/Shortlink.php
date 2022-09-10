@@ -17,4 +17,9 @@ class Shortlink extends Model
     {
         return $this->belongsTo(Shortstring::class);
     }
+
+    public function redirectUrl() {
+        return $this->hasOne(ShortlinkUrl::class)
+                    ->where('is_redirect_url', '=', 1);
+    }
 }

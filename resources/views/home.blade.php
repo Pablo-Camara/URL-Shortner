@@ -2920,7 +2920,9 @@
 
 
                                             infoRow.appendChild(createdAtCol);
-                                            infoRow.appendChild(totalViewsCol);
+
+                                            //TODO: uncomment line after total views are stored
+                                            //infoRow.appendChild(totalViewsCol);
 
                                             this.el().appendChild(listItem);
 

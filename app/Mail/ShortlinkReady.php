@@ -36,7 +36,7 @@ class ShortlinkReady extends Mailable
     public function __construct(Shortlink $shortlink)
     {
         $this->shortlink = URL::to('/' . $shortlink->shortstring->shortstring);
-        $this->longUrl = $shortlink->long_url;
+        $this->longUrl = $shortlink->redirectUrl->url;
     }
 
     /**
