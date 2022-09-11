@@ -153,6 +153,15 @@
                 );
             }
 
+            .form-box .button.darker-blue {
+                background: linear-gradient(
+                    120deg,
+                    rgb(9 103 194) 0%,
+                    rgb(9 103 194) 25%,
+                    rgb(97 153 210) 100%
+                );
+            }
+
             .form-box .button.light-blue {
                 background: linear-gradient(
                     120deg,
@@ -2073,6 +2082,36 @@
                                     }
                                 }
                             },
+                            LoginWithLinkedinBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("login-with-linkedin-button");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/linkedin/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                             CloseBtn: {
                                 hasInitialized: false,
                                 el: function () {
@@ -2205,6 +2244,7 @@
                             this.Components.LoginWithGithubBtn.initialize();
                             this.Components.LoginWithFacebookBtn.initialize();
                             this.Components.LoginWithGoogleBtn.initialize();
+                            this.Components.LoginWithLinkedinBtn.initialize();
                             this.Components.CloseBtn.initialize();
                             this.Components.CreateAccLink.initialize();
                             this.Components.ForgotPasswordLink.initialize();
@@ -3453,6 +3493,7 @@
             <div class="external-logins">
                 <div class="button light-blue disabled" id="login-with-google-button"><img src="{{ asset('img/google-logo.png') }}" width="30">Entrar com o Google</div>
                 <div class="button blue disabled" id="login-with-facebook-button"><img src="{{ asset('img/facebook-logo.png') }}" width="26"/>Entrar com o Facebook</div>
+                <div class="button darker-blue disabled" id="login-with-linkedin-button"><img src="{{ asset('img/linkedin-logo.png') }}" width="26">Entrar com o LinkedIn</div>
                 <div class="button dark disabled" id="login-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
             </div>
         </div>
@@ -3675,6 +3716,7 @@
                 window.App.Components.Login.Components.LoginWithGithubBtn.enable();
                 window.App.Components.Login.Components.LoginWithFacebookBtn.enable();
                 window.App.Components.Login.Components.LoginWithGoogleBtn.enable();
+                window.App.Components.Login.Components.LoginWithLinkedinBtn.enable();
 
                 if (window._authManager.isLoggedIn) {
                     window.App.Components.Login.hide();

@@ -42,6 +42,10 @@ Route::get('/auth/google/callback', [AuthenticationController::class, 'googleCal
 Route::get('/auth/facebook/redirect', [AuthenticationController::class, 'facebookRedirect']);
 Route::get('/auth/facebook/callback', [AuthenticationController::class, 'facebookCallback']);
 
+/** LinkedIn */
+Route::get('/auth/linkedin/redirect', [AuthenticationController::class, 'linkedinRedirect']);
+Route::get('/auth/linkedin/callback', [AuthenticationController::class, 'linkedinCallback']);
+
  /** Github */
 Route::get('/auth/github/redirect', [AuthenticationController::class, 'githubRedirect']);
 Route::get('/auth/github/callback', [AuthenticationController::class, 'githubCallback']);
