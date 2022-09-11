@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('facebook_accounts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('facebook_user_id')->index();
+            $table->string('facebook_user_id')->index();
             $table->string('nickname')->nullable();
             $table->string('name');
             $table->string('email');

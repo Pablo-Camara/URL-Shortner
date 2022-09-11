@@ -17,6 +17,7 @@ use App\Mail\Auth\EmailConfirmation;
 use App\Mail\Auth\PasswordRecovery;
 use App\Models\FacebookAccount;
 use App\Models\GithubAccount;
+use App\Models\GoogleAccount;
 use App\Models\Shortlink;
 use App\Models\UserAction;
 use Illuminate\Support\Facades\Mail;
@@ -673,6 +674,96 @@ class AuthenticationController extends Controller
         } catch (\Throwable $th) {
             throw $th;
             UserAction::logAction($this->userId, AuthActions::FAILED_TO_LOGIN_WITH_FACEBOOK);
+            return redirect()->route('login-page');
+        }
+
+    }
+
+    public function googleRedirect(){
+        if (is_null($this->userId) || $this->guest == 0) {
+            return redirect()->route('login-page');
+        }
+
+        return Socialite::driver('google')->redirect();
+    }
+
+    /**
+     * Registers and/or login user with google
+     *
+     */
+    public function googleCallback() {
+
+        if (is_null($this->userId) || $this->guest == 0) {
+            return redirect()->route('login-page');
+        }
+
+        UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_GOOGLE);
+
+        try {
+            $user = Socialite::driver('google')->user();
+
+            // store or update facebook data
+            GoogleAccount::updateOrCreate(
+                [
+                    'google_user_id' => $user->id
+                ],
+                [
+                    'nickname' => $user->nickname,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar,
+                    'avatar_original' => $user->avatar_original,
+                    'user_token' => $user->token,
+                    'user_refresh_token' => $user->refreshToken,
+                    'expires_in' => $user->expiresIn,
+                    'approved_scopes' => json_encode($user->approvedScopes),
+                    'user_link' => $user->user['link'],
+                    'user_picture' => $user->user['picture'],
+                    'user_email_verified' => $user->user['email_verified'],
+                    'user_locale' => $user->user['locale'],
+                    'user_verified_email' => $user->user['verified_email'],
+                ]
+            );
+
+            // login user using facebook email
+            $existingUser = User::where('email', '=', $user->email)->first();
+
+            $usedGuestAcc = false;
+            if (!$existingUser) {
+                $existingUser = User::find($this->userId);
+                $existingUser->guest = 0;
+                $existingUser->name = $user->name;
+                $existingUser->email = $user->email;
+                $existingUser->save();
+
+                $usedGuestAcc = true;
+                UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_GOOGLE);
+            }
+
+            if (!$usedGuestAcc) {
+                // move shortlinks generated as guest to acc
+                $totalGeneratedLinksAsGuest = Shortlink::where(
+                    'user_id', '=', $this->userId
+                )->update(['user_id' => $existingUser->id]);
+
+                if ($totalGeneratedLinksAsGuest > 0) {
+                    UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
+                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
+                }
+            }
+
+            $this->setAuthCookie($existingUser);
+
+            UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_GOOGLE);
+            if (!$usedGuestAcc) {
+                UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_GOOGLE);
+            }
+
+            return redirect()->route('my-links-page');
+
+        } catch (\Throwable $th) {
+            throw $th;
+            UserAction::logAction($this->userId, AuthActions::FAILED_TO_LOGIN_WITH_GOOGLE);
             return redirect()->route('login-page');
         }
 

@@ -34,6 +34,10 @@ Route::get('/alterar-palavra-passe/{token}', [HomeController::class, 'changePass
  * routes for Login with External services
  */
 
+ /** Google */
+Route::get('/auth/google/redirect', [AuthenticationController::class, 'googleRedirect']);
+Route::get('/auth/google/callback', [AuthenticationController::class, 'googleCallback']);
+
  /** Facebook */
 Route::get('/auth/facebook/redirect', [AuthenticationController::class, 'facebookRedirect']);
 Route::get('/auth/facebook/callback', [AuthenticationController::class, 'facebookCallback']);

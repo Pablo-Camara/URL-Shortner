@@ -150,7 +150,22 @@
                     rgb(1 101 225) 0%,
                     rgb(22 166 251) 25%,
                     rgb(244 244 244) 100%
-                )
+                );
+            }
+
+            .form-box .button.light-blue {
+                background: linear-gradient(
+                    120deg,
+                    rgb(229 243 255) 0%,
+                    rgb(226 244 255) 25%,
+                    rgb(255 255 255) 100%
+                );
+                color: #555;
+            }
+
+            .form-box .button.light-blue.disabled {
+                background: white !important;
+                color: #AAA !important;
             }
 
             .form-box .button img {
@@ -2028,6 +2043,36 @@
                                     }
                                 }
                             },
+                            LoginWithGoogleBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("login-with-google-button");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/google/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                             CloseBtn: {
                                 hasInitialized: false,
                                 el: function () {
@@ -2159,6 +2204,7 @@
                             this.Components.LoginBtn.initialize();
                             this.Components.LoginWithGithubBtn.initialize();
                             this.Components.LoginWithFacebookBtn.initialize();
+                            this.Components.LoginWithGoogleBtn.initialize();
                             this.Components.CloseBtn.initialize();
                             this.Components.CreateAccLink.initialize();
                             this.Components.ForgotPasswordLink.initialize();
@@ -3405,6 +3451,7 @@
             <a href="javascript:void(0);" id="forgot-pwd-link" class="form-link">Esqueci-me da palavra-passe</a>
 
             <div class="external-logins">
+                <div class="button light-blue disabled" id="login-with-google-button"><img src="{{ asset('img/google-logo.png') }}" width="30">Entrar com o Google</div>
                 <div class="button blue disabled" id="login-with-facebook-button"><img src="{{ asset('img/facebook-logo.png') }}" width="26"/>Entrar com o Facebook</div>
                 <div class="button dark disabled" id="login-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
             </div>
@@ -3627,6 +3674,7 @@
                 window.App.Components.Login.Components.LoginBtn.enable();
                 window.App.Components.Login.Components.LoginWithGithubBtn.enable();
                 window.App.Components.Login.Components.LoginWithFacebookBtn.enable();
+                window.App.Components.Login.Components.LoginWithGoogleBtn.enable();
 
                 if (window._authManager.isLoggedIn) {
                     window.App.Components.Login.hide();
