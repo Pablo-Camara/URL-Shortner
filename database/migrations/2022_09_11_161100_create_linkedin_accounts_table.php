@@ -37,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('google_accounts');
+        Schema::dropIfExists('linkedin_accounts');
     }
 };

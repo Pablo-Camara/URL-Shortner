@@ -153,6 +153,15 @@
                 );
             }
 
+            .form-box .button.sky-blue {
+                background: linear-gradient(
+                    120deg,
+                    rgb(0 174 240) 0%,
+                    rgb(0 174 240) 25%,
+                    rgb(224 241 247) 100%
+                );
+            }
+
             .form-box .button.darker-blue {
                 background: linear-gradient(
                     120deg,
@@ -2112,6 +2121,36 @@
                                     }
                                 }
                             },
+                            LoginWithTwitterBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("login-with-twitter-button");
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/twitter/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                             CloseBtn: {
                                 hasInitialized: false,
                                 el: function () {
@@ -2245,6 +2284,7 @@
                             this.Components.LoginWithFacebookBtn.initialize();
                             this.Components.LoginWithGoogleBtn.initialize();
                             this.Components.LoginWithLinkedinBtn.initialize();
+                            this.Components.LoginWithTwitterBtn.initialize();
                             this.Components.CloseBtn.initialize();
                             this.Components.CreateAccLink.initialize();
                             this.Components.ForgotPasswordLink.initialize();
@@ -3493,6 +3533,7 @@
             <div class="external-logins">
                 <div class="button light-blue disabled" id="login-with-google-button"><img src="{{ asset('img/google-logo.png') }}" width="30">Entrar com o Google</div>
                 <div class="button blue disabled" id="login-with-facebook-button"><img src="{{ asset('img/facebook-logo.png') }}" width="26"/>Entrar com o Facebook</div>
+                <div class="button sky-blue disabled" id="login-with-twitter-button"><img src="{{ asset('img/twitter-logo.png') }}" width="26"/>Entrar com o Twitter</div>
                 <div class="button darker-blue disabled" id="login-with-linkedin-button"><img src="{{ asset('img/linkedin-logo.png') }}" width="26">Entrar com o LinkedIn</div>
                 <div class="button dark disabled" id="login-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
             </div>
@@ -3717,6 +3758,7 @@
                 window.App.Components.Login.Components.LoginWithFacebookBtn.enable();
                 window.App.Components.Login.Components.LoginWithGoogleBtn.enable();
                 window.App.Components.Login.Components.LoginWithLinkedinBtn.enable();
+                window.App.Components.Login.Components.LoginWithTwitterBtn.enable();
 
                 if (window._authManager.isLoggedIn) {
                     window.App.Components.Login.hide();

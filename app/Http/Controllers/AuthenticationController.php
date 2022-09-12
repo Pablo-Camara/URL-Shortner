@@ -20,6 +20,7 @@ use App\Models\GithubAccount;
 use App\Models\GoogleAccount;
 use App\Models\LinkedinAccount;
 use App\Models\Shortlink;
+use App\Models\TwitterAccount;
 use App\Models\UserAction;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Socialite\Facades\Socialite;
@@ -673,7 +674,6 @@ class AuthenticationController extends Controller
             return redirect()->route('my-links-page');
 
         } catch (\Throwable $th) {
-            throw $th;
             UserAction::logAction($this->userId, AuthActions::FAILED_TO_LOGIN_WITH_FACEBOOK);
             return redirect()->route('login-page');
         }
@@ -848,8 +848,114 @@ class AuthenticationController extends Controller
             return redirect()->route('my-links-page');
 
         } catch (\Throwable $th) {
-            throw $th;
             UserAction::logAction($this->userId, AuthActions::FAILED_TO_LOGIN_WITH_LINKEDIN);
+            return redirect()->route('login-page');
+        }
+
+    }
+
+
+    public function twitterRedirect(){
+        if (is_null($this->userId) || $this->guest == 0) {
+            return redirect()->route('login-page');
+        }
+
+        return Socialite::driver('twitter')->redirect();
+    }
+
+    /**
+     * Registers and/or login user with twitter
+     *
+     */
+    public function twitterCallback() {
+
+        if (is_null($this->userId) || $this->guest == 0) {
+            return redirect()->route('login-page');
+        }
+
+        UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_TWITTER);
+
+        try {
+            $user = Socialite::driver('twitter')->user();
+
+            // store or update twitter data
+            TwitterAccount::updateOrCreate(
+                [
+                    'twitter_user_id' => $user->id,
+                ],
+                [
+                    'nickname' => $user->nickname,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar,
+                    'avatar_original' => $user->avatar_original,
+                    'user_protected' => $user->user['protected'],
+                    'user_followers_count' => $user->user['followers_count'],
+                    'user_friends_count' => $user->user['friends_count'],
+                    'user_listed_count' => $user->user['listed_count'],
+                    'user_created_at' => $user->user['created_at'],
+                    'user_favourites_count' => $user->user['favourites_count'],
+                    'user_utc_offset' => $user->user['utc_offset'],
+                    'user_time_zone' => $user->user['time_zone'],
+                    'user_geo_enabled' => $user->user['geo_enabled'],
+                    'user_verified' => $user->user['verified'],
+                    'user_statuses_count' => $user->user['statuses_count'],
+                    'user_lang' => $user->user['lang'],
+                    'user_contributors_enabled' => $user->user['contributors_enabled'],
+                    'user_is_translator' => $user->user['is_translator'],
+                    'user_is_translation_enabled' => $user->user['is_translation_enabled'],
+                    'user_profile_use_background_image' => $user->user['profile_use_background_image'],
+                    'user_has_extended_profile' => $user->user['has_extended_profile'],
+                    'user_default_profile' => $user->user['default_profile'],
+                    'user_default_profile_image' => $user->user['default_profile_image'],
+                    'user_suspended' => $user->user['suspended'],
+                    'user_needs_phone_verification' => $user->user['needs_phone_verification'],
+                    'user_url' => $user->user['url'],
+                    'user_location' => $user->user['location'],
+                    'user_description' => $user->user['description'],
+                    'user_token' => $user->token,
+                    'user_token_secret' => $user->tokenSecret,
+                ]
+            );
+
+            // login user using twitter email
+            $existingUser = User::where('email', '=', $user->email)->first();
+
+            $usedGuestAcc = false;
+            if (!$existingUser) {
+                $existingUser = User::find($this->userId);
+                $existingUser->guest = 0;
+                $existingUser->name = $user->name;
+                $existingUser->email = $user->email;
+                $existingUser->save();
+
+                $usedGuestAcc = true;
+                UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_TWITTER);
+            }
+
+            if (!$usedGuestAcc) {
+                // move shortlinks generated as guest to acc
+                $totalGeneratedLinksAsGuest = Shortlink::where(
+                    'user_id', '=', $this->userId
+                )->update(['user_id' => $existingUser->id]);
+
+                if ($totalGeneratedLinksAsGuest > 0) {
+                    UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
+                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
+                }
+            }
+
+            $this->setAuthCookie($existingUser);
+
+            UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_TWITTER);
+            if (!$usedGuestAcc) {
+                UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_TWITTER);
+            }
+
+            return redirect()->route('my-links-page');
+
+        } catch (\Throwable $th) {
+            UserAction::logAction($this->userId, AuthActions::FAILED_TO_LOGIN_WITH_TWITTER);
             return redirect()->route('login-page');
         }
 

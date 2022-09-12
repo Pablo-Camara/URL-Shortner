@@ -46,6 +46,10 @@ Route::get('/auth/facebook/callback', [AuthenticationController::class, 'faceboo
 Route::get('/auth/linkedin/redirect', [AuthenticationController::class, 'linkedinRedirect']);
 Route::get('/auth/linkedin/callback', [AuthenticationController::class, 'linkedinCallback']);
 
+/** Twitter */
+Route::get('/auth/twitter/redirect', [AuthenticationController::class, 'twitterRedirect']);
+Route::get('/auth/twitter/callback', [AuthenticationController::class, 'twitterCallback']);
+
  /** Github */
 Route::get('/auth/github/redirect', [AuthenticationController::class, 'githubRedirect']);
 Route::get('/auth/github/callback', [AuthenticationController::class, 'githubCallback']);
