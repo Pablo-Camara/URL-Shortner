@@ -24,6 +24,13 @@
 
             body {
                 font-family: "Nunito", sans-serif;
+
+                background: url('{{ $currentBackground }}');
+                background-size: cover;
+                background-repeat: no-repeat;
+                min-height: 600px;
+                background-position-x: 70%;
+
             }
 
             .form-box {
@@ -367,6 +374,11 @@
             }
 
             @media (min-width: 1024px) {
+
+                body {
+
+                }
+
                 #my-links-view {
                     width: 50%;
                     max-width: unset;
@@ -3424,11 +3436,6 @@
     </head>
     <body
         class="antialiased"
-        style="
-            background: url('{{ $currentBackground }}');
-            background-size: 100%;
-            background-repeat: no-repeat;
-        "
     >
         <div id="logo-top-container">
             <img
