@@ -22,7 +22,9 @@ use App\Models\LinkedinAccount;
 use App\Models\Shortlink;
 use App\Models\TwitterAccount;
 use App\Models\UserAction;
+use App\Models\UserDevice;
 use Illuminate\Support\Facades\Mail;
+use Jenssegers\Agent\Agent;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthenticationController extends Controller
@@ -33,55 +35,7 @@ class AuthenticationController extends Controller
         $this->getUserDataFromCookie();
     }
 
-    public function setAuthCookie(User $user)
-    {
-        $config = config('session');
 
-        // creates new guest token
-        $tokenExpirationDatetime = Carbon::now()->addRealMinutes(
-            $config['auth_token_cookie_lifetime']
-        );
-
-        $tokenName = 'guest_token';
-        $userAbilities = ['guest'];
-
-        if ($user->guest === 0) {
-
-            $tokenName = 'stay_logged_in_token';
-            $userAbilities = $user->abilities->all();
-            $userAbilities = array_map(function($ability){
-                return $ability['name'];
-            }, $userAbilities);
-            $userAbilities = array_merge(['logged_in'], $userAbilities);
-
-        }
-
-        $userToken = $user->createToken(
-            $tokenName,
-            $userAbilities,
-            $tokenExpirationDatetime
-        )->plainTextToken;
-
-        // creates new authCookie
-        $authCookie = Cookie::make(
-            $config['auth_token_cookie_name'],
-            encrypt([
-                'auth_token' => $userToken,
-                'guest' => $user->guest,
-                'user_id' => $user->id
-            ]),
-            $config['auth_token_cookie_lifetime'],
-            $config['path'],
-            $config['domain'],
-            $config['secure'],
-            false,
-            false,
-            $config['same_site'] ?? null
-        );
-
-        Cookie::queue($authCookie);
-        return $userToken;
-    }
 
     /**
      * Authenticates the user
@@ -113,9 +67,51 @@ class AuthenticationController extends Controller
         }
 
         // creates new guest user
+
         $user = new User();
         $user->guest = 1;
         $user->save();
+
+        try {
+            if (
+                (
+                    !is_null($request->input('dw'))
+                    &&
+                    is_numeric($request->input('dw'))
+                )
+                &&
+                (
+                    !is_null($request->input('dh'))
+                    &&
+                    is_numeric($request->input('dh'))
+                )
+            ) {
+                $userDevice = new UserDevice();
+                $userDevice->user_id = $user->id;
+                $userDevice->device_width = $request->input('dw');
+                $userDevice->device_height = $request->input('dh');
+
+                if (!is_null($request->input('ua'))) {
+                    $userDevice->user_agent = $request->input('ua');
+
+                    $userAgent = new Agent();
+                    $userAgent->setUserAgent($userDevice->user_agent);
+
+                    $userDevice->is_robot = $userAgent->isRobot();
+                    $userDevice->is_phone = $userAgent->isPhone();
+                    $userDevice->is_mobile = $userAgent->isMobile();
+                    $userDevice->is_tablet = $userAgent->isTablet();
+                    $userDevice->is_desktop = $userAgent->isDesktop();
+                    $userDevice->device = $userAgent->device();
+                    $userDevice->platform = $userAgent->platform();
+                    $userDevice->browser = $userAgent->browser();
+                }
+
+                $userDevice->save();
+            }
+        } catch (\Throwable $th) {
+            UserAction::logAction($user->id, AuthActions::FAILED_TO_STORE_USER_DEVICE);
+        }
 
         $userToken = $this->setAuthCookie($user);
 
@@ -141,9 +137,11 @@ class AuthenticationController extends Controller
         $config = config('session');
 
         if (
-            !is_null($this->userId)
+            !is_null($this->userId) && ($this->guest === 0)
         ) {
             UserAction::logAction($this->userId, AuthActions::LOGGED_OUT);
+        } else {
+            UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOG_OUT_WITHOUT_BEING_LOGGED_IN);
         }
 
         $response->withoutCookie($config['auth_token_cookie_name'])->setStatusCode(200);
@@ -216,6 +214,17 @@ class AuthenticationController extends Controller
             UserAction::logAction($user->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
         }
 
+        // move guest device
+        // to the now newly created user account
+        $totalUserDevicesAsGuest = UserDevice::where(
+            'user_id', '=', $this->userId
+        )->update(['user_id' => $user->id]);
+
+        if ($totalUserDevicesAsGuest > 0) {
+            UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
+            UserAction::logAction($user->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
+        }
+
         UserAction::logAction($this->userId, AuthActions::LOGGED_IN);
         UserAction::logAction($user->id, AuthActions::LOGGED_IN);
 
@@ -273,7 +282,7 @@ class AuthenticationController extends Controller
         $this->sendVerificationEmail($user);
 
         // move shortlinks generated as guest
-        // to the now newly created (and now logged in) user account
+        // to the now newly created user account
         $totalGeneratedLinksAsGuest = Shortlink::where(
             'user_id', '=', $this->userId
         )->update(['user_id' => $user->id]);
@@ -283,6 +292,16 @@ class AuthenticationController extends Controller
             UserAction::logAction($user->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
         }
 
+        // move guest device
+        // to the now newly created user account
+        $totalUserDevicesAsGuest = UserDevice::where(
+            'user_id', '=', $this->userId
+        )->update(['user_id' => $user->id]);
+
+        if ($totalUserDevicesAsGuest > 0) {
+            UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
+            UserAction::logAction($user->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
+        }
 
         return $response
             ->setContent([
@@ -574,6 +593,17 @@ class AuthenticationController extends Controller
                     UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
                 }
+
+                // move guest device
+                // to the now newly created user account
+                $totalUserDevicesAsGuest = UserDevice::where(
+                    'user_id', '=', $this->userId
+                )->update(['user_id' => $existingUser->id]);
+
+                if ($totalUserDevicesAsGuest > 0) {
+                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
+                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
+                }
             }
 
             $this->setAuthCookie($existingUser);
@@ -661,6 +691,17 @@ class AuthenticationController extends Controller
                 if ($totalGeneratedLinksAsGuest > 0) {
                     UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
+                }
+
+                // move guest device
+                // to the now newly created user account
+                $totalUserDevicesAsGuest = UserDevice::where(
+                    'user_id', '=', $this->userId
+                )->update(['user_id' => $existingUser->id]);
+
+                if ($totalUserDevicesAsGuest > 0) {
+                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
+                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
                 }
             }
 
@@ -751,6 +792,17 @@ class AuthenticationController extends Controller
                     UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
                 }
+
+                // move guest device
+                // to the now newly created user account
+                $totalUserDevicesAsGuest = UserDevice::where(
+                    'user_id', '=', $this->userId
+                )->update(['user_id' => $existingUser->id]);
+
+                if ($totalUserDevicesAsGuest > 0) {
+                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
+                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
+                }
             }
 
             $this->setAuthCookie($existingUser);
@@ -835,6 +887,17 @@ class AuthenticationController extends Controller
                 if ($totalGeneratedLinksAsGuest > 0) {
                     UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
+                }
+
+                // move guest device
+                // to the now newly created user account
+                $totalUserDevicesAsGuest = UserDevice::where(
+                    'user_id', '=', $this->userId
+                )->update(['user_id' => $existingUser->id]);
+
+                if ($totalUserDevicesAsGuest > 0) {
+                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
+                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
                 }
             }
 
@@ -942,6 +1005,17 @@ class AuthenticationController extends Controller
                 if ($totalGeneratedLinksAsGuest > 0) {
                     UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
+                }
+
+                // move guest device
+                // to the now newly created user account
+                $totalUserDevicesAsGuest = UserDevice::where(
+                    'user_id', '=', $this->userId
+                )->update(['user_id' => $existingUser->id]);
+
+                if ($totalUserDevicesAsGuest > 0) {
+                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
+                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
                 }
             }
 

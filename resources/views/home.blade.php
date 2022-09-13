@@ -663,9 +663,16 @@
                         }
                     });
 
+                    //TODO: add device width, height
+                    var dWidth = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+                    var dHeight = (window.innerHeight > 0) ? window.innerHeight : screen.height;
+                    var ua = navigator.userAgent;
+
+
+                    var urlStr = this.api.url + this.api.endpoints.authentication + '?dw=' + dWidth + '&dh=' + dHeight + '&ua=' + ua;
                     xhr.open(
                         "POST",
-                        this.api.url + this.api.endpoints.authentication
+                        urlStr
                     );
                     xhr.send();
                 },
