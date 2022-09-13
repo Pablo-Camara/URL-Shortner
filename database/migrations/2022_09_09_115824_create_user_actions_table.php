@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('user_actions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('action_id');
 
             $table->string('ip', 45)->nullable()->index();
