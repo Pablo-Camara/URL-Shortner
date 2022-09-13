@@ -435,6 +435,7 @@
                     padding-right: 16px;
 
                     cursor: pointer;
+                    border-bottom: 0;
                 }
 
                 #menu-top .menu-item:last-child {
