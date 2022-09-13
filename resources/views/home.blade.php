@@ -28,7 +28,7 @@
                 background: url('{{ $currentBackground }}');
                 background-size: cover;
                 background-repeat: no-repeat;
-                min-height: 600px;
+                min-height: 100%;
                 background-position-x: 70%;
 
             }
