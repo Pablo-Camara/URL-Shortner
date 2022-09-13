@@ -17,6 +17,7 @@ class UserAction extends Model
                 $userAction = new UserAction();
                 $userAction->user_id = $userId;
                 $userAction->action_id = $action->id;
+                $userAction->ip = request()->ip();
                 $userAction->save();
             }
         } catch (\Throwable $th) {
