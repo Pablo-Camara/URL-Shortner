@@ -195,11 +195,16 @@ class AuthenticationController extends Controller
                     ]);
         }
 
-        $request->validate([
+        $validations = [
             'email' => 'required|email',
             'password' => 'required',
-            'g-recaptcha-response' => 'required|captcha'
-        ]);
+        ];
+        $enableCaptchaSitekey = config('captcha.enable');
+        if ($enableCaptchaSitekey) {
+            $validations['g-recaptcha-response'] = 'required|captcha';
+        }
+
+        $request->validate($validations);
 
         $user = User::where('email', $request->email)->first();
 
@@ -277,12 +282,18 @@ class AuthenticationController extends Controller
                     ]);
         }
 
-        $request->validate([
+        $validations = [
             'name' => 'required',
             'email' => 'required|email|confirmed|unique:users',
             'password' => 'required|confirmed',
-            'g-recaptcha-response' => 'required|captcha'
-        ]);
+        ];
+
+        $enableCaptchaSitekey = config('captcha.enable');
+        if ($enableCaptchaSitekey) {
+            $validations['g-recaptcha-response'] = 'required|captcha';
+        }
+
+        $request->validate($validations);
 
         $user = new User();
         $user->guest = 0;
@@ -346,10 +357,17 @@ class AuthenticationController extends Controller
      */
     public function resendVerificationEmail(Request $request, Response $response)
     {
-        $request->validate([
+
+        $validations = [
             'email' => 'required|email',
-            'g-recaptcha-response' => 'required|captcha'
-        ]);
+        ];
+
+        $enableCaptchaSitekey = config('captcha.enable');
+        if ($enableCaptchaSitekey) {
+            $validations['g-recaptcha-response'] = 'required|captcha';
+        }
+
+        $request->validate($validations);
 
         $user = User::where('email', $request->email)->first();
 
@@ -444,11 +462,17 @@ class AuthenticationController extends Controller
      */
     public function recoverPassword(Request $request, Response $response)
     {
-        //REQUESTED_PASSWORD_RECOVERY_EMAIL
-        $request->validate([
+        $validations = [
             'email' => 'required|email',
-            'g-recaptcha-response' => 'required|captcha'
-        ]);
+        ];
+
+        $enableCaptchaSitekey = config('captcha.enable');
+        if ($enableCaptchaSitekey) {
+            $validations['g-recaptcha-response'] = 'required|captcha';
+        }
+
+        //REQUESTED_PASSWORD_RECOVERY_EMAIL
+        $request->validate($validations);
 
         if (
             !is_null($this->userId)
@@ -525,10 +549,16 @@ class AuthenticationController extends Controller
      */
     public function changePassword(Request $request) {
 
-        $request->validate([
+        $validations = [
             'new_password' => 'required|confirmed',
-            'g-recaptcha-response' => 'required|captcha'
-        ]);
+        ];
+
+        $enableCaptchaSitekey = config('captcha.enable');
+        if ($enableCaptchaSitekey) {
+            $validations['g-recaptcha-response'] = 'required|captcha';
+        }
+
+        $request->validate($validations);
 
         $user = $request->user();
         $user->password = Hash::make($request->input('new_password'));
@@ -543,7 +573,8 @@ class AuthenticationController extends Controller
 
 
     public function githubRedirect(){
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.github.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -555,8 +586,8 @@ class AuthenticationController extends Controller
      *
      */
     public function githubCallback() {
-
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.github.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -664,7 +695,8 @@ class AuthenticationController extends Controller
 
 
     public function facebookRedirect(){
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.facebook.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -677,7 +709,8 @@ class AuthenticationController extends Controller
      */
     public function facebookCallback() {
 
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.facebook.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -772,7 +805,8 @@ class AuthenticationController extends Controller
     }
 
     public function googleRedirect(){
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.google.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -785,7 +819,8 @@ class AuthenticationController extends Controller
      */
     public function googleCallback() {
 
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.google.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -884,7 +919,8 @@ class AuthenticationController extends Controller
 
 
     public function linkedInRedirect(){
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.linkedin.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -897,7 +933,8 @@ class AuthenticationController extends Controller
      */
     public function linkedInCallback() {
 
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.linkedin.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -991,7 +1028,8 @@ class AuthenticationController extends Controller
 
 
     public function twitterRedirect(){
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.twitter.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 
@@ -1004,7 +1042,8 @@ class AuthenticationController extends Controller
      */
     public function twitterCallback() {
 
-        if (is_null($this->userId) || $this->guest == 0) {
+        $enableLoginBtn = config('services.twitter.enable_login_btn');
+        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
 

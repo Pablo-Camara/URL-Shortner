@@ -33,30 +33,35 @@ return [
 
 
     'github' => [
+        'enable_login_btn' => env('ENABLE_LOGIN_WITH_GITHUB', false),
         'client_id' => env('GITHUB_CLIENT_ID'),
         'client_secret' => env('GITHUB_CLIENT_SECRET'),
         'redirect' => '/auth/github/callback',
     ],
 
     'facebook' => [
+        'enable_login_btn' => env('ENABLE_LOGIN_WITH_FACEBOOK', false),
         'client_id' => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
         'redirect' => '/auth/facebook/callback',
     ],
 
     'google' => [
+        'enable_login_btn' => env('ENABLE_LOGIN_WITH_GOOGLE', false),
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => '/auth/google/callback',
     ],
 
     'linkedin' => [
+        'enable_login_btn' => env('ENABLE_LOGIN_WITH_LINKEDIN', false),
         'client_id' => env('LINKEDIN_CLIENT_ID'),
         'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
         'redirect' => '/auth/linkedin/callback',
     ],
 
     'twitter' => [
+        'enable_login_btn' => env('ENABLE_LOGIN_WITH_TWITTER', false),
         'client_id' => env('TWITTER_CLIENT_ID'),
         'client_secret' => env('TWITTER_CLIENT_SECRET'),
         'redirect' => '/auth/twitter/callback',

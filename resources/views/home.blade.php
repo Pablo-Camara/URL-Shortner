@@ -570,6 +570,11 @@
 
         </style>
 
+        @if(isset($enableCaptcha) && $enableCaptcha === true)
+            <script>
+                window._enableCaptcha = true;
+            </script>
+        @endif
 
         <script>
 
@@ -776,8 +781,19 @@
                     email = encodeURIComponent(email);
                     password = encodeURIComponent(password);
 
-                    const credentialsQueryStr =
-                        "?email=" + email + "&password=" + password + '&g-recaptcha-response=' + captchaToken;
+                    var credentialsQueryStr =
+                        "?email=" + email + "&password=" + password;
+
+                    if(
+                        typeof captchaToken !== 'undefined'
+                        &&
+                        captchaToken != null
+                        &&
+                        captchaToken.length > 0
+                    ) {
+                        credentialsQueryStr += '&g-recaptcha-response=' + captchaToken;
+                    }
+
                     xhr.open(
                         "POST",
                         this.api.url +
@@ -874,8 +890,19 @@
                     password = encodeURIComponent(password);
                     passwordConfirmation = encodeURIComponent(passwordConfirmation);
 
-                    const credentialsQueryStr =
-                        "?name=" + name + "&email=" + email + "&email_confirmation=" + emailConfirmation + "&password=" + password + "&password_confirmation=" + passwordConfirmation+ '&g-recaptcha-response=' + captchaToken;;
+                    var credentialsQueryStr =
+                        "?name=" + name + "&email=" + email + "&email_confirmation=" + emailConfirmation + "&password=" + password + "&password_confirmation=" + passwordConfirmation;
+
+                    if (
+                        typeof captchaToken !== 'undefined'
+                        &&
+                        captchaToken != null
+                        &&
+                        captchaToken.length > 0
+                    ) {
+                        credentialsQueryStr += '&g-recaptcha-response=' + captchaToken;
+                    }
+
                     xhr.open(
                         "POST",
                         this.api.url +
@@ -895,8 +922,17 @@
                     xhr.withCredentials = true;
                     email = encodeURIComponent(email);
 
-                    const credentialsQueryStr =
-                        "?email=" + email + '&g-recaptcha-response=' + captchaToken;
+                    var credentialsQueryStr = "?email=" + email;
+
+                    if (
+                        typeof captchaToken !== 'undefined'
+                        &&
+                        captchaToken != null
+                        &&
+                        captchaToken.length > 0
+                    ) {
+                        credentialsQueryStr += '&g-recaptcha-response=' + captchaToken;
+                    }
 
                     xhr.open(
                         "POST",
@@ -917,8 +953,17 @@
                     xhr.withCredentials = true;
                     email = encodeURIComponent(email);
 
-                    const credentialsQueryStr =
-                        "?email=" + email + '&g-recaptcha-response=' + captchaToken;
+                    var credentialsQueryStr = "?email=" + email;
+
+                    if (
+                        typeof captchaToken !== 'undefined'
+                        &&
+                        captchaToken != null
+                        &&
+                        captchaToken.length > 0
+                    ) {
+                        credentialsQueryStr += '&g-recaptcha-response=' + captchaToken;
+                    }
 
                     xhr.open(
                         "POST",
@@ -946,8 +991,18 @@
                     newPassword = encodeURIComponent(newPassword);
                     newPasswordConfirmation = encodeURIComponent(newPasswordConfirmation);
 
-                    const credentialsQueryStr =
-                        "?new_password=" + newPassword + '&new_password_confirmation=' + newPasswordConfirmation + '&g-recaptcha-response=' + captchaToken;
+                    var credentialsQueryStr =
+                        "?new_password=" + newPassword + '&new_password_confirmation=' + newPasswordConfirmation;
+
+                    if (
+                        typeof captchaToken !== 'undefined'
+                        &&
+                        captchaToken != null
+                        &&
+                        captchaToken.length > 0
+                    ) {
+                        credentialsQueryStr += '&g-recaptcha-response=' + captchaToken;
+                    }
 
 
                     xhr.addEventListener("readystatechange", function () {
@@ -1586,58 +1641,82 @@
                                             longUrlInput.classList.remove('has-error');
                                         }
 
-                                        grecaptcha.ready(function() {
-                                            grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
-                                                var xhr = new XMLHttpRequest();
-                                                xhr.withCredentials = true;
+                                        var func = function (token) {
+                                            var xhr = new XMLHttpRequest();
+                                            xhr.withCredentials = true;
 
-                                                xhr.addEventListener("readystatechange", function () {
-                                                    if (this.readyState === 4) {
-                                                        try {
-                                                            const jsonResObj = JSON.parse(this.responseText);
+                                            xhr.addEventListener("readystatechange", function () {
+                                                if (this.readyState === 4) {
+                                                    try {
+                                                        const jsonResObj = JSON.parse(this.responseText);
 
-                                                            if (this.status === 201) {
-                                                                window.App.Components.ShortenUrl.hide();
-                                                                window.App.Components.ShortlinkResult.Components.Shortlink.set(
-                                                                    jsonResObj.shortlink
-                                                                );
-                                                                window.App.Components.ShortlinkResult.show();
-                                                                return;
-                                                            }
+                                                        if (this.status === 201) {
+                                                            window.App.Components.ShortenUrl.hide();
+                                                            window.App.Components.ShortlinkResult.Components.Shortlink.set(
+                                                                jsonResObj.shortlink
+                                                            );
+                                                            window.App.Components.ShortlinkResult.show();
+                                                            return;
+                                                        }
 
-                                                            if(typeof jsonResObj.message !== 'undefined') {
-                                                                window.App.Components.ShortenUrl.Components.Feedback.showError(jsonResObj.message);
-                                                            } else {
-                                                                window.App.Components.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
-                                                            }
-
-                                                            e.target.classList.remove('disabled');
-                                                        } catch (e) {
-                                                            // invalid json something went wrong
+                                                        if(typeof jsonResObj.message !== 'undefined') {
+                                                            window.App.Components.ShortenUrl.Components.Feedback.showError(jsonResObj.message);
+                                                        } else {
                                                             window.App.Components.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                         }
+
+                                                        e.target.classList.remove('disabled');
+                                                    } catch (e) {
+                                                        // invalid json something went wrong
+                                                        window.App.Components.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                     }
-                                                });
-
-                                                var paramsStr = 'long_url='+ longUrlInput.value;
-                                                if (destinationEmailInput.value.length > 0) {
-                                                    paramsStr += '&destination_email=' + destinationEmailInput.value;
                                                 }
-                                                paramsStr += '&g-recaptcha-response=' + token;
-
-                                                xhr.open(
-                                                    "POST",
-                                                    '{{ url("/api/shorten") }}?' + paramsStr
-                                                );
-                                                xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
-
-                                                // disable generate button to prevent double requests
-                                                e.target.classList.add('disabled');
-
-                                                window.App.Components.ShortenUrl.Components.Feedback.showInfo('por favor espere..');
-                                                xhr.send();
                                             });
-                                        });
+
+                                            var paramsStr = 'long_url='+ longUrlInput.value;
+                                            if (destinationEmailInput.value.length > 0) {
+                                                paramsStr += '&destination_email=' + destinationEmailInput.value;
+                                            }
+
+                                            if (
+                                                typeof token !== 'undefined'
+                                                &&
+                                                token != null
+                                                &&
+                                                token.length > 0
+                                            ) {
+                                                paramsStr += '&g-recaptcha-response=' + token;
+                                            }
+
+
+                                            xhr.open(
+                                                "POST",
+                                                '{{ url("/api/shorten") }}?' + paramsStr
+                                            );
+                                            xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+
+                                            // disable generate button to prevent double requests
+                                            e.target.classList.add('disabled');
+
+                                            window.App.Components.ShortenUrl.Components.Feedback.showInfo('por favor espere..');
+                                            xhr.send();
+                                        };
+
+                                        if (
+                                            typeof window._enableCaptcha !== 'undefined'
+                                            &&
+                                            window._enableCaptcha === true
+                                        ) {
+                                            grecaptcha.ready(function() {
+                                            grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
+                                                func(token);
+                                                });
+                                            });
+                                        } else {
+                                            func(null);
+                                        }
+
+
                                     };
                                     this.hasInitialized = true;
                                 }
@@ -1844,49 +1923,74 @@
 
                                             window.App.Components.RegisterAvailableShortlink.Components.Feedback.showInfo('por favor espere..');
 
-                                            grecaptcha.ready(function() {
-                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
-                                                    function(token) {
-                                                        var xhr = new XMLHttpRequest();
-                                                        xhr.withCredentials = true;
+                                            var func = function (token) {
+                                                var xhr = new XMLHttpRequest();
+                                                xhr.withCredentials = true;
 
-                                                        xhr.addEventListener("readystatechange", function () {
-                                                            if (this.readyState === 4) {
-                                                                try {
-                                                                    const jsonResObj = JSON.parse(this.responseText);
+                                                xhr.addEventListener("readystatechange", function () {
+                                                    if (this.readyState === 4) {
+                                                        try {
+                                                            const jsonResObj = JSON.parse(this.responseText);
 
-                                                                    if (this.status === 201) {
-                                                                        window.App.Components.RegisterAvailableShortlink.hide();
-                                                                        window.App.Components.ShortlinkResult.Components.Shortlink.set(
-                                                                            jsonResObj.shortlink
-                                                                        );
-                                                                        window.App.Components.ShortlinkResult.show();
-                                                                        return;
-                                                                    }
-
-                                                                    if(typeof jsonResObj.message !== 'undefined') {
-                                                                        window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError(jsonResObj.message);
-                                                                    } else {
-                                                                        window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
-                                                                    }
-
-                                                                    e.target.classList.remove('disabled');
-                                                                } catch (e) {
-                                                                    // invalid json something went wrong
-                                                                    window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
-                                                                }
+                                                            if (this.status === 201) {
+                                                                window.App.Components.RegisterAvailableShortlink.hide();
+                                                                window.App.Components.ShortlinkResult.Components.Shortlink.set(
+                                                                    jsonResObj.shortlink
+                                                                );
+                                                                window.App.Components.ShortlinkResult.show();
+                                                                return;
                                                             }
-                                                        });
 
-                                                        xhr.open(
-                                                            "POST",
-                                                            '{{ url("/api/register-available") }}?long_url='+ longUrlField.value +'&shortstring=' + shortStr + '&g-recaptcha-response=' + token
-                                                        );
-                                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
-                                                        xhr.send();
+                                                            if(typeof jsonResObj.message !== 'undefined') {
+                                                                window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError(jsonResObj.message);
+                                                            } else {
+                                                                window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                            }
+
+                                                            e.target.classList.remove('disabled');
+                                                        } catch (e) {
+                                                            // invalid json something went wrong
+                                                            window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                        }
                                                     }
+                                                });
+
+                                                var queryStr = '?long_url='+ longUrlField.value +'&shortstring=' + shortStr;
+
+                                                if (
+                                                    typeof token !== 'undefined'
+                                                    &&
+                                                    token != null
+                                                    &&
+                                                    token.length > 0
+                                                ) {
+                                                    queryStr += '&g-recaptcha-response=' + token;
+                                                }
+
+                                                xhr.open(
+                                                    "POST",
+                                                    '{{ url("/api/register-available") }}' + queryStr
                                                 );
-                                            });
+                                                xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                                xhr.send();
+                                            };
+
+                                            if (
+                                                typeof window._enableCaptcha !== 'undefined'
+                                                &&
+                                                window._enableCaptcha === true
+                                            ) {
+                                                grecaptcha.ready(function() {
+                                                    grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                        function(token) {
+                                                            func(token);
+                                                        }
+                                                    );
+                                                });
+                                            } else {
+                                                func(null);
+                                            }
+
 
 
                                         };
@@ -2028,13 +2132,23 @@
 
                                             $this.disable();
                                             window.App.Components.Login.Components.Feedback.showInfo('por favor espere..');
-                                            grecaptcha.ready(function() {
-                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
-                                                    function(token) {
-                                                        window._authManager.login(loginEmailInput.value, loginPasswordInput.value, token);
-                                                    }
-                                                );
-                                            });
+
+                                            if (
+                                                typeof window._enableCaptcha !== 'undefined'
+                                                &&
+                                                window._enableCaptcha === true
+                                            ) {
+                                                grecaptcha.ready(function() {
+                                                    grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                        function(token) {
+                                                            window._authManager.login(loginEmailInput.value, loginPasswordInput.value, token);
+                                                        }
+                                                    );
+                                                });
+                                            } else {
+                                                window._authManager.login(loginEmailInput.value, loginPasswordInput.value, null);
+                                            }
+
                                         };
 
                                         this.hasInitialized = true;
@@ -2047,12 +2161,15 @@
                                     return document.getElementById("login-with-github-button");
                                 },
                                 enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.remove('disabled');
                                 },
                                 disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.add('disabled');
                                 },
                                 initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
                                         this.el().onclick = function (e) {
@@ -2077,12 +2194,15 @@
                                     return document.getElementById("login-with-facebook-button");
                                 },
                                 enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.remove('disabled');
                                 },
                                 disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.add('disabled');
                                 },
                                 initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
                                         this.el().onclick = function (e) {
@@ -2107,12 +2227,15 @@
                                     return document.getElementById("login-with-google-button");
                                 },
                                 enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.remove('disabled');
                                 },
                                 disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.add('disabled');
                                 },
                                 initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
                                         this.el().onclick = function (e) {
@@ -2137,12 +2260,15 @@
                                     return document.getElementById("login-with-linkedin-button");
                                 },
                                 enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.remove('disabled');
                                 },
                                 disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.add('disabled');
                                 },
                                 initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
                                         this.el().onclick = function (e) {
@@ -2167,12 +2293,15 @@
                                     return document.getElementById("login-with-twitter-button");
                                 },
                                 enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.remove('disabled');
                                 },
                                 disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     this.el().classList.add('disabled');
                                 },
                                 initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
                                         this.el().onclick = function (e) {
@@ -2279,16 +2408,28 @@
                                                 loginEmailInput.classList.remove('has-error');
                                             }
 
-                                            grecaptcha.ready(function() {
-                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
-                                                    function(token) {
-                                                        window._authManager.resendVerificationEmail(
-                                                            loginEmailInput.value,
-                                                            token
-                                                        );
-                                                    }
+                                            if (
+                                                typeof window._enableCaptcha !== 'undefined'
+                                                &&
+                                                window._enableCaptcha === true
+                                            ) {
+                                                grecaptcha.ready(function() {
+                                                    grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                        function(token) {
+                                                            window._authManager.resendVerificationEmail(
+                                                                loginEmailInput.value,
+                                                                token
+                                                            );
+                                                        }
+                                                    );
+                                                });
+                                            } else {
+                                                window._authManager.resendVerificationEmail(
+                                                    loginEmailInput.value,
+                                                    null
                                                 );
-                                            });
+                                            }
+
 
                                             window.App.Components.Login.Components.ResendVerificationEmail.hide();
 
@@ -2589,20 +2730,37 @@
 
                                             $this.disable();
                                             window.App.Components.Register.Components.Feedback.showInfo('por favor espere..');
-                                            grecaptcha.ready(function() {
-                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
-                                                    function(token) {
-                                                        window._authManager.register(
-                                                            registerNameInput.value,
-                                                            registerEmailInput.value,
-                                                            registerEmailConfInput.value,
-                                                            registerPasswordInput.value,
-                                                            registerPasswordConfInput.value,
-                                                            token
-                                                        );
-                                                    }
+
+                                            if (
+                                                typeof window._enableCaptcha !== 'undefined'
+                                                &&
+                                                window._enableCaptcha === true
+                                            ) {
+                                                grecaptcha.ready(function() {
+                                                    grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                        function(token) {
+                                                            window._authManager.register(
+                                                                registerNameInput.value,
+                                                                registerEmailInput.value,
+                                                                registerEmailConfInput.value,
+                                                                registerPasswordInput.value,
+                                                                registerPasswordConfInput.value,
+                                                                token
+                                                            );
+                                                        }
+                                                    );
+                                                });
+                                            } else {
+                                                window._authManager.register(
+                                                    registerNameInput.value,
+                                                    registerEmailInput.value,
+                                                    registerEmailConfInput.value,
+                                                    registerPasswordInput.value,
+                                                    registerPasswordConfInput.value,
+                                                    null
                                                 );
-                                            });
+                                            }
+
                                         };
 
                                         this.hasInitialized = true;
@@ -2814,21 +2972,33 @@
                                                 emailInput.classList.remove('has-error');
                                             }
 
-                                            grecaptcha.ready(function() {
-                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
-                                                    function(token) {
-                                                        window._authManager.sendPasswordRecoveryEmail(
-                                                            emailInput.value,
-                                                            token
-                                                        );
-
-                                                        window.App.Components.PasswordRecovery.Components.Feedback.showInfo(
-                                                            'Acabamos de lhe enviar um email para que possa criar uma nova palavra-passe.'
-                                                        );
-                                                        window.App.Components.PasswordRecovery.Components.SendPwdRecoveryBtn.disable();
-                                                    }
+                                            if (
+                                                typeof window._enableCaptcha !== 'undefined'
+                                                &&
+                                                window._enableCaptcha === true
+                                            ) {
+                                                grecaptcha.ready(function() {
+                                                    grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                        function(token) {
+                                                            window._authManager.sendPasswordRecoveryEmail(
+                                                                emailInput.value,
+                                                                token
+                                                            );
+                                                        }
+                                                    );
+                                                });
+                                            } else {
+                                                window._authManager.sendPasswordRecoveryEmail(
+                                                    emailInput.value,
+                                                    null
                                                 );
-                                            });
+                                            }
+
+                                            window.App.Components.PasswordRecovery.Components.Feedback.showInfo(
+                                                                'Acabamos de lhe enviar um email para que possa criar uma nova palavra-passe.'
+                                                            );
+                                            window.App.Components.PasswordRecovery.Components.SendPwdRecoveryBtn.disable();
+
                                         };
 
                                         this.hasInitialized = true;
@@ -2996,17 +3166,31 @@
 
                                             $this.disable();
                                             window.App.Components.ChangePassword.Components.Feedback.showInfo('por favor espere..');
-                                            grecaptcha.ready(function() {
-                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
-                                                    function(token) {
-                                                        window._authManager.changePassword(
-                                                            newPassword.value,
-                                                            newPasswordConfirmation.value,
-                                                            token
-                                                        );
-                                                    }
+
+                                            if (
+                                                typeof window._enableCaptcha !== 'undefined'
+                                                &&
+                                                window._enableCaptcha === true
+                                            ) {
+                                                grecaptcha.ready(function() {
+                                                    grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(
+                                                        function(token) {
+                                                            window._authManager.changePassword(
+                                                                newPassword.value,
+                                                                newPasswordConfirmation.value,
+                                                                token
+                                                            );
+                                                        }
+                                                    );
+                                                });
+                                            } else {
+                                                window._authManager.changePassword(
+                                                    newPassword.value,
+                                                    newPasswordConfirmation.value,
+                                                    null
                                                 );
-                                            });
+                                            }
+
                                         };
 
                                         this.hasInitialized = true;
@@ -3202,67 +3386,80 @@
                                             saveEditLongUrlLink.onclick = function (e) {
                                                 saveEditLongUrlLink.innerText = 'a guardar..';
 
-                                                grecaptcha.ready(function() {
-                                                    grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
+                                                var saveLongUrlFunc = function (token) {
+                                                    var xhr = new XMLHttpRequest();
+                                                    xhr.withCredentials = true;
 
-
-                                                        var xhr = new XMLHttpRequest();
-                                                        xhr.withCredentials = true;
-
-                                                        xhr.addEventListener("readystatechange", function () {
-                                                            if (this.readyState === 4) {
-
-
-                                                                if (this.status === 201) {
-                                                                    longUrlContainer.innerText = editLongUrlInput.value
-                                                                    var saveColor = saveEditLongUrlLink.style.color;
-                                                                    saveEditLongUrlLink.style.color = 'green';
-                                                                    setTimeout(function () {
-                                                                        saveEditLongUrlLink.style.color = saveColor;
-                                                                        saveEditLongUrlLink.style.display = 'none';
-                                                                        saveEditLongUrlLink.innerText = 'guardar';
-                                                                        editLongUrlInput.style.display = 'none';
-                                                                        longUrlContainer.style.display = 'block';
-                                                                        cancelEditLongUrlLink.style.display = 'none';
-                                                                        editLongUrlLink.style.display = 'inline-block';
-                                                                    }, 1000);
-                                                                    return;
-                                                                }
-
-                                                                const resObj = JSON.parse(this.response); //TODO: Catch exception
-
-                                                                if (
-                                                                    typeof resObj.message !== 'undefined'
-                                                                    &&
-                                                                    (
-                                                                        typeof resObj.errors !== 'undefined'
-                                                                        ||
-                                                                        typeof resObj.error_id !== 'undefined'
-                                                                    )
-                                                                ) {
-
-
-
-                                                                }
+                                                    xhr.addEventListener("readystatechange", function () {
+                                                        if (this.readyState === 4) {
+                                                            if (this.status === 201) {
+                                                                longUrlContainer.innerText = editLongUrlInput.value
+                                                                var saveColor = saveEditLongUrlLink.style.color;
+                                                                saveEditLongUrlLink.style.color = 'green';
+                                                                setTimeout(function () {
+                                                                    saveEditLongUrlLink.style.color = saveColor;
+                                                                    saveEditLongUrlLink.style.display = 'none';
+                                                                    saveEditLongUrlLink.innerText = 'guardar';
+                                                                    editLongUrlInput.style.display = 'none';
+                                                                    longUrlContainer.style.display = 'block';
+                                                                    cancelEditLongUrlLink.style.display = 'none';
+                                                                    editLongUrlLink.style.display = 'inline-block';
+                                                                }, 1000);
+                                                                return;
                                                             }
-                                                        });
 
+                                                            const resObj = JSON.parse(this.response); //TODO: Catch exception
 
-                                                        const shortlinkId = saveEditLongUrlLink.getAttribute('data-shortlink-id');
+                                                            if (
+                                                                typeof resObj.message !== 'undefined'
+                                                                &&
+                                                                (
+                                                                    typeof resObj.errors !== 'undefined'
+                                                                    ||
+                                                                    typeof resObj.error_id !== 'undefined'
+                                                                )
+                                                            ) {
 
-                                                        const credentialsQueryStr =
-                                                            "?shortlink_id=" + shortlinkId + "&long_url=" + editLongUrlInput.value + '&g-recaptcha-response=' + token;
-
-                                                            xhr.open(
-                                                            "POST",'/api/shortlinks/edit' + credentialsQueryStr
-                                                        );
-                                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
-                                                        xhr.send();
-
-
+                                                            }
+                                                        }
                                                     });
-                                                });
 
+
+                                                    const shortlinkId = saveEditLongUrlLink.getAttribute('data-shortlink-id');
+
+                                                    var credentialsQueryStr =
+                                                        "?shortlink_id=" + shortlinkId + "&long_url=" + editLongUrlInput.value;
+
+                                                    if (
+                                                        typeof token !== 'undefined'
+                                                        &&
+                                                        token != null
+                                                        &&
+                                                        token.length > 0
+                                                    ) {
+                                                        credentialsQueryStr += '&g-recaptcha-response=' + token;
+                                                    }
+
+                                                    xhr.open(
+                                                        "POST",'/api/shortlinks/edit' + credentialsQueryStr
+                                                    );
+                                                    xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                                    xhr.send();
+                                                };
+
+                                                if (
+                                                    typeof window._enableCaptcha !== 'undefined'
+                                                    &&
+                                                    window._enableCaptcha === true
+                                                ) {
+                                                    grecaptcha.ready(function() {
+                                                        grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
+                                                            saveLongUrlFunc(token);
+                                                        });
+                                                    });
+                                                } else {
+                                                    saveLongUrlFunc(null);
+                                                }
                                             };
 
 
@@ -3693,11 +3890,21 @@
             <a href="javascript:void(0);" id="forgot-pwd-link" class="form-link">Esqueci-me da palavra-passe</a>
 
             <div class="external-logins">
-                <div class="button light-blue disabled" id="login-with-google-button"><img src="{{ asset('img/google-logo.png') }}" width="30">Entrar com o Google</div>
-                <div class="button blue disabled" id="login-with-facebook-button"><img src="{{ asset('img/facebook-logo.png') }}" width="26"/>Entrar com o Facebook</div>
-                <div class="button sky-blue disabled" id="login-with-twitter-button"><img src="{{ asset('img/twitter-logo.png') }}" width="26"/>Entrar com o Twitter</div>
-                <div class="button darker-blue disabled" id="login-with-linkedin-button"><img src="{{ asset('img/linkedin-logo.png') }}" width="26">Entrar com o LinkedIn</div>
-                <div class="button dark disabled" id="login-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
+                @if(isset($enableLoginWithGoogleBtn) && $enableLoginWithGoogleBtn === true)
+                    <div class="button light-blue disabled" id="login-with-google-button"><img src="{{ asset('img/google-logo.png') }}" width="30">Entrar com o Google</div>
+                @endif
+                @if(isset($enableLoginWithFacebookBtn) && $enableLoginWithFacebookBtn === true)
+                    <div class="button blue disabled" id="login-with-facebook-button"><img src="{{ asset('img/facebook-logo.png') }}" width="26"/>Entrar com o Facebook</div>
+                @endif
+                @if(isset($enableLoginWithTwitterBtn) && $enableLoginWithTwitterBtn === true)
+                    <div class="button sky-blue disabled" id="login-with-twitter-button"><img src="{{ asset('img/twitter-logo.png') }}" width="26"/>Entrar com o Twitter</div>
+                @endif
+                @if(isset($enableLoginWithLinkedinBtn) && $enableLoginWithLinkedinBtn === true)
+                    <div class="button darker-blue disabled" id="login-with-linkedin-button"><img src="{{ asset('img/linkedin-logo.png') }}" width="26">Entrar com o LinkedIn</div>
+                @endif
+                @if(isset($enableLoginWithGithubBtn) && $enableLoginWithGithubBtn === true)
+                    <div class="button dark disabled" id="login-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
+                @endif
             </div>
         </div>
 

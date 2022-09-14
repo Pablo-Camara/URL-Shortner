@@ -49,7 +49,14 @@ class ShortlinkController extends Controller
             }
 
             if ($shortstring->is_available) {
+                $enableCaptcha = config('captcha.enable');
                 $captchaSitekey = config('captcha.sitekey');
+
+                $enableLoginWithGoogleBtn = config('services.google.enable_login_btn');
+                $enableLoginWithFacebookBtn = config('services.facebook.enable_login_btn');
+                $enableLoginWithTwitterBtn = config('services.twitter.enable_login_btn');
+                $enableLoginWithLinkedinBtn = config('services.linkedin.enable_login_btn');
+                $enableLoginWithGithubBtn = config('services.github.enable_login_btn');
 
                 UserAction::logAction($this->userId, ShortlinkActions::VISITED_AVAILABLE_SHORTLINK);
                 return view('home', [
@@ -57,7 +64,13 @@ class ShortlinkController extends Controller
                     'shortlink' => url('/' . $shortstring->shortstring),
                     'shortlink_available' => true,
                     'shortlink_shortstring' => $shortstring->shortstring,
-                    'captchaSitekey' => $captchaSitekey
+                    'captchaSitekey' => $captchaSitekey,
+                    'enableCaptcha' => $enableCaptcha,
+                    'enableLoginWithGoogleBtn' => $enableLoginWithGoogleBtn,
+                    'enableLoginWithFacebookBtn' => $enableLoginWithFacebookBtn,
+                    'enableLoginWithTwitterBtn' => $enableLoginWithTwitterBtn,
+                    'enableLoginWithLinkedinBtn' => $enableLoginWithLinkedinBtn,
+                    'enableLoginWithGithubBtn' => $enableLoginWithGithubBtn,
                 ]);
             }
 
@@ -129,13 +142,18 @@ class ShortlinkController extends Controller
         $maxUrlLength = 2048;
 
         try {
+            $validations = [
+                // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
+                'long_url' => 'required|url|max:' . $maxUrlLength,
+            ];
+
+            $enableCaptchaSitekey = config('captcha.enable');
+            if ($enableCaptchaSitekey) {
+                $validations['g-recaptcha-response'] = 'required|captcha';
+            }
             Validator::make(
                 $request->all(),
-                [
-                    // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
-                    'long_url' => 'required|url|max:' . $maxUrlLength,
-                    'g-recaptcha-response' => 'required|captcha'
-                ],
+                $validations,
                 [],
                 ['long_url' => 'URL']
             )->validate();
@@ -234,14 +252,21 @@ class ShortlinkController extends Controller
         $maxUrlLength = 2048;
 
         try {
+
+            $validations = [
+                // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
+                'long_url' => 'required|url|max:' . $maxUrlLength,
+                'destination_email' => 'email:rfc,dns',
+            ];
+
+            $enableCaptchaSitekey = config('captcha.enable');
+            if ($enableCaptchaSitekey) {
+                $validations['g-recaptcha-response'] = 'required|captcha';
+            }
+
             Validator::make(
                 $request->all(),
-                [
-                    // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
-                    'long_url' => 'required|url|max:' . $maxUrlLength,
-                    'destination_email' => 'email:rfc,dns',
-                    'g-recaptcha-response' => 'required|captcha'
-                ],
+                $validations,
                 [],
                 ['long_url' => 'URL']
             )->validate();
@@ -387,14 +412,21 @@ class ShortlinkController extends Controller
         $maxUrlLength = 2048; //TODO: use global config/env variable
 
         try {
+
+            $validations = [
+                // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
+                'long_url' => 'required|url|max:' . $maxUrlLength,
+                'shortlink_id' => 'required|numeric',
+            ];
+
+            $enableCaptchaSitekey = config('captcha.enable');
+            if ($enableCaptchaSitekey) {
+                $validations['g-recaptcha-response'] = 'required|captcha';
+            }
+
             Validator::make(
                 $request->all(),
-                [
-                    // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
-                    'long_url' => 'required|url|max:' . $maxUrlLength,
-                    'shortlink_id' => 'required|numeric',
-                    'g-recaptcha-response' => 'required|captcha'
-                ],
+                $validations,
                 [],
                 ['long_url' => 'URL']
             )->validate();
