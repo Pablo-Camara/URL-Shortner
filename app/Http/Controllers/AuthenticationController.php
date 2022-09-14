@@ -76,7 +76,8 @@ class AuthenticationController extends Controller
 
                 if ($user->avatar) {
                     $authResponse['data'] = [
-                        'avatar' => $user->avatar
+                        'avatar' => $user->avatar,
+                        'name' => $user->name
                     ];
                 }
             }
@@ -280,7 +281,8 @@ class AuthenticationController extends Controller
 
         if ($user->avatar) {
             $authResponse['data'] = [
-                'avatar' => $user->avatar
+                'avatar' => $user->avatar,
+                'name' => $user->name
             ];
         }
 

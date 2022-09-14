@@ -3873,6 +3873,7 @@
                 <div class="menu-item" id="menu-mobile-acc-register">Criar</div>
             </div>
             <div id="menu-mobile-acc-items-user" style="display: none">
+                <div class="menu-item" id="menu-mobile-user-name" style="display: none"></div>
                 <div class="menu-item" id="menu-mobile-acc-logout">Sair</div>
             </div>
         </div>
@@ -3895,6 +3896,7 @@
                     <div class="menu-item" id="menu-top-acc-register">Criar conta</div>
                 </div>
                 <div id="menu-acc-items-user" style="display: none">
+                    <div class="menu-item" id="menu-top-user-name" style="display: none"></div>
                     <div class="menu-item" id="menu-top-acc-logout">Sair</div>
                 </div>
             </div>
@@ -4228,7 +4230,28 @@
                         userProfilePicEl.innerText = '';
                         userProfilePicEl.style.backgroundImage = 'url("'+window._authManager.userData.avatar+'")';
                     }
+
+                    if (
+                        typeof window._authManager.userData.name !== 'undefined'
+                        &&
+                        typeof window._authManager.userData.name === 'string'
+                    ) {
+                        const mobileUsername = document.getElementById('menu-mobile-user-name');
+                        const desktopUsername = document.getElementById('menu-top-user-name');
+
+                        const userName = window._authManager.userData.name;
+
+                        mobileUsername.innerText = userName;
+                        desktopUsername.innerText = userName;
+
+                        mobileUsername.style.display = 'block';
+                        desktopUsername.style.display = 'block';
+
+                    }
+
                 }
+
+
             }, false);
 
             document.addEventListener('userLoggedIn', (e) => {
@@ -4243,6 +4266,24 @@
                         const userProfilePicEl = document.getElementById('user-profile-pic');
                         userProfilePicEl.innerText = '';
                         userProfilePicEl.style.backgroundImage = 'url("'+window._authManager.userData.avatar+'")';
+                    }
+
+                    if (
+                        typeof window._authManager.userData.name !== 'undefined'
+                        &&
+                        typeof window._authManager.userData.name === 'string'
+                    ) {
+                        const mobileUsername = document.getElementById('menu-mobile-user-name');
+                        const desktopUsername = document.getElementById('menu-top-user-name');
+
+                        const userName = window._authManager.userData.name;
+
+                        mobileUsername.innerText = userName;
+                        desktopUsername.innerText = userName;
+
+                        mobileUsername.style.display = 'block';
+                        desktopUsername.style.display = 'block';
+
                     }
                 }
 
