@@ -609,7 +609,8 @@
                     userLoginFailedEvent: null,
                     userRegisterFailedEvent: null,
                     userRegisterSuccessEvent: null,
-                    userPasswordChangedEvent: null
+                    userPasswordChangedEvent: null,
+                    userPasswordChangeFailedEvent: null,
                 },
 
                 initialize: function () {
@@ -657,6 +658,14 @@
                         document.createEvent("Event");
                     this.customEvents.userPasswordChangedEvent.initEvent(
                         "userPasswordChanged",
+                        true,
+                        true
+                    );
+
+                    this.customEvents.userPasswordChangeFailedEvent =
+                        document.createEvent("Event");
+                    this.customEvents.userPasswordChangeFailedEvent.initEvent(
+                        "userPasswordChangeFailed",
                         true,
                         true
                     );
@@ -1022,23 +1031,25 @@
 
                             if (
                                 typeof resObj.message !== 'undefined'
-                                &&
-                                (
+                            ) {
+
+                                window._authManager.customEvents.userPasswordChangeFailedEvent.reason =
+                                    resObj.message;
+
+                                if (
                                     typeof resObj.errors !== 'undefined'
                                     ||
                                     typeof resObj.error_id !== 'undefined'
-                                )
-                            ) {
-                                // trigger userLoginFailed event
-                                /*window._authManager.customEvents.userLoginFailedEvent.reason =
-                                    resObj.message;
-                                window._authManager.customEvents.userLoginFailedEvent.isError = true;
-                                window._authManager.customEvents.userLoginFailedEvent.error_id = resObj.error_id;
+                                ) {
+                                    window._authManager.customEvents.userPasswordChangeFailedEvent.error_id = resObj.error_id;
+                                }
+                                window._authManager.customEvents.userPasswordChangeFailedEvent.isError = true;
+
 
                                 document.dispatchEvent(
                                     window._authManager.customEvents
-                                        .userLoginFailedEvent
-                                );*/
+                                        .userPasswordChangeFailedEvent
+                                );
 
                             }
                         }
@@ -4221,6 +4232,16 @@
             document.addEventListener('userPasswordChanged', (e) => {
                 window.App.Components.ChangePassword.hide();
                 window.App.Components.PasswordHasChanged.show();
+            }, false);
+
+            document.addEventListener('userPasswordChangeFailed', (e) => {
+                if (e.isError) {
+                    window.App.Components.ChangePassword.Components.Feedback.showError(e.reason);
+                } else {
+                    window.App.Components.ChangePassword.Components.Feedback.showInfo(e.reason);
+                }
+
+                window.App.Components.ChangePassword.Components.ChangePasswordBtn.enable();
             }, false);
 
 

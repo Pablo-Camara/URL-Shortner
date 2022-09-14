@@ -26,6 +26,7 @@ use App\Models\UserDevice;
 use App\Models\UserPermission;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use Jenssegers\Agent\Agent;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -558,7 +559,15 @@ class AuthenticationController extends Controller
             $validations['g-recaptcha-response'] = 'required|captcha';
         }
 
-        $request->validate($validations);
+        Validator::make(
+            $request->all(),
+            $validations,
+            [],
+            [
+                'new_password' => 'nova palavra-passe',
+            ]
+        )->validate();
+
 
         $user = $request->user();
         $user->password = Hash::make($request->input('new_password'));
