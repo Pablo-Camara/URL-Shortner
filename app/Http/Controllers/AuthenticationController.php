@@ -23,6 +23,8 @@ use App\Models\Shortlink;
 use App\Models\TwitterAccount;
 use App\Models\UserAction;
 use App\Models\UserDevice;
+use App\Models\UserPermission;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Jenssegers\Agent\Agent;
 use Laravel\Socialite\Facades\Socialite;
@@ -54,14 +56,31 @@ class AuthenticationController extends Controller
             // if auth cookie is valid
             // if auth token is valid / not expired
             // send the auth token from the cookie
-            $response->setContent([
+            $authResponse = [
                 'at' => $this->authToken,
                 'guest' => $this->guest,
-            ]);
+            ];
 
-            $actionName = $this->guest == 0 ?
-                AuthActions::AUTHENTICATED_AS_USER : AuthActions::AUTHENTICATED_AS_GUEST;
-            UserAction::logAction($this->userId, $actionName);
+            if ($this->guest === 0) {
+
+                $userPermissions = UserPermission::where('user_id', $this->userId)->first();
+
+                if ($userPermissions) {
+                    $authResponse['permissions'] = [
+                        'edit_shortlinks_destination_url' => $userPermissions->edit_shortlinks_destination_url ? true : false
+                    ];
+                }
+
+            }
+
+            $response->setContent($authResponse);
+
+
+            UserAction::logAction(
+                $this->userId,
+                $this->guest == 0 ?
+                    AuthActions::AUTHENTICATED_AS_USER : AuthActions::AUTHENTICATED_AS_GUEST
+            );
 
             return $response;
         }
@@ -271,13 +290,20 @@ class AuthenticationController extends Controller
         $user->email = $request->input('email');
         $user->password = Hash::make($request->input('password'));
 
+        DB::beginTransaction();
         try {
             $user->save();
+
+            $userPermissions = new UserPermission();
+            $userPermissions->user_id = $user->id;
+            $userPermissions->save();
+
             UserAction::logAction($this->userId, AuthActions::REGISTERED);
         } catch (\Throwable $th) {
             //TODO: log event
             return AuthResponses::registerFailed();
         }
+        DB::commit();
 
         $this->sendVerificationEmail($user);
 
@@ -577,7 +603,20 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
-                $existingUser->save();
+
+                DB::beginTransaction();
+                try {
+                    $existingUser->save();
+
+                    $userPermissions = new UserPermission();
+                    $userPermissions->user_id = $existingUser->id;
+                    $userPermissions->save();
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    throw $th;
+                }
+                DB::commit();
+
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_GITHUB);
@@ -676,7 +715,18 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
-                $existingUser->save();
+                DB::beginTransaction();
+                try {
+                    $existingUser->save();
+
+                    $userPermissions = new UserPermission();
+                    $userPermissions->user_id = $existingUser->id;
+                    $userPermissions->save();
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    throw $th;
+                }
+                DB::commit();
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_FACEBOOK);
@@ -776,7 +826,18 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
-                $existingUser->save();
+                DB::beginTransaction();
+                try {
+                    $existingUser->save();
+
+                    $userPermissions = new UserPermission();
+                    $userPermissions->user_id = $existingUser->id;
+                    $userPermissions->save();
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    throw $th;
+                }
+                DB::commit();
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_GOOGLE);
@@ -872,7 +933,18 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
-                $existingUser->save();
+                DB::beginTransaction();
+                try {
+                    $existingUser->save();
+
+                    $userPermissions = new UserPermission();
+                    $userPermissions->user_id = $existingUser->id;
+                    $userPermissions->save();
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    throw $th;
+                }
+                DB::commit();
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_LINKEDIN);
@@ -990,7 +1062,18 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
-                $existingUser->save();
+                DB::beginTransaction();
+                try {
+                    $existingUser->save();
+
+                    $userPermissions = new UserPermission();
+                    $userPermissions->user_id = $existingUser->id;
+                    $userPermissions->save();
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    throw $th;
+                }
+                DB::commit();
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_TWITTER);

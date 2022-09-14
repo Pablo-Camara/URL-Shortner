@@ -87,6 +87,14 @@
                 margin-bottom: 10px;
             }
 
+            .form-box .input-generic-1 {
+                color: #0077c8;
+                width: 100%;
+                padding: 12px 6px;
+                box-sizing: border-box;
+                border: 1px solid #EEE;
+            }
+
             .form-box .input-container .input-label {
                 position: absolute;
                 left: 0;
@@ -295,6 +303,12 @@
                 color: gray;
                 overflow: hidden;
                 word-break: break-word;
+            }
+            .form-box .list-container .list-item .generic-edit-link-1 {
+                font-size: 12px;
+                text-decoration: underline;
+                cursor: pointer;
+                margin-right: 14px;
             }
 
             #logo-top-mobile {
@@ -569,6 +583,8 @@
                 isAuthenticated: false,
                 isLoggedIn: false,
 
+                userPermissions: null,
+
                 api: {
                     url: "{{ url('/api') }}",
                     endpoints: {
@@ -656,6 +672,8 @@
                                 ? false
                                 : true;
 
+                            window._authManager.userPermissions = resObj.permissions;
+
                             // trigger userAuthenticated event
                             document.dispatchEvent(
                                 window._authManager.customEvents
@@ -720,6 +738,8 @@
                                 window._authManager.isLoggedIn = resObj.guest
                                     ? false
                                     : true;
+
+                                window._authManager.userPermissions = resObj.permissions;
 
                                 // trigger userLoggedIn event
                                 document.dispatchEvent(
@@ -3147,9 +3167,117 @@
                                             longUrlLabel.classList.add('long-url-label');
                                             longUrlLabel.innerText = 'Link original:';
 
+                                            const editLongUrlInput = document.createElement('input');
+                                            editLongUrlInput.style.display = 'none';
+                                            editLongUrlInput.classList.add('input-generic-1');
+                                            editLongUrlInput.value = long_url; //TODO: shortstring
+
+
                                             const longUrlContainer = document.createElement("div");
                                             longUrlContainer.classList.add('long-url');
                                             longUrlContainer.innerText = long_url;
+
+                                            const editLongUrlLink = document.createElement('a');
+                                            const saveEditLongUrlLink = document.createElement('a');
+                                            const cancelEditLongUrlLink = document.createElement('a');
+
+                                            editLongUrlLink.classList.add('generic-edit-link-1');
+                                            editLongUrlLink.innerText = 'editar';
+                                            editLongUrlLink.onclick = function (e) {
+                                                editLongUrlInput.style.display = 'block';
+                                                longUrlContainer.style.display = 'none';
+                                                editLongUrlInput.value = editLongUrlInput.value;
+                                                editLongUrlInput.focus();
+                                                editLongUrlLink.style.display = 'none';
+                                                saveEditLongUrlLink.style.display = 'inline-block';
+                                                cancelEditLongUrlLink.style.display = 'inline-block';
+                                            };
+
+                                            saveEditLongUrlLink.classList.add('generic-edit-link-1');
+                                            saveEditLongUrlLink.innerText = 'guardar';
+                                            saveEditLongUrlLink.style.display = 'none';
+                                            saveEditLongUrlLink.setAttribute('data-shortlink-id', id);
+
+
+                                            saveEditLongUrlLink.onclick = function (e) {
+                                                grecaptcha.ready(function() {
+                                                    grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
+
+
+                                                        var xhr = new XMLHttpRequest();
+                                                        xhr.withCredentials = true;
+
+                                                        xhr.addEventListener("readystatechange", function () {
+                                                            if (this.readyState === 4) {
+
+
+                                                                if (this.status === 201) {
+                                                                    longUrlContainer.innerText = editLongUrlInput.value
+                                                                    var saveColor = saveEditLongUrlLink.style.color;
+                                                                    saveEditLongUrlLink.style.color = 'green';
+                                                                    setTimeout(function () {
+                                                                        saveEditLongUrlLink.style.color = saveColor;
+                                                                        saveEditLongUrlLink.style.display = 'none';
+                                                                        editLongUrlInput.style.display = 'none';
+                                                                        longUrlContainer.style.display = 'block';
+                                                                        cancelEditLongUrlLink.style.display = 'none';
+                                                                        editLongUrlLink.style.display = 'inline-block';
+                                                                    }, 1000);
+                                                                    return;
+                                                                }
+
+                                                                const resObj = JSON.parse(this.response); //TODO: Catch exception
+
+                                                                if (
+                                                                    typeof resObj.message !== 'undefined'
+                                                                    &&
+                                                                    (
+                                                                        typeof resObj.errors !== 'undefined'
+                                                                        ||
+                                                                        typeof resObj.error_id !== 'undefined'
+                                                                    )
+                                                                ) {
+
+
+
+                                                                }
+                                                            }
+                                                        });
+
+
+                                                        const shortlinkId = saveEditLongUrlLink.getAttribute('data-shortlink-id');
+
+                                                        const credentialsQueryStr =
+                                                            "?shortlink_id=" + shortlinkId + "&long_url=" + editLongUrlInput.value + '&g-recaptcha-response=' + token;
+
+                                                            xhr.open(
+                                                            "POST",'/api/shortlinks/edit' + credentialsQueryStr
+                                                        );
+                                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                                        xhr.send();
+
+
+                                                    });
+                                                });
+
+                                            };
+
+
+                                            cancelEditLongUrlLink.classList.add('generic-edit-link-1');
+                                            cancelEditLongUrlLink.innerText = 'cancelar';
+                                            cancelEditLongUrlLink.style.display = 'none';
+                                            cancelEditLongUrlLink.onclick = function (e) {
+                                                editLongUrlInput.style.display = 'none';
+                                                longUrlContainer.style.display = 'block';
+                                                cancelEditLongUrlLink.style.display = 'none';
+                                                saveEditLongUrlLink.style.display = 'none';
+                                                editLongUrlLink.style.display = 'inline-block';
+                                                editLongUrlInput.value = longUrlContainer.innerText;
+                                            };
+
+
+
+
 
 
                                             const infoRow = document.createElement('div');
@@ -3173,6 +3301,22 @@
                                             this.el().appendChild(listItem);
 
                                             listItem.appendChild(longUrlLabel);
+
+                                            if (
+                                                window._authManager.isLoggedIn
+                                                &&
+                                                window._authManager.userPermissions !== null
+                                                &&
+                                                typeof window._authManager.userPermissions['edit_shortlinks_destination_url'] !== 'undefined'
+                                                &&
+                                                window._authManager.userPermissions['edit_shortlinks_destination_url'] == true
+                                            ) {
+                                                listItem.appendChild(editLongUrlLink);
+                                                listItem.appendChild(cancelEditLongUrlLink);
+                                                listItem.appendChild(saveEditLongUrlLink);
+                                                listItem.appendChild(editLongUrlInput);
+                                            }
+
                                             listItem.appendChild(longUrlContainer);
                                             listItem.appendChild(shortlinkLabel);
                                             listItem.appendChild(shortlinkContainer);

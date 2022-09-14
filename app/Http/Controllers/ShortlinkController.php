@@ -9,6 +9,7 @@ use App\Models\Shortlink;
 use App\Models\ShortlinkUrl;
 use App\Models\Shortstring;
 use App\Models\UserAction;
+use App\Models\UserPermission;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -220,7 +221,7 @@ class ShortlinkController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Generates a new shortlink
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -370,6 +371,88 @@ class ShortlinkController extends Controller
             Response::HTTP_CREATED
         );
     }
+
+
+    /**
+     * edits destination url of a shortlink keeping history
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function editShortlinkUrl(Request $request)
+    {
+        // url validation, read below ( about max length )
+        // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
+
+        $maxUrlLength = 2048; //TODO: use global config/env variable
+
+        try {
+            Validator::make(
+                $request->all(),
+                [
+                    // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
+                    'long_url' => 'required|url|max:' . $maxUrlLength,
+                    'shortlink_id' => 'required|numeric',
+                    'g-recaptcha-response' => 'required|captcha'
+                ],
+                [],
+                ['long_url' => 'URL']
+            )->validate();
+
+        } catch (ValidationException $ve) {
+            if (
+                $request->input('long_url', '')
+                &&
+                strlen($request->input('long_url')) > $maxUrlLength
+                &&
+                !is_null($this->userId)
+            ) {
+                UserAction::logAction(
+                    $this->userId,
+                    ShortlinkActions::ATTEMPTED_TO_EDIT_SHORTLINK_URL_TO_ONE_THAT_IS_TOO_LONG
+                );
+            }
+            throw $ve;
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+        $shortlink = Shortlink::findOrFail($request->input('shortlink_id'));
+
+
+        // check user owns shortlink / has permission to edit the url
+        if ($shortlink->user_id !== $request->user()->id) {
+            //TODO: log that someone tried to edit someone elses shortlink redirect url
+            return new Response('', Response::HTTP_FORBIDDEN);
+        }
+
+        $userPermissions = UserPermission::where('user_id', $request->user()->id)->first();
+
+        if ($userPermissions->edit_shortlinks_destination_url !== 1) {
+            //TODO: user has no permission to edit shortlinks destination urls
+            return new Response('', Response::HTTP_FORBIDDEN);
+        }
+
+        DB::beginTransaction();
+        try {
+
+            ShortlinkUrl::where('shortlink_id', '=', $shortlink->id)->update(
+                ['is_redirect_url' => false]
+            );
+            $shortlinkUrl = new ShortlinkUrl();
+            $shortlinkUrl->url = $request->input('long_url');
+            $shortlinkUrl->shortlink_id = $shortlink->id;
+            $shortlinkUrl->is_redirect_url = true;
+            $shortlinkUrl->save();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+        DB::commit();
+
+        return new Response('',Response::HTTP_CREATED);
+    }
+
 
     /**
      * Display the specified resource.
