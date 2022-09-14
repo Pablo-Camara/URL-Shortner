@@ -2028,6 +2028,7 @@
                             this.el().style.display = 'block';
                             this.Components.Email.el().focus();
                             this.Components.Feedback.hide();
+                            window.history.pushState(null, 'Entrar na minha conta', '/entrar');
                         },
                         hide: function () {
                             this.el().style.display = 'none';
@@ -2497,6 +2498,7 @@
                             this.el().style.display = 'block';
                             this.Components.Name.el().focus();
                             this.Components.Feedback.hide();
+                            window.history.pushState(null, 'Criar conta', '/criar-conta');
                         },
                         hide: function () {
                             this.el().style.display = 'none';
@@ -3725,6 +3727,7 @@
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
+                            window.history.pushState(null, 'Os meus links', '/os-meus-links');
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
