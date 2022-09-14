@@ -717,7 +717,7 @@ class AuthenticationController extends Controller
 
                 // update avatar
                 User::where(
-                    'id', '=', $this->userId
+                    'id', '=', $existingUser->id
                 )->update(['avatar' => $user->avatar]);
 
             }
@@ -837,7 +837,7 @@ class AuthenticationController extends Controller
 
                  // update avatar
                  User::where(
-                    'id', '=', $this->userId
+                    'id', '=', $existingUser->id
                 )->update(['avatar' => $user->avatar]);
             }
 
@@ -957,7 +957,7 @@ class AuthenticationController extends Controller
 
                  // update avatar
                  User::where(
-                    'id', '=', $this->userId
+                    'id', '=', $existingUser->id
                 )->update(['avatar' => $user->avatar]);
             }
 
@@ -1073,7 +1073,7 @@ class AuthenticationController extends Controller
 
                  // update avatar
                  User::where(
-                    'id', '=', $this->userId
+                    'id', '=', $existingUser->id
                 )->update(['avatar' => $user->avatar]);
             }
 
@@ -1211,7 +1211,7 @@ class AuthenticationController extends Controller
 
                  // update avatar
                  User::where(
-                    'id', '=', $this->userId
+                    'id', '=', $existingUser->id
                 )->update(['avatar' => $user->avatar]);
             }
 
