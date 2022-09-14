@@ -3200,6 +3200,8 @@
 
 
                                             saveEditLongUrlLink.onclick = function (e) {
+                                                saveEditLongUrlLink.innerText = 'a guardar..';
+
                                                 grecaptcha.ready(function() {
                                                     grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
 
@@ -3218,6 +3220,7 @@
                                                                     setTimeout(function () {
                                                                         saveEditLongUrlLink.style.color = saveColor;
                                                                         saveEditLongUrlLink.style.display = 'none';
+                                                                        saveEditLongUrlLink.innerText = 'guardar';
                                                                         editLongUrlInput.style.display = 'none';
                                                                         longUrlContainer.style.display = 'block';
                                                                         cancelEditLongUrlLink.style.display = 'none';
