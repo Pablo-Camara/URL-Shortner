@@ -225,6 +225,10 @@
                 margin-top: 8px;
             }
 
+            .edit-long-url-feedback {
+                font-size: 12px;
+            }
+
             .form-box-feedback.error {
                 color: red;
             }
@@ -3370,6 +3374,12 @@
                                             editLongUrlInput.classList.add('input-generic-1');
                                             editLongUrlInput.value = long_url; //TODO: shortstring
 
+                                            const editLongUrlInputFeedback = document.createElement('div');
+                                            editLongUrlInputFeedback.style.display = 'none';
+                                            editLongUrlInputFeedback.classList.add('form-box-feedback');
+                                            editLongUrlInputFeedback.classList.add('edit-long-url-feedback');
+
+
 
                                             const longUrlContainer = document.createElement("div");
                                             longUrlContainer.classList.add('long-url');
@@ -3399,6 +3409,9 @@
 
                                             saveEditLongUrlLink.onclick = function (e) {
                                                 saveEditLongUrlLink.innerText = 'a guardar..';
+                                                editLongUrlInputFeedback.innerText = '';
+                                                editLongUrlInputFeedback.classList.remove('error');
+                                                editLongUrlInputFeedback.style.display = 'none';
 
                                                 var saveLongUrlFunc = function (token) {
                                                     var xhr = new XMLHttpRequest();
@@ -3406,9 +3419,11 @@
 
                                                     xhr.addEventListener("readystatechange", function () {
                                                         if (this.readyState === 4) {
+                                                            var saveColor = saveEditLongUrlLink.style.color;
+
                                                             if (this.status === 201) {
                                                                 longUrlContainer.innerText = editLongUrlInput.value
-                                                                var saveColor = saveEditLongUrlLink.style.color;
+
                                                                 saveEditLongUrlLink.style.color = 'green';
                                                                 setTimeout(function () {
                                                                     saveEditLongUrlLink.style.color = saveColor;
@@ -3422,18 +3437,32 @@
                                                                 return;
                                                             }
 
+                                                            if (this.status === 403) {
+                                                                editLongUrlInputFeedback.innerText = 'Não tens permissão para executar esta ação.';
+                                                                editLongUrlInputFeedback.style.display = 'block';
+                                                                editLongUrlInputFeedback.classList.add('error');
+                                                                saveEditLongUrlLink.style.color = saveColor;
+                                                                saveEditLongUrlLink.innerText = 'guardar';
+                                                                return;
+                                                            }
+
                                                             const resObj = JSON.parse(this.response); //TODO: Catch exception
 
                                                             if (
                                                                 typeof resObj.message !== 'undefined'
-                                                                &&
-                                                                (
+                                                            ) {
+                                                                editLongUrlInputFeedback.innerText = resObj.message;
+                                                                editLongUrlInputFeedback.style.display = 'block';
+
+                                                                if(
                                                                     typeof resObj.errors !== 'undefined'
                                                                     ||
                                                                     typeof resObj.error_id !== 'undefined'
-                                                                )
-                                                            ) {
-
+                                                                ) {
+                                                                    editLongUrlInputFeedback.classList.add('error');
+                                                                    saveEditLongUrlLink.style.color = saveColor;
+                                                                    saveEditLongUrlLink.innerText = 'guardar';
+                                                                }
                                                             }
                                                         }
                                                     });
@@ -3487,6 +3516,7 @@
                                                 saveEditLongUrlLink.style.display = 'none';
                                                 editLongUrlLink.style.display = 'inline-block';
                                                 editLongUrlInput.value = longUrlContainer.innerText;
+                                                editLongUrlInputFeedback.style.display = 'none';
                                             };
 
 
@@ -3529,6 +3559,7 @@
                                                 listItem.appendChild(cancelEditLongUrlLink);
                                                 listItem.appendChild(saveEditLongUrlLink);
                                                 listItem.appendChild(editLongUrlInput);
+                                                listItem.appendChild(editLongUrlInputFeedback);
                                             }
 
                                             listItem.appendChild(longUrlContainer);
