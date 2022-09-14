@@ -2016,6 +2016,7 @@
                         },
                         hide: function () {
                             this.el().style.display = 'none';
+                            this.Components.Password.el().value = '';
                         },
                         Components: {
                             Email: {
@@ -2484,6 +2485,8 @@
                         },
                         hide: function () {
                             this.el().style.display = 'none';
+                            this.Components.Password.el().value = '';
+                            this.Components.PasswordConfirmation.el().value = '';
                         },
                         Components: {
                             Name: {
