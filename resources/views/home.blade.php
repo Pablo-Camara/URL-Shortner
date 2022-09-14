@@ -507,6 +507,8 @@
                     text-align: center;
                     line-height: 24px;
                     color: #FFFFFF;
+
+                    background-size: contain;
                 }
 
                 #menu-top-acc #menu-acc-items {
@@ -593,6 +595,7 @@
                 isLoggedIn: false,
 
                 userPermissions: null,
+                userData: null,
 
                 api: {
                     url: "{{ url('/api') }}",
@@ -686,11 +689,13 @@
                             const resObj = JSON.parse(this.response);
                             window._authManager.at = resObj.at;
                             window._authManager.isAuthenticated = true;
-                            window._authManager.isLoggedIn = resObj.guest
-                                ? false
-                                : true;
+                            window._authManager.isLoggedIn = resObj.guest === 0;
 
-                            window._authManager.userPermissions = resObj.permissions;
+                            if (resObj.guest === 0) {
+                                window._authManager.userPermissions = resObj.permissions;
+                                window._authManager.userData = resObj.data;
+                            }
+
 
                             // trigger userAuthenticated event
                             document.dispatchEvent(
@@ -758,6 +763,7 @@
                                     : true;
 
                                 window._authManager.userPermissions = resObj.permissions;
+                                window._authManager.userData = resObj.data;
 
                                 // trigger userLoggedIn event
                                 document.dispatchEvent(
@@ -3882,7 +3888,7 @@
             <div class="settings-icon">
                 <img src="{{ asset('/img/acc-settings.png') }}" />
             </div>
-            <div class="profile-pic">?</div>
+            <div class="profile-pic" id="user-profile-pic">?</div>
             <div id="menu-acc-items" style="display: none">
                 <div id="menu-acc-items-guest" style="display: none">
                     <div class="menu-item" id="menu-top-acc-login">Entrar</div>
@@ -4209,9 +4215,37 @@
 
             document.addEventListener('userAuthenticated', (e) => {
                 enableAuthenticationDependentButtons();
+
+                if (
+                    window._authManager.userData != null
+                ) {
+                    if (
+                        typeof window._authManager.userData.avatar !== 'undefined'
+                        &&
+                        typeof window._authManager.userData.avatar === 'string'
+                    ) {
+                        const userProfilePicEl = document.getElementById('user-profile-pic');
+                        userProfilePicEl.innerText = '';
+                        userProfilePicEl.style.backgroundImage = 'url("'+window._authManager.userData.avatar+'")';
+                    }
+                }
             }, false);
 
             document.addEventListener('userLoggedIn', (e) => {
+                if (
+                    window._authManager.userData != null
+                ) {
+                    if (
+                        typeof window._authManager.userData.avatar !== 'undefined'
+                        &&
+                        typeof window._authManager.userData.avatar === 'string'
+                    ) {
+                        const userProfilePicEl = document.getElementById('user-profile-pic');
+                        userProfilePicEl.innerText = '';
+                        userProfilePicEl.style.backgroundImage = 'url("'+window._authManager.userData.avatar+'")';
+                    }
+                }
+
                 window.App.Components.Login.hide();
                 window.App.Components.ShortenUrl.Components.DestinationEmail.show();
                 if (

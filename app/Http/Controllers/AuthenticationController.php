@@ -72,6 +72,13 @@ class AuthenticationController extends Controller
                     ];
                 }
 
+                $user = User::findOrFail($this->userId);
+
+                if ($user->avatar) {
+                    $authResponse['data'] = [
+                        'avatar' => $user->avatar
+                    ];
+                }
             }
 
             $response->setContent($authResponse);
@@ -253,11 +260,34 @@ class AuthenticationController extends Controller
         UserAction::logAction($this->userId, AuthActions::LOGGED_IN);
         UserAction::logAction($user->id, AuthActions::LOGGED_IN);
 
-        return $response
-            ->setContent([
-                'at' => $userToken,
-                'guest' => 0
-            ]);
+
+        $authResponse = [
+            'at' => $this->authToken,
+            'guest' => 0,
+        ];
+
+
+
+        $userPermissions = UserPermission::where('user_id', $this->userId)->first();
+
+        if ($userPermissions) {
+            $authResponse['permissions'] = [
+                'edit_shortlinks_destination_url' => $userPermissions->edit_shortlinks_destination_url ? true : false
+            ];
+        }
+
+        $user = User::findOrFail($this->userId);
+
+        if ($user->avatar) {
+            $authResponse['data'] = [
+                'avatar' => $user->avatar
+            ];
+        }
+
+
+        $response->setContent($authResponse);
+
+        return $response;
     }
 
     /**
@@ -643,6 +673,7 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
+                $existingUser->avatar = $user->avatar;
 
                 DB::beginTransaction();
                 try {
@@ -683,6 +714,12 @@ class AuthenticationController extends Controller
                     UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
                 }
+
+                // update avatar
+                User::where(
+                    'id', '=', $this->userId
+                )->update(['avatar' => $user->avatar]);
+
             }
 
             $this->setAuthCookie($existingUser);
@@ -757,6 +794,8 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
+                $existingUser->avatar = $user->avatar;
+
                 DB::beginTransaction();
                 try {
                     $existingUser->save();
@@ -795,6 +834,11 @@ class AuthenticationController extends Controller
                     UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
                 }
+
+                 // update avatar
+                 User::where(
+                    'id', '=', $this->userId
+                )->update(['avatar' => $user->avatar]);
             }
 
             $this->setAuthCookie($existingUser);
@@ -870,6 +914,8 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
+                $existingUser->avatar = $user->avatar;
+
                 DB::beginTransaction();
                 try {
                     $existingUser->save();
@@ -908,6 +954,11 @@ class AuthenticationController extends Controller
                     UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
                 }
+
+                 // update avatar
+                 User::where(
+                    'id', '=', $this->userId
+                )->update(['avatar' => $user->avatar]);
             }
 
             $this->setAuthCookie($existingUser);
@@ -979,6 +1030,8 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
+                $existingUser->avatar = $user->avatar;
+
                 DB::beginTransaction();
                 try {
                     $existingUser->save();
@@ -1017,6 +1070,11 @@ class AuthenticationController extends Controller
                     UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
                 }
+
+                 // update avatar
+                 User::where(
+                    'id', '=', $this->userId
+                )->update(['avatar' => $user->avatar]);
             }
 
             $this->setAuthCookie($existingUser);
@@ -1110,6 +1168,8 @@ class AuthenticationController extends Controller
                 $existingUser->guest = 0;
                 $existingUser->name = $user->name;
                 $existingUser->email = $user->email;
+                $existingUser->avatar = $user->avatar;
+
                 DB::beginTransaction();
                 try {
                     $existingUser->save();
@@ -1148,6 +1208,11 @@ class AuthenticationController extends Controller
                     UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
                     UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
                 }
+
+                 // update avatar
+                 User::where(
+                    'id', '=', $this->userId
+                )->update(['avatar' => $user->avatar]);
             }
 
             $this->setAuthCookie($existingUser);
