@@ -22,11 +22,7 @@ class HomeController extends Controller
      * Display homepage
      */
     public function index() {
-
-        if (!is_null($this->userId)) {
-            UserAction::logAction($this->userId, HomeControllerActions::OPENED_HOME_PAGE_DIRECTLY);
-        }
-
+        UserAction::logAction($this->userId, HomeControllerActions::OPENED_HOME_PAGE_DIRECTLY);
         return view('home', [
             'view' => 'HomePage'
         ]);
@@ -36,11 +32,7 @@ class HomeController extends Controller
      * Display login page
      */
     public function login() {
-
-        if (!is_null($this->userId)) {
-            UserAction::logAction($this->userId, HomeControllerActions::OPENED_LOGIN_PAGE_DIRECTLY);
-        }
-
+        UserAction::logAction($this->userId, HomeControllerActions::OPENED_LOGIN_PAGE_DIRECTLY);
         return view('home', [
             'view' => 'Login'
         ]);
@@ -50,11 +42,7 @@ class HomeController extends Controller
      * Display register page
      */
     public function register() {
-
-        if (!is_null($this->userId)) {
-            UserAction::logAction($this->userId, HomeControllerActions::OPENED_REGISTER_PAGE_DIRECTLY);
-        }
-
+        UserAction::logAction($this->userId, HomeControllerActions::OPENED_REGISTER_PAGE_DIRECTLY);
         return view('home', [
             'view' => 'Register'
         ]);
@@ -64,11 +52,7 @@ class HomeController extends Controller
      * Display home page with my links open
      */
     public function myLinks() {
-
-        if (!is_null($this->userId)) {
-            UserAction::logAction($this->userId, HomeControllerActions::OPENED_MY_LINKS_PAGE_DIRECTLY);
-        }
-
+        UserAction::logAction($this->userId, HomeControllerActions::OPENED_MY_LINKS_PAGE_DIRECTLY);
         return view('home', [
             'view' => 'MyLinks'
         ]);
@@ -118,17 +102,17 @@ class HomeController extends Controller
         // this is a cool feature I thought would be nice to have :D
         $user = User::findOrFail($request->user()->id);
 
+        UserAction::logAction($user->id, HomeControllerActions::OPENED_CHANGE_PASSWORD_PAGE_DIRECTLY);
+
         if ( !$user->hasVerifiedEmail() ) {
             try {
                 $user->email_verified_at = Carbon::now();
                 $user->save();
                 UserAction::logAction($user->id, AuthActions::CONFIRMED_EMAIL_THROUGH_PASSWORD_RECOVERY);
             } catch (\Throwable $th) {
-                // TODO: log this event in the future?
+                UserAction::logAction($user->id, AuthActions::FAILED_TO_CONFIRM_EMAIL_THROUGH_PASSWORD_RECOVERY);
             }
         }
-
-        UserAction::logAction($user->id, HomeControllerActions::OPENED_CHANGE_PASSWORD_PAGE_DIRECTLY);
 
         return view('home', [
             'view' => 'ChangePassword',

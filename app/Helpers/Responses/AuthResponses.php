@@ -45,4 +45,13 @@ class AuthResponses {
             'message' => 'Ainda não verificou o seu email. Verifique a sua caixa de entrada e/ou caixa de spam no seu provedor de email.'
         ], Response::HTTP_UNAUTHORIZED);
     }
+
+    public static function failedToCreateGuestAccount() {
+        return response()->json([
+            //TODO: translate msg str
+            'error_id' => 'failed_to_create_guest_account',
+            // TODO: translate
+            'message' => 'Não foi possível criar uma conta convidado para o utilizador.'
+        ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
 }

@@ -23,7 +23,20 @@ class UserAction extends Model
         } catch (\Throwable $th) {
             //throw $th;
         }
+    }
 
+    public static function moveActionsFromUserToUser (
+        $fromUserId,
+        $toUserId
+    ) {
+        try {
+            $totalRowsUpdated = UserAction::where(
+                'user_id', '=', $fromUserId
+            )->update(['user_id' => $toUserId]);
+            return $totalRowsUpdated;
+        } catch (\Throwable $th) {
+            return null;
+        }
     }
 
 }

@@ -22,4 +22,18 @@ class Shortlink extends Model
         return $this->hasOne(ShortlinkUrl::class)
                     ->where('is_redirect_url', '=', 1);
     }
+
+    public static function moveShortlinksFromUserToUser (
+        $fromUserId,
+        $toUserId
+    ) {
+        try {
+            $totalRowsUpdated = Shortlink::where(
+                'user_id', '=', $fromUserId
+            )->update(['user_id' => $toUserId]);
+            return $totalRowsUpdated;
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
 }

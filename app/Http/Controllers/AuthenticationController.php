@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Actions\AuthActions;
-use App\Helpers\Auth\AuthValidator;
+use App\Helpers\Actions\ShortlinkActions;
 use App\Helpers\Auth\Traits\InteractsWithAuthCookie;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\InteractsWithTime;
 use App\Helpers\Responses\AuthResponses;
@@ -27,7 +26,6 @@ use App\Models\UserPermission;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Jenssegers\Agent\Agent;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthenticationController extends Controller
@@ -51,39 +49,9 @@ class AuthenticationController extends Controller
      */
     public function authenticationAttempt(Request $request, Response $response)
     {
-        if (
-            !is_null($this->userId)
-        ) {
-            // if auth cookie is valid
-            // if auth token is valid / not expired
-            // send the auth token from the cookie
-            $authResponse = [
-                'at' => $this->authToken,
-                'guest' => $this->guest,
-            ];
-
-            if ($this->guest === 0) {
-
-                $userPermissions = UserPermission::where('user_id', $this->userId)->first();
-
-                if ($userPermissions) {
-                    $authResponse['permissions'] = [
-                        'edit_shortlinks_destination_url' => $userPermissions->edit_shortlinks_destination_url ? true : false
-                    ];
-                }
-
-                $user = User::findOrFail($this->userId);
-
-                if ($user->avatar) {
-                    $authResponse['data'] = [
-                        'avatar' => $user->avatar,
-                        'name' => $user->name
-                    ];
-                }
-            }
-
-            $response->setContent($authResponse);
-
+        $authenticatedResponseData = $this->getAuthenticatedAuthResponseData();
+        if ( !is_null($authenticatedResponseData) ) {
+            $response->setContent($authenticatedResponseData);
 
             UserAction::logAction(
                 $this->userId,
@@ -95,61 +63,31 @@ class AuthenticationController extends Controller
         }
 
         // creates new guest user
-
-        $user = new User();
-        $user->guest = 1;
-        $user->save();
+        $user = User::createNewGuestUser();
+        if (is_null($user)) {
+            // failed to create the guest user
+            UserAction::logAction(null, AuthActions::FAILED_TO_CREATE_GUEST_ACCOUNT);
+            return AuthResponses::failedToCreateGuestAccount();
+        }
 
         try {
-            if (
-                (
-                    !is_null($request->input('dw'))
-                    &&
-                    is_numeric($request->input('dw'))
-                )
-                &&
-                (
-                    !is_null($request->input('dh'))
-                    &&
-                    is_numeric($request->input('dh'))
-                )
-            ) {
-                $userDevice = new UserDevice();
-                $userDevice->user_id = $user->id;
-                $userDevice->device_width = $request->input('dw');
-                $userDevice->device_height = $request->input('dh');
-
-                if (!is_null($request->input('ua'))) {
-                    $userDevice->user_agent = $request->input('ua');
-
-                    $userAgent = new Agent();
-                    $userAgent->setUserAgent($userDevice->user_agent);
-
-                    $userDevice->is_robot = $userAgent->isRobot();
-                    $userDevice->is_phone = $userAgent->isPhone();
-                    $userDevice->is_mobile = $userAgent->isMobile();
-                    $userDevice->is_tablet = $userAgent->isTablet();
-                    $userDevice->is_desktop = $userAgent->isDesktop();
-                    $userDevice->device = $userAgent->device();
-                    $userDevice->platform = $userAgent->platform();
-                    $userDevice->browser = $userAgent->browser();
-                }
-
-                $userDevice->save();
-            }
+            UserDevice::create(
+                $request->input('dw'),
+                $request->input('dh'),
+                $request->input('ua'),
+                $user->id
+            );
         } catch (\Throwable $th) {
             UserAction::logAction($user->id, AuthActions::FAILED_TO_STORE_USER_DEVICE);
         }
 
-        $userToken = $this->setAuthCookie($user);
-
+        $newAccessToken = $this->setAuthCookie($user);
         $response->setContent([
-            'at' => $userToken,
+            'at' => $newAccessToken->plainTextToken,
             'guest' => 1
         ]);
 
         UserAction::logAction($user->id, AuthActions::AUTHENTICATED_AS_GUEST);
-
         return $response;
     }
 
@@ -162,17 +100,15 @@ class AuthenticationController extends Controller
      */
     public function logoutAttempt(Request $request, Response $response)
     {
-        $config = config('session');
+        $authTokenCookieName = config('session.auth_token_cookie_name');
 
-        if (
-            !is_null($this->userId) && ($this->guest === 0)
-        ) {
+        if ( $this->isLoggedIn() ) {
             UserAction::logAction($this->userId, AuthActions::LOGGED_OUT);
         } else {
             UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOG_OUT_WITHOUT_BEING_LOGGED_IN);
         }
 
-        $response->withoutCookie($config['auth_token_cookie_name'])->setStatusCode(200);
+        $response->withoutCookie($authTokenCookieName)->setStatusCode(200);
 
         return $response;
     }
@@ -186,22 +122,13 @@ class AuthenticationController extends Controller
      */
     public function loginAttempt(Request $request, Response $response)
     {
-        $config = config('session');
-
-        // when logging in, users must always have an Auth Cookie (with guest token)
-        if (is_null($this->userId)) {
+        if (false == $this->isAuthenticated()) {
             return AuthResponses::notAuthenticated();
         }
 
-        if ($this->guest === 0) {
-
+        if ($this->isLoggedIn()) {
             UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WHILE_LOGGED_IN);
-
-            return $response
-                    ->setContent([
-                        'at' => $this->authToken,
-                        'guest' => 0
-                    ]);
+            return $response->setContent($this->getAuthenticatedAuthResponseData());
         }
 
         $validations = [
@@ -223,70 +150,31 @@ class AuthenticationController extends Controller
         }
 
         if ( !Hash::check($request->password, $user->password) ) {
-            UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_WRONG_PASSWORD);
+            // todo: store guest acc id if any, associated to:
             UserAction::logAction($user->id, AuthActions::ATTEMPTED_TO_LOGIN_WITH_WRONG_PASSWORD);
             return AuthResponses::incorrectCredentials();
         }
 
         if (!$user->hasVerifiedEmail()) {
-            UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_UNVERIFIED_EMAIL);
+            // todo: store guest acc id if any, associated to:
             UserAction::logAction($user->id, AuthActions::ATTEMPTED_TO_LOGIN_WITH_UNVERIFIED_EMAIL);
             return AuthResponses::unverifiedAccount();
         }
 
-        $userToken = $this->setAuthCookie($user);
+        $newAccessToken = $this->setAuthCookie($user);
 
-        // move shortlinks generated as guest
-        // to the now logged in user account.
-        $totalGeneratedLinksAsGuest = Shortlink::where(
-            'user_id', '=', $this->userId
-        )->update(['user_id' => $user->id]);
+        $this->moveGuestDataToRegisteredUser(
+            $this->userId,
+            $user->id
+        );
 
-        if ($totalGeneratedLinksAsGuest > 0) {
-            UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
-            UserAction::logAction($user->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
-        }
-
-        // move guest device
-        // to the now newly created user account
-        $totalUserDevicesAsGuest = UserDevice::where(
-            'user_id', '=', $this->userId
-        )->update(['user_id' => $user->id]);
-
-        if ($totalUserDevicesAsGuest > 0) {
-            UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
-            UserAction::logAction($user->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
-        }
-
-        UserAction::logAction($this->userId, AuthActions::LOGGED_IN);
+        // todo: store guest acc id if any, associated to:
         UserAction::logAction($user->id, AuthActions::LOGGED_IN);
 
-
-        $authResponse = [
-            'at' => $this->authToken,
-            'guest' => 0,
-        ];
-
-
-
-        $userPermissions = UserPermission::where('user_id', $this->userId)->first();
-
-        if ($userPermissions) {
-            $authResponse['permissions'] = [
-                'edit_shortlinks_destination_url' => $userPermissions->edit_shortlinks_destination_url ? true : false
-            ];
-        }
-
-        $user = User::findOrFail($this->userId);
-
-        if ($user->avatar) {
-            $authResponse['data'] = [
-                'avatar' => $user->avatar,
-                'name' => $user->name
-            ];
-        }
-
-
+        $authResponse = $this->getAuthResponseDataForUserToken(
+            $newAccessToken->plainTextToken,
+            $newAccessToken->accessToken
+        );
         $response->setContent($authResponse);
 
         return $response;
@@ -300,19 +188,13 @@ class AuthenticationController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function registerAttempt(Request $request, Response $response) {
-
-        // when registering in, users must always have an Auth Cookie (with guest token)
-        if (is_null($this->userId)) {
+        if (false == $this->isAuthenticated()) {
             return AuthResponses::notAuthenticated();
         }
 
-        if ($this->guest === 0) {
+        if ($this->isLoggedIn()) {
             UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_REGISTER_WHILE_LOGGED_IN);
-            return $response
-                    ->setContent([
-                        'at' => $this->authToken,
-                        'guest' => 0
-                    ]);
+            return $response->setContent($this->getAuthenticatedAuthResponseData());
         }
 
         $validations = [
@@ -350,28 +232,7 @@ class AuthenticationController extends Controller
         DB::commit();
 
         $this->sendVerificationEmail($user);
-
-        // move shortlinks generated as guest
-        // to the now newly created user account
-        $totalGeneratedLinksAsGuest = Shortlink::where(
-            'user_id', '=', $this->userId
-        )->update(['user_id' => $user->id]);
-
-        if ($totalGeneratedLinksAsGuest > 0) {
-            UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
-            UserAction::logAction($user->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
-        }
-
-        // move guest device
-        // to the now newly created user account
-        $totalUserDevicesAsGuest = UserDevice::where(
-            'user_id', '=', $this->userId
-        )->update(['user_id' => $user->id]);
-
-        if ($totalUserDevicesAsGuest > 0) {
-            UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
-            UserAction::logAction($user->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
-        }
+        $this->moveGuestDataToRegisteredUser($this->userId, $user->id);
 
         return $response
             ->setContent([
@@ -409,16 +270,12 @@ class AuthenticationController extends Controller
             // to find out which emails are registered
             // so we just return 200 and fool the users that are attempting
             // to spam this endpoint
-            if (!is_null($this->userId)) {
-                UserAction::logAction($this->userId, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL_FOR_UNEXISTING_EMAIL);
-            }
+            UserAction::logAction($this->userId, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL_FOR_UNEXISTING_EMAIL);
 
             return new Response('', 200);
         }
 
-        if (!is_null($this->userId)) {
-            UserAction::logAction($this->userId, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL);
-        }
+        // todo: store guest acc id if any, associated to ( from which guest attempted this ? )
         UserAction::logAction($user->id, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL);
         $this->sendVerificationEmail($user, true);
 
@@ -507,12 +364,6 @@ class AuthenticationController extends Controller
         //REQUESTED_PASSWORD_RECOVERY_EMAIL
         $request->validate($validations);
 
-        if (
-            !is_null($this->userId)
-        ) {
-            UserAction::logAction($this->userId, AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL);
-        }
-
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
@@ -520,16 +371,12 @@ class AuthenticationController extends Controller
             // to find out which emails are registered
             // so we just return 200 and fool the users that are attempting
             // to spam this endpoint
-            if (
-                !is_null($this->userId)
-            ) {
-                UserAction::logAction($this->userId, AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL_FOR_UNEXISTING_EMAIL);
-            }
+            UserAction::logAction($this->userId, AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL_FOR_UNEXISTING_EMAIL);
             return new Response('', 200);
         }
 
+        //todo: from which guest acc id ?
         UserAction::logAction($user->id, AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL);
-
 
         // delete expired pwd token
         $user->tokens()
@@ -632,8 +479,6 @@ class AuthenticationController extends Controller
             return redirect()->route('login-page');
         }
 
-        UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_GITHUB);
-
         try {
             $user = Socialite::driver('github')->user();
 
@@ -696,41 +541,14 @@ class AuthenticationController extends Controller
             }
 
             if (!$usedGuestAcc) {
-                // move shortlinks generated as guest to acc
-                $totalGeneratedLinksAsGuest = Shortlink::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalGeneratedLinksAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
-                }
-
-                // move guest device
-                // to the now newly created user account
-                $totalUserDevicesAsGuest = UserDevice::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalUserDevicesAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
-                }
-
-                // update avatar
-                User::where(
-                    'id', '=', $existingUser->id
-                )->update(['avatar' => $user->avatar]);
-
+                $this->moveGuestDataToRegisteredUser($this->userId, $existingUser->id);
+                User::updateAvatar($existingUser->id, $user->avatar);
             }
 
             $this->setAuthCookie($existingUser);
 
-            UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_GITHUB);
-            if (!$usedGuestAcc) {
-                UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_GITHUB);
-            }
-
+            // todo: from which guest id ( if not $usedGuestAcc )
+            UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_GITHUB);
             return redirect()->route('my-links-page');
 
         } catch (\Throwable $th) {
@@ -761,8 +579,6 @@ class AuthenticationController extends Controller
         if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
-
-        UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_FACEBOOK);
 
         try {
             $user = Socialite::driver('facebook')->user();
@@ -816,39 +632,14 @@ class AuthenticationController extends Controller
             }
 
             if (!$usedGuestAcc) {
-                // move shortlinks generated as guest to acc
-                $totalGeneratedLinksAsGuest = Shortlink::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalGeneratedLinksAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
-                }
-
-                // move guest device
-                // to the now newly created user account
-                $totalUserDevicesAsGuest = UserDevice::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalUserDevicesAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
-                }
-
-                 // update avatar
-                 User::where(
-                    'id', '=', $existingUser->id
-                )->update(['avatar' => $user->avatar]);
+                $this->moveGuestDataToRegisteredUser($this->userId, $existingUser->id);
+                User::updateAvatar($existingUser->id, $user->avatar);
             }
 
             $this->setAuthCookie($existingUser);
 
-            UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_FACEBOOK);
-            if (!$usedGuestAcc) {
-                UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_FACEBOOK);
-            }
+            //TODO: from which guest?
+            UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_FACEBOOK);
 
             return redirect()->route('my-links-page');
 
@@ -878,8 +669,6 @@ class AuthenticationController extends Controller
         if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
-
-        UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_GOOGLE);
 
         try {
             $user = Socialite::driver('google')->user();
@@ -936,39 +725,14 @@ class AuthenticationController extends Controller
             }
 
             if (!$usedGuestAcc) {
-                // move shortlinks generated as guest to acc
-                $totalGeneratedLinksAsGuest = Shortlink::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalGeneratedLinksAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
-                }
-
-                // move guest device
-                // to the now newly created user account
-                $totalUserDevicesAsGuest = UserDevice::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalUserDevicesAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
-                }
-
-                 // update avatar
-                 User::where(
-                    'id', '=', $existingUser->id
-                )->update(['avatar' => $user->avatar]);
+                $this->moveGuestDataToRegisteredUser($this->userId, $existingUser->id);
+                User::updateAvatar($existingUser->id, $user->avatar);
             }
 
             $this->setAuthCookie($existingUser);
 
-            UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_GOOGLE);
-            if (!$usedGuestAcc) {
-                UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_GOOGLE);
-            }
+            //TODO: from which guest?
+            UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_GOOGLE);
 
             return redirect()->route('my-links-page');
 
@@ -999,8 +763,6 @@ class AuthenticationController extends Controller
         if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
-
-        UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_LINKEDIN);
 
         try {
             $user = Socialite::driver('linkedin')->user();
@@ -1052,39 +814,14 @@ class AuthenticationController extends Controller
             }
 
             if (!$usedGuestAcc) {
-                // move shortlinks generated as guest to acc
-                $totalGeneratedLinksAsGuest = Shortlink::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalGeneratedLinksAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
-                }
-
-                // move guest device
-                // to the now newly created user account
-                $totalUserDevicesAsGuest = UserDevice::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalUserDevicesAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
-                }
-
-                 // update avatar
-                 User::where(
-                    'id', '=', $existingUser->id
-                )->update(['avatar' => $user->avatar]);
+                $this->moveGuestDataToRegisteredUser($this->userId, $existingUser->id);
+                User::updateAvatar($existingUser->id, $user->avatar);
             }
 
             $this->setAuthCookie($existingUser);
 
-            UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_LINKEDIN);
-            if (!$usedGuestAcc) {
-                UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_LINKEDIN);
-            }
+            //TODO: from which guest?
+            UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_LINKEDIN);
 
             return redirect()->route('my-links-page');
 
@@ -1115,8 +852,6 @@ class AuthenticationController extends Controller
         if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
             return redirect()->route('login-page');
         }
-
-        UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WITH_TWITTER);
 
         try {
             $user = Socialite::driver('twitter')->user();
@@ -1190,45 +925,62 @@ class AuthenticationController extends Controller
             }
 
             if (!$usedGuestAcc) {
-                // move shortlinks generated as guest to acc
-                $totalGeneratedLinksAsGuest = Shortlink::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalGeneratedLinksAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_SHORTLINKS_GENERATED_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
-                }
-
-                // move guest device
-                // to the now newly created user account
-                $totalUserDevicesAsGuest = UserDevice::where(
-                    'user_id', '=', $this->userId
-                )->update(['user_id' => $existingUser->id]);
-
-                if ($totalUserDevicesAsGuest > 0) {
-                    UserAction::logAction($this->userId, AuthActions::SAVED_DETECTED_DEVICES_AS_GUEST_TO_ACCOUNT);
-                    UserAction::logAction($existingUser->id, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
-                }
-
-                 // update avatar
-                 User::where(
-                    'id', '=', $existingUser->id
-                )->update(['avatar' => $user->avatar]);
+                $this->moveGuestDataToRegisteredUser($this->userId, $existingUser->id);
+                User::updateAvatar($existingUser->id, $user->avatar);
             }
 
             $this->setAuthCookie($existingUser);
 
-            UserAction::logAction($this->userId, AuthActions::LOGGED_IN_WITH_TWITTER);
-            if (!$usedGuestAcc) {
-                UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_TWITTER);
-            }
+            //TODO: from which guest?
+            UserAction::logAction($existingUser->id, AuthActions::LOGGED_IN_WITH_TWITTER);
 
             return redirect()->route('my-links-page');
 
         } catch (\Throwable $th) {
             UserAction::logAction($this->userId, AuthActions::FAILED_TO_LOGIN_WITH_TWITTER);
             return redirect()->route('login-page');
+        }
+
+    }
+
+
+    public function moveGuestDataToRegisteredUser (
+        $guestUserId,
+        $registeredUserId
+    ) {
+        // lets move Guest actions to the registered user
+        $totalActionsAsGuest = UserAction::moveActionsFromUserToUser($guestUserId, $registeredUserId);
+        if (is_null($totalActionsAsGuest)) {
+            UserAction::logAction($registeredUserId, AuthActions::FAILED_TO_IMPORT_ACTIONS_FROM_GUEST_ACCOUNT);
+        }
+
+        if ($totalActionsAsGuest > 0) {
+            UserAction::logAction($registeredUserId, AuthActions::IMPORTED_ACTIONS_FROM_GUEST_ACCOUNT);
+        }
+
+
+        // move shortlinks generated as guest
+        // to the registered user account.
+        $totalGeneratedShortlinksAsGuest = Shortlink::moveShortlinksFromUserToUser($guestUserId, $registeredUserId);
+        if (is_null($totalGeneratedShortlinksAsGuest)) {
+            UserAction::logAction($registeredUserId, ShortlinkActions::FAILED_TO_IMPORT_SHORTLINKS_FROM_GUEST_ACCOUNT);
+        }
+
+        if ($totalGeneratedShortlinksAsGuest > 0) {
+            UserAction::logAction($registeredUserId, ShortlinkActions::IMPORTED_SHORTLINKS_FROM_GUEST_ACCOUNT);
+        }
+
+
+        // move guest device
+        // to the now newly created user account
+        $totalUserDevicesAsGuest = UserDevice::moveDevicesFromUserToUser($guestUserId, $registeredUserId);
+
+        if (is_null($totalUserDevicesAsGuest)) {
+            UserAction::logAction($registeredUserId, AuthActions::FAILED_TO_IMPORT_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
+        }
+
+        if ($totalUserDevicesAsGuest > 0) {
+            UserAction::logAction($registeredUserId, AuthActions::IMPORTED_DETECTED_DEVICES_FROM_GUEST_ACCOUNT);
         }
 
     }
