@@ -3656,8 +3656,12 @@
                                                                 window.App.Components.MyLinks.Components.Links.Components.GuestMsg.show();
                                                             }
 
-                                                            const paginationLinks = $this.Components.Pagination.createEl(resObj.current_page, resObj.last_page);
-                                                            $this.el().appendChild(paginationLinks);
+
+                                                            if (resObj.last_page > 1) {
+                                                                const paginationLinks = $this.Components.Pagination.createEl(resObj.current_page, resObj.last_page);
+                                                                $this.el().appendChild(paginationLinks);
+                                                            }
+
                                                         }
                                                     }
                                                 }
