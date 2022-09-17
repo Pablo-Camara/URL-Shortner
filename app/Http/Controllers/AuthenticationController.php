@@ -210,27 +210,18 @@ class AuthenticationController extends Controller
 
         $request->validate($validations);
 
-        $user = new User();
-        $user->guest = 0;
-        $user->name = $request->input('name');
-        $user->email = $request->input('email');
-        $user->password = Hash::make($request->input('password'));
+        $user = User::createNewRegisteredUser(
+            $request->input('name'),
+            $request->input('email'),
+            $request->input('password')
+        );
 
-        DB::beginTransaction();
-        try {
-            $user->save();
-
-            $userPermissions = new UserPermission();
-            $userPermissions->user_id = $user->id;
-            $userPermissions->save();
-
-            UserAction::logAction($this->userId, AuthActions::REGISTERED);
-        } catch (\Throwable $th) {
-            //TODO: log event
+        if (is_null($user)) {
+            UserAction::logAction($this->userId, AuthActions::FAILED_TO_REGISTER);
             return AuthResponses::registerFailed();
         }
-        DB::commit();
 
+        UserAction::logAction($user->id, AuthActions::REGISTERED);
         $this->sendVerificationEmail($user);
         $this->moveGuestDataToRegisteredUser($this->userId, $user->id);
 
@@ -516,25 +507,17 @@ class AuthenticationController extends Controller
 
             $usedGuestAcc = false;
             if (!$existingUser) {
-                $existingUser = User::find($this->userId);
-                $existingUser->guest = 0;
-                $existingUser->name = $user->name;
-                $existingUser->email = $user->email;
-                $existingUser->avatar = $user->avatar;
+                $existingUser = User::registerGuestUser(
+                    $this->userId,
+                    $user->name,
+                    $user->email,
+                    $user->avatar
+                );
 
-                DB::beginTransaction();
-                try {
-                    $existingUser->save();
-
-                    $userPermissions = new UserPermission();
-                    $userPermissions->user_id = $existingUser->id;
-                    $userPermissions->save();
-                } catch (\Throwable $th) {
-                    DB::rollBack();
-                    throw $th;
+                if (is_null($existingUser)) {
+                    UserAction::logAction($this->userId, AuthActions::FAILED_TO_REGISTER_WITH_GITHUB);
+                    return redirect()->route('login-page');
                 }
-                DB::commit();
-
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_GITHUB);
@@ -608,24 +591,17 @@ class AuthenticationController extends Controller
 
             $usedGuestAcc = false;
             if (!$existingUser) {
-                $existingUser = User::find($this->userId);
-                $existingUser->guest = 0;
-                $existingUser->name = $user->name;
-                $existingUser->email = $user->email;
-                $existingUser->avatar = $user->avatar;
+                $existingUser = User::registerGuestUser(
+                    $this->userId,
+                    $user->name,
+                    $user->email,
+                    $user->avatar
+                );
 
-                DB::beginTransaction();
-                try {
-                    $existingUser->save();
-
-                    $userPermissions = new UserPermission();
-                    $userPermissions->user_id = $existingUser->id;
-                    $userPermissions->save();
-                } catch (\Throwable $th) {
-                    DB::rollBack();
-                    throw $th;
+                if (is_null($existingUser)) {
+                    UserAction::logAction($this->userId, AuthActions::FAILED_TO_REGISTER_WITH_FACEBOOK);
+                    return redirect()->route('login-page');
                 }
-                DB::commit();
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_FACEBOOK);
@@ -701,24 +677,17 @@ class AuthenticationController extends Controller
 
             $usedGuestAcc = false;
             if (!$existingUser) {
-                $existingUser = User::find($this->userId);
-                $existingUser->guest = 0;
-                $existingUser->name = $user->name;
-                $existingUser->email = $user->email;
-                $existingUser->avatar = $user->avatar;
+                $existingUser = User::registerGuestUser(
+                    $this->userId,
+                    $user->name,
+                    $user->email,
+                    $user->avatar
+                );
 
-                DB::beginTransaction();
-                try {
-                    $existingUser->save();
-
-                    $userPermissions = new UserPermission();
-                    $userPermissions->user_id = $existingUser->id;
-                    $userPermissions->save();
-                } catch (\Throwable $th) {
-                    DB::rollBack();
-                    throw $th;
+                if (is_null($existingUser)) {
+                    UserAction::logAction($this->userId, AuthActions::FAILED_TO_REGISTER_WITH_GOOGLE);
+                    return redirect()->route('login-page');
                 }
-                DB::commit();
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_GOOGLE);
@@ -790,24 +759,17 @@ class AuthenticationController extends Controller
 
             $usedGuestAcc = false;
             if (!$existingUser) {
-                $existingUser = User::find($this->userId);
-                $existingUser->guest = 0;
-                $existingUser->name = $user->name;
-                $existingUser->email = $user->email;
-                $existingUser->avatar = $user->avatar;
+                $existingUser = User::registerGuestUser(
+                    $this->userId,
+                    $user->name,
+                    $user->email,
+                    $user->avatar
+                );
 
-                DB::beginTransaction();
-                try {
-                    $existingUser->save();
-
-                    $userPermissions = new UserPermission();
-                    $userPermissions->user_id = $existingUser->id;
-                    $userPermissions->save();
-                } catch (\Throwable $th) {
-                    DB::rollBack();
-                    throw $th;
+                if (is_null($existingUser)) {
+                    UserAction::logAction($this->userId, AuthActions::FAILED_TO_REGISTER_WITH_LINKEDIN);
+                    return redirect()->route('login-page');
                 }
-                DB::commit();
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_LINKEDIN);
@@ -901,24 +863,17 @@ class AuthenticationController extends Controller
 
             $usedGuestAcc = false;
             if (!$existingUser) {
-                $existingUser = User::find($this->userId);
-                $existingUser->guest = 0;
-                $existingUser->name = $user->name;
-                $existingUser->email = $user->email;
-                $existingUser->avatar = $user->avatar;
+                $existingUser = User::registerGuestUser(
+                    $this->userId,
+                    $user->name,
+                    $user->email,
+                    $user->avatar
+                );
 
-                DB::beginTransaction();
-                try {
-                    $existingUser->save();
-
-                    $userPermissions = new UserPermission();
-                    $userPermissions->user_id = $existingUser->id;
-                    $userPermissions->save();
-                } catch (\Throwable $th) {
-                    DB::rollBack();
-                    throw $th;
+                if (is_null($existingUser)) {
+                    UserAction::logAction($this->userId, AuthActions::FAILED_TO_REGISTER_WITH_TWITTER);
+                    return redirect()->route('login-page');
                 }
-                DB::commit();
 
                 $usedGuestAcc = true;
                 UserAction::logAction($existingUser->id, AuthActions::REGISTERED_WITH_TWITTER);

@@ -6,6 +6,8 @@ use App\Helpers\Auth\Abilities\AdminAbilities;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -111,6 +113,67 @@ class User extends Authenticatable
         } catch (\Throwable $th) {
             return null;
         }
+    }
+
+    /**
+     * Creates a new registered user or returns null
+     *
+     * @return User|null
+     */
+    public static function createNewRegisteredUser(
+        $name,
+        $email,
+        $password
+    ) {
+
+        $user = new User();
+        $user->guest = 0;
+        $user->name = $name;
+        $user->email = $email;
+        $user->password = Hash::make($password);
+
+        DB::beginTransaction();
+        try {
+            $user->save();
+
+            $userPermissions = new UserPermission();
+            $userPermissions->user_id = $user->id;
+            $userPermissions->save();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return null;
+        }
+        DB::commit();
+
+        return $user;
+    }
+
+    public static function registerGuestUser (
+        $guestUserId,
+        $name,
+        $email,
+        $avatar
+    ) {
+        $existingUser = User::find($guestUserId);
+        $existingUser->guest = 0;
+        $existingUser->name = $name;
+        $existingUser->email = $email;
+        $existingUser->avatar = $avatar;
+
+        DB::beginTransaction();
+        try {
+            $existingUser->save();
+
+            $userPermissions = new UserPermission();
+            $userPermissions->user_id = $existingUser->id;
+            $userPermissions->save();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return null;
+        }
+        DB::commit();
+
+        return $existingUser;
     }
 
     public static function updateAvatar($userId, $newAvatar) {
