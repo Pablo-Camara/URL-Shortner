@@ -10,7 +10,7 @@ class UserPermission extends Model
     public function toArray()
     {
         return [
-            'edit_shortlinks_destination_url' => $this->edit_shortlinks_destination_url
+            'edit_shortlinks_destination_url' => (bool)$this->edit_shortlinks_destination_url
         ];
     }
 }
