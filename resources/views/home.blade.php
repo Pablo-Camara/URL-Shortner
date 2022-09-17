@@ -298,23 +298,27 @@
 
             .form-box .list-container .list-item {
                 margin-bottom: 10px;
-                border-bottom: 1px solid #EEEEEE;
-
-                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
+                border: 1px solid #EEEEEE;
                 padding: 10px;
+            }
+
+            .form-box .list-container .list-item .long-url-label {
+                font-size: 12px;
             }
 
             .form-box .list-container .list-item .short-url-label {
                 margin-top: 14px;
+                font-size: 14px;
             }
 
             .form-box .list-container .list-item .info-row .info-col {
                 display: inline-block;
                 margin-right: 16px;
                 margin-top: 10px;
+                font-size: 12px;
             }
             .form-box .list-container .list-item .short-url input {
-                color: #0077c8;
+                color: #a57212;
                 width: 100%;
                 padding: 12px 6px;
                 box-sizing: border-box;
