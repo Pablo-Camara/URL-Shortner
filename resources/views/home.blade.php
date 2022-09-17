@@ -278,6 +278,24 @@
 
             }
 
+            .form-box .list-container .pagination-container {
+                font-size: 12px;
+                text-align: center;
+            }
+
+            .form-box .list-container .pagination-container a {
+                margin-right: 12px;
+            }
+
+            .form-box .list-container .pagination-container a.current {
+                text-decoration: none;
+                color: #888;
+            }
+
+            .form-box .list-container .pagination-container a:last-child {
+                margin-right: 0;
+            }
+
             .form-box .list-container .list-item {
                 margin-bottom: 10px;
                 border-bottom: 1px solid #EEEEEE;
@@ -3597,7 +3615,7 @@
 
 
                                         },
-                                        fetch: function () {
+                                        fetch: function (pageNumber = 1) {
                                             if (window._authManager.isAuthenticated !== true) {
                                                 return;
                                             }
@@ -3617,32 +3635,122 @@
 
                                                     if (this.status === 200) {
                                                         window.App.Components.MyLinks.Components.Links.Components.Loading.hide();
-                                                        if (resObj.length == 0) {
+                                                        if (resObj.total == 0) {
                                                             window.App.Components.MyLinks.Components.Links.Components.NotFound.show();
                                                         } else  {
                                                             window.App.Components.MyLinks.Components.Links.Components.NotFound.hide();
                                                         }
-                                                        for (var i = 0; i < resObj.length; i++) {
+
+                                                        for (var i = 0; i < resObj.data.length; i++) {
                                                             $this.addLink(
-                                                                resObj[i].id,
-                                                                resObj[i].long_url,
-                                                                resObj[i].shortlink,
-                                                                resObj[i].destination_email,
-                                                                resObj[i].created_at
+                                                                resObj.data[i].id,
+                                                                resObj.data[i].long_url,
+                                                                resObj.data[i].shortlink,
+                                                                resObj.data[i].destination_email,
+                                                                resObj.data[i].created_at
                                                             );
                                                         }
 
-                                                        if (resObj.length > 0 && !window._authManager.isLoggedIn) {
-                                                            window.App.Components.MyLinks.Components.Links.Components.GuestMsg.show();
+                                                        if (resObj.total > 0) {
+                                                            if (!window._authManager.isLoggedIn) {
+                                                                window.App.Components.MyLinks.Components.Links.Components.GuestMsg.show();
+                                                            }
+
+                                                            const paginationLinks = $this.Components.Pagination.createEl(resObj.current_page, resObj.last_page);
+                                                            $this.el().appendChild(paginationLinks);
                                                         }
                                                     }
                                                 }
                                             });
 
-                                            xhr.open("POST", this.api);
+                                            xhr.open("POST", this.api + '?page=' + pageNumber);
                                             xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
                                             xhr.send();
                                         },
+                                        Components: {
+                                            Pagination: {
+                                                createEl: function (currentPage, lastPage) {
+                                                    const paginationContainer = document.createElement('div');
+                                                    paginationContainer.classList.add('pagination-container');
+
+                                                    const numbersBeginning = 2;
+                                                    const numbersBefore = 2;
+                                                    const numbersAfter = 2;
+                                                    const numbersEnd = 2;
+
+                                                    var i;
+                                                    var pagination = [];
+                                                    for(i = 1; i <= numbersBeginning; i++) {
+                                                        pagination.push(i);
+                                                    }
+                                                    for(i = currentPage; i >= currentPage - numbersBefore; i--) {
+                                                        pagination.push(i);
+                                                    }
+                                                    pagination.push(currentPage);
+                                                    for(i = currentPage; i <= currentPage + numbersAfter; i++) {
+                                                        pagination.push(i);
+                                                    }
+                                                    for(i = lastPage; i > lastPage - numbersEnd; i--) {
+                                                        pagination.push(i);
+                                                    }
+
+                                                    pagination = pagination.filter(function(pageNumber) {
+                                                        return pageNumber > 0 && pageNumber <= lastPage;
+                                                    });
+
+                                                    pagination = pagination.filter(function(value, index, self) {
+                                                        return self.indexOf(value) === index;
+                                                    });
+
+                                                    pagination = pagination.sort(function(a, b) {
+                                                        if( a === Infinity )
+                                                            return 1;
+                                                        else if( isNaN(a))
+                                                            return -1;
+                                                        else
+                                                            return a - b;
+                                                    });
+
+                                                    var paginationWithDots = [];
+                                                    for(i = 0; i < pagination.length; i++) {
+                                                        const pageNum = pagination[i];
+                                                        paginationWithDots.push(pageNum);
+
+                                                        var nextPageNum = null;
+                                                        if ( (i + 1) < pagination.length ) {
+                                                            nextPageNum = pagination[i + 1];
+                                                        }
+
+                                                        if (
+                                                            nextPageNum != null
+                                                            &&
+                                                            pageNum+1 < nextPageNum
+                                                        ) {
+                                                            paginationWithDots.push('...');
+                                                        }
+                                                    }
+
+                                                    for(i = 0; i < paginationWithDots.length; i++) {
+                                                        const paginationLink = document.createElement('a');
+                                                        paginationLink.href = 'javascript:void(0);';
+                                                        paginationLink.innerHTML = paginationWithDots[i];
+
+                                                        if (paginationWithDots[i] === currentPage) {
+                                                            paginationLink.classList.add('current');
+                                                        } else {
+                                                            if (paginationWithDots[i] !== '...') {
+                                                                paginationLink.onclick = function (e) {
+                                                                    window.App.Components.MyLinks.Components.Links.Components.List.fetch(e.target.innerText);
+                                                                };
+                                                            }
+                                                        }
+
+                                                        paginationContainer.appendChild(paginationLink);
+                                                    }
+                                                    return paginationContainer;
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

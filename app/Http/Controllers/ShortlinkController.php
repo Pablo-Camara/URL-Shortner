@@ -108,19 +108,16 @@ class ShortlinkController extends Controller
             ]
          )
          ->orderBy('id', 'desc')
-         ->get()->toArray();
+         ->paginate(3)
+         ->through(function($shortlink){
+            $shortlink->long_url = $shortlink->redirectUrl->url;
+            $shortlink->shortlink = URL::to('/' . $shortlink->shortstring->shortstring);
 
-        $userShortlinks = array_map(
-            function ($row) {
-                return [
-                    'id' => $row['id'],
-                    'long_url' => $row['redirect_url']['url'],
-                    'shortlink' => URL::to('/' . $row['shortstring']['shortstring']),
-                    'destination_email' => $row['destination_email'],
-                    'created_at' => $row['created_at']
-                ];
-            }, $userShortlinks
-        );
+            unset($shortlink->shortstring);
+            unset($shortlink->shortstring_id);
+            unset($shortlink->redirectUrl);
+            return $shortlink;
+        });
 
         if (!is_null($this->userId)) {
             UserAction::logAction($this->userId, ShortlinkActions::VIEWED_LINKS_LIST);
