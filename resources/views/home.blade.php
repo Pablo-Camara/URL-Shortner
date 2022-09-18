@@ -300,6 +300,41 @@
                 margin-bottom: 10px;
                 border: 1px solid #EEEEEE;
                 padding: 10px;
+                position: relative;
+            }
+
+            .form-box .list-container .list-item-options {
+                position: absolute;
+                right: 8px;
+                background-image: url("{{ asset('/img/acc-settings.png') }}");
+                background-size: contain;
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+            }
+
+            .form-box .list-container .list-item-options-container {
+                position: absolute;
+                right: 10px;
+                background: #ffffff;
+                top: 38px;
+                color: #000000;
+                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
+            }
+
+            .form-box .list-container .list-item-options-option {
+                padding: 4px 12px;
+                font-size: 14px;
+                height: 24px;
+                line-height: 24px;
+                border-bottom: 1px solid #EEEEEE;
+                cursor: pointer;
+            }
+
+            .form-box .list-container .list-item-options-option img {
+                height: 24px;
+                float: left;
+                margin-right: 10px;
             }
 
             .form-box .list-container .list-item .long-url-label {
@@ -3375,6 +3410,123 @@
                                             const listItem = document.createElement("div");
                                             listItem.classList.add('list-item');
 
+                                            const listItemOptions = document.createElement('div');
+                                            listItemOptions.classList.add('list-item-options');
+
+                                            const listItemOptionsContainer = document.createElement('div');
+                                            listItemOptionsContainer.classList.add('list-item-options-container');
+                                            listItemOptionsContainer.style.display = 'none';
+
+                                            const listItemOptionDelete = document.createElement('div');
+                                            listItemOptionDelete.classList.add('list-item-options-option');
+                                            listItemOptionDelete.innerText = 'apagar';
+                                            listItemOptionDelete.style.color = '#d81a1a';
+
+                                            const listItemOptionDeleteConfirm = document.createElement('div');
+                                            listItemOptionDeleteConfirm.classList.add('list-item-options-option');
+                                            listItemOptionDeleteConfirm.innerText = 'tem a certeza?';
+                                            listItemOptionDeleteConfirm.style.color = '#d81a1a';
+                                            listItemOptionDeleteConfirm.style.display = 'none';
+
+                                            const listItemOptionDeleteConfirmYes = document.createElement('a');
+                                            listItemOptionDeleteConfirmYes.href = 'javascript:void(0);';
+                                            listItemOptionDeleteConfirmYes.innerText = 'sim';
+                                            listItemOptionDeleteConfirmYes.style.marginLeft = '10px';
+                                            listItemOptionDeleteConfirmYes.style.marginRight = '10px';
+                                            listItemOptionDeleteConfirmYes.setAttribute('data-shortlink-id', id);
+
+                                            listItemOptionDeleteConfirmYes.onclick = function (e) {
+                                                listItemOptionDeleteConfirmYes.style.cursor = 'wait';
+
+                                                var deleteShortlinkFunc = function (token) {
+                                                    var xhr = new XMLHttpRequest();
+                                                    xhr.withCredentials = true;
+
+                                                    xhr.addEventListener("readystatechange", function () {
+                                                        if (this.readyState === 4) {
+
+                                                            if (this.status === 200) {
+                                                                window.App.Components.MyLinks.Components.Links.Components.List.fetch(
+                                                                    window.App.Components.MyLinks.Components.Links.Components.List.Components.Pagination.currentPage
+                                                                );
+                                                                return;
+                                                            }
+
+                                                        }
+                                                    });
+
+
+                                                    const shortlinkId = listItemOptionDeleteConfirmYes.getAttribute('data-shortlink-id');
+
+                                                    var credentialsQueryStr =
+                                                        "?shortlink_id=" + shortlinkId;
+
+                                                    if (
+                                                        typeof token !== 'undefined'
+                                                        &&
+                                                        token != null
+                                                        &&
+                                                        token.length > 0
+                                                    ) {
+                                                        credentialsQueryStr += '&g-recaptcha-response=' + token;
+                                                    }
+
+                                                    xhr.open(
+                                                        "POST",'/api/shortlinks/delete' + credentialsQueryStr
+                                                    );
+                                                    xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                                    xhr.send();
+                                                };
+
+                                                if (
+                                                    typeof window._enableCaptcha !== 'undefined'
+                                                    &&
+                                                    window._enableCaptcha === true
+                                                ) {
+                                                    grecaptcha.ready(function() {
+                                                        grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
+                                                            deleteShortlinkFunc(token);
+                                                        });
+                                                    });
+                                                } else {
+                                                    deleteShortlinkFunc(null);
+                                                }
+                                            };
+
+                                            const listItemOptionDeleteConfirmNo = document.createElement('a');
+                                            listItemOptionDeleteConfirmNo.href = 'javascript:void(0);';
+                                            listItemOptionDeleteConfirmNo.innerText = 'não';
+
+                                            listItemOptionDeleteConfirmNo.onclick = function (e) {
+                                                listItemOptionDeleteConfirm.style.display = 'none';
+                                                listItemOptionDelete.style.display = 'block';
+                                            };
+
+                                            listItemOptionDeleteConfirm.appendChild(listItemOptionDeleteConfirmYes);
+                                            listItemOptionDeleteConfirm.appendChild(listItemOptionDeleteConfirmNo);
+
+
+
+                                            listItemOptionDelete.onclick = function (e) {
+                                                listItemOptionDelete.style.display = 'none';
+                                                listItemOptionDeleteConfirm.style.display = 'block';
+                                            };
+
+                                            listItemOptionsContainer.appendChild(listItemOptionDelete);
+                                            listItemOptionsContainer.appendChild(listItemOptionDeleteConfirm);
+
+
+                                            listItemOptions.onclick = function (e) {
+                                                if (listItemOptionsContainer.style.display === 'block') {
+                                                    listItemOptionsContainer.style.display = 'none';
+
+                                                    listItemOptionDeleteConfirm.style.display = 'none';
+                                                    listItemOptionDelete.style.display = 'block';
+                                                } else {
+                                                    listItemOptionsContainer.style.display = 'block';
+                                                }
+                                            };
+
                                             const shortlinkLabel = document.createElement("div");
                                             shortlinkLabel.classList.add('short-url-label');
                                             shortlinkLabel.innerText = 'Wil link:';
@@ -3452,7 +3604,7 @@
                                                             var saveColor = saveEditLongUrlLink.style.color;
 
                                                             if (this.status === 201) {
-                                                                longUrlContainer.innerText = editLongUrlInput.value
+                                                                longUrlContainer.innerText = editLongUrlInput.value;
 
                                                                 saveEditLongUrlLink.style.color = 'green';
                                                                 setTimeout(function () {
@@ -3574,6 +3726,8 @@
 
                                             this.el().appendChild(listItem);
 
+                                            listItem.appendChild(listItemOptions);
+                                            listItem.appendChild(listItemOptionsContainer);
                                             listItem.appendChild(longUrlLabel);
 
                                             if (
@@ -3660,7 +3814,7 @@
                                                                 window.App.Components.MyLinks.Components.Links.Components.GuestMsg.show();
                                                             }
 
-
+                                                            $this.Components.Pagination.setCurrentPage(resObj.current_page);
                                                             if (resObj.last_page > 1) {
                                                                 const paginationLinks = $this.Components.Pagination.createEl(resObj.current_page, resObj.last_page);
                                                                 $this.el().appendChild(paginationLinks);
@@ -3677,7 +3831,12 @@
                                         },
                                         Components: {
                                             Pagination: {
+                                                currentPage: null,
+                                                setCurrentPage: function(currentPage) {
+                                                    this.currentPage = currentPage;
+                                                },
                                                 createEl: function (currentPage, lastPage) {
+
                                                     const paginationContainer = document.createElement('div');
                                                     paginationContainer.classList.add('pagination-container');
 

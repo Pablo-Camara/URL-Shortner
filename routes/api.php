@@ -51,3 +51,6 @@ Route::middleware('auth:sanctum')->post('/register-available', [ShortlinkControl
 
 Route::post('/shortlinks/edit', [ShortlinkController::class, 'editShortlinkUrl'])
         ->middleware(['auth:sanctum']);
+
+Route::post('/shortlinks/delete', [ShortlinkController::class, 'deleteShortlinkUrl'])
+        ->middleware(['auth:sanctum']);

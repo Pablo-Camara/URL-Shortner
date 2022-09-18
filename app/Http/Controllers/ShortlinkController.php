@@ -107,6 +107,7 @@ class ShortlinkController extends Controller
                 }
             ]
          )
+         ->where('status_id', '=', Shortlink::STATUS_ACTIVE)
          ->orderBy('id', 'desc')
          ->paginate(3)
          ->through(function($shortlink){
@@ -479,7 +480,58 @@ class ShortlinkController extends Controller
         }
         DB::commit();
 
+        UserAction::logAction(
+            $this->userId,
+            ShortlinkActions::EDITED_SHORTLINK_DESTINATION_URL
+        );
+
         return new Response('',Response::HTTP_CREATED);
+    }
+
+
+    /**
+     * soft deletes a shortlink
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteShortlinkUrl(Request $request)
+    {
+
+        $validations = [
+            'shortlink_id' => 'required|numeric',
+        ];
+
+        $enableCaptchaSitekey = config('captcha.enable');
+        if ($enableCaptchaSitekey) {
+            $validations['g-recaptcha-response'] = 'required|captcha';
+        }
+
+        Validator::make(
+            $request->all(),
+            $validations,
+            [],
+            []
+        )->validate();
+
+        $shortlink = Shortlink::findOrFail($request->input('shortlink_id'));
+
+        // check user owns shortlink / has permission to edit the url
+        if ($shortlink->user_id !== $request->user()->id) {
+            //TODO: log that someone tried to delete someone elses shortlink redirect url?
+            return new Response('', Response::HTTP_FORBIDDEN);
+        }
+
+
+        $shortlink->status_id = Shortlink::STATUS_DELETED;
+        $shortlink->save();
+
+        UserAction::logAction(
+            $this->userId,
+            ShortlinkActions::DELETED_SHORTLINK
+        );
+
+        return new Response('', Response::HTTP_OK);
     }
 
 
