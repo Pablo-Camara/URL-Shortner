@@ -3431,8 +3431,8 @@
                                             const listItemOptionDeleteConfirmYes = document.createElement('a');
                                             listItemOptionDeleteConfirmYes.href = 'javascript:void(0);';
                                             listItemOptionDeleteConfirmYes.innerText = 'sim';
-                                            listItemOptionDeleteConfirmYes.style.marginLeft = '10px';
-                                            listItemOptionDeleteConfirmYes.style.marginRight = '10px';
+                                            listItemOptionDeleteConfirmYes.style.marginLeft = '20px';
+                                            listItemOptionDeleteConfirmYes.style.marginRight = '20px';
                                             listItemOptionDeleteConfirmYes.setAttribute('data-shortlink-id', id);
 
                                             listItemOptionDeleteConfirmYes.onclick = function (e) {
