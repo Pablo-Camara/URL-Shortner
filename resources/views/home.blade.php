@@ -3435,6 +3435,8 @@
                                             listItemOptionDeleteConfirmYes.style.marginRight = '20px';
                                             listItemOptionDeleteConfirmYes.setAttribute('data-shortlink-id', id);
 
+                                            const $this = this;
+
                                             listItemOptionDeleteConfirmYes.onclick = function (e) {
                                                 listItemOptionDeleteConfirmYes.style.cursor = 'wait';
 
@@ -3446,8 +3448,13 @@
                                                         if (this.readyState === 4) {
 
                                                             if (this.status === 200) {
+                                                                const totalListItems = $this.el().getElementsByClassName('list-item').length;
+                                                                var currPage = window.App.Components.MyLinks.Components.Links.Components.List.Components.Pagination.currentPage;
+                                                                if (currPage > 1 && totalListItems === 1) {
+                                                                    currPage -= 1;
+                                                                }
                                                                 window.App.Components.MyLinks.Components.Links.Components.List.fetch(
-                                                                    window.App.Components.MyLinks.Components.Links.Components.List.Components.Pagination.currentPage
+                                                                    currPage
                                                                 );
                                                                 return;
                                                             }
@@ -3498,6 +3505,7 @@
                                             listItemOptionDeleteConfirmNo.innerText = 'não';
 
                                             listItemOptionDeleteConfirmNo.onclick = function (e) {
+                                                listItemOptionsContainer.style.display = 'none';
                                                 listItemOptionDeleteConfirm.style.display = 'none';
                                                 listItemOptionDelete.style.display = 'block';
                                             };
