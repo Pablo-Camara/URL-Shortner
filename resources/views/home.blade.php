@@ -3726,8 +3726,11 @@
 
                                             this.el().appendChild(listItem);
 
-                                            listItem.appendChild(listItemOptions);
-                                            listItem.appendChild(listItemOptionsContainer);
+                                            if (window._authManager.isLoggedIn) {
+                                                listItem.appendChild(listItemOptions);
+                                                listItem.appendChild(listItemOptionsContainer);
+                                            }
+
                                             listItem.appendChild(longUrlLabel);
 
                                             if (
