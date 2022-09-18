@@ -3598,6 +3598,10 @@
 
 
                                             saveEditLongUrlLink.onclick = function (e) {
+                                                if(longUrlContainer.innerText === editLongUrlInput.value) {
+                                                    return;
+                                                }
+
                                                 saveEditLongUrlLink.innerText = 'a guardar..';
                                                 editLongUrlInputFeedback.innerText = '';
                                                 editLongUrlInputFeedback.classList.remove('error');
