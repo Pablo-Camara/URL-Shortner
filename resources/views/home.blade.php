@@ -3647,16 +3647,9 @@
                                                             ) {
                                                                 editLongUrlInputFeedback.innerText = resObj.message;
                                                                 editLongUrlInputFeedback.style.display = 'block';
-
-                                                                if(
-                                                                    typeof resObj.errors !== 'undefined'
-                                                                    ||
-                                                                    typeof resObj.error_id !== 'undefined'
-                                                                ) {
-                                                                    editLongUrlInputFeedback.classList.add('error');
-                                                                    saveEditLongUrlLink.style.color = saveColor;
-                                                                    saveEditLongUrlLink.innerText = 'guardar';
-                                                                }
+                                                                editLongUrlInputFeedback.classList.add('error');
+                                                                saveEditLongUrlLink.style.color = saveColor;
+                                                                saveEditLongUrlLink.innerText = 'guardar';
                                                             }
                                                         }
                                                     });

@@ -174,6 +174,15 @@ class ShortlinkController extends Controller
             throw $th;
         }
 
+        if ($request->getHost() === parse_url($request->input('long_url'))['host']) {
+            UserAction::logAction(
+                $this->userId,
+                ShortlinkActions::ATTEMPTED_TO_CREATE_SHORTLINK_FOR_SHORTLINK
+            );
+
+            throw ValidationException::withMessages(['long_url' => 'Não é possível criar um link curto para este url.']);
+        }
+
         $shortstring = $request->input('shortstring');
 
         $shortstring = Shortstring::where('shortstring', '=', $shortstring)->first();
@@ -285,6 +294,15 @@ class ShortlinkController extends Controller
             throw $ve;
         } catch (\Throwable $th) {
             throw $th;
+        }
+
+        if ($request->getHost() === parse_url($request->input('long_url'))['host']) {
+            UserAction::logAction(
+                $this->userId,
+                ShortlinkActions::ATTEMPTED_TO_CREATE_SHORTLINK_FOR_SHORTLINK
+            );
+
+            throw ValidationException::withMessages(['long_url' => 'Não é possível criar um link curto para este url.']);
         }
 
 
@@ -446,6 +464,16 @@ class ShortlinkController extends Controller
         } catch (\Throwable $th) {
             throw $th;
         }
+
+        if ($request->getHost() === parse_url($request->input('long_url'))['host']) {
+            UserAction::logAction(
+                $this->userId,
+                ShortlinkActions::ATTEMPTED_TO_CREATE_SHORTLINK_FOR_SHORTLINK
+            );
+
+            throw ValidationException::withMessages(['long_url' => 'Não é possível criar um link curto para este url.']);
+        }
+
 
         $shortlink = Shortlink::findOrFail($request->input('shortlink_id'));
 
