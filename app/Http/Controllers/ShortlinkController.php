@@ -90,7 +90,6 @@ class ShortlinkController extends Controller
      */
     public function myLinks(Request $request)
     {
-        //TODO: pagination
         $userShortlinks = $request->user()->shortlinks()
         ->select(['id', 'destination_email', 'shortstring_id', 'created_at'])
         ->with(

@@ -11,7 +11,9 @@
         <!-- Fonts -->
         <link
             href="https://fonts.bunny.net/css2?family=Nunito:wght@400;600;700&display=swap"
-            rel="stylesheet"
+            rel="preload"
+            as="style"
+            onload="this.onload=null;this.rel='stylesheet';"
         />
 
         <!-- Styles -->
@@ -24,13 +26,11 @@
 
             body {
                 font-family: "Nunito", sans-serif;
-
                 background: url('{{ $currentBackground }}');
                 background-size: cover;
                 background-repeat: no-repeat;
                 min-height: 100vh;
                 background-position-x: 70%;
-
             }
 
             .form-box {
@@ -113,7 +113,9 @@
                 padding-bottom: 0;
             }
 
-            .form-box .input-container input {
+            .form-box .input-container input,
+            .form-box .input-container select
+            {
                 width: 100%;
                 height: 40px;
                 box-sizing: border-box;
@@ -248,8 +250,65 @@
                 margin-bottom: 5px;
             }
 
+            #pa-view,
             #my-links-view {
                 width: 85%;
+            }
+
+            .dashboard-item-container .dashboard-item {
+                text-align: center;
+                display: inline-block;
+                cursor: pointer;
+            }
+
+            .dashboard-item-container .dashboard-item .dashboard-item-img img {
+                width: 100%;
+                max-width: 30px;
+            }
+
+            .dashboard-back-button {
+                text-align: center;
+                color: #333333;
+                background: #EEE;
+                padding: 4px;
+                display: block;
+                margin: auto;
+                margin-top: 10px;
+                cursor: pointer;
+            }
+
+            .dashboard-list-items-container {
+
+            }
+
+            .dashboard-list-items-container .dashboard-list-item {
+                padding: 10px;
+                background: #245691;
+                margin-bottom: 10px;
+                color: white;
+                cursor: pointer;
+            }
+
+            .dashboard-list-items-container .dashboard-list-item:hover {
+                background-color: #318fff;
+            }
+
+            .dashboard-filter-container .input-container {
+                margin-right: 10px;
+            }
+
+            .dashboard-results-container {
+                width: 100%;
+            }
+
+            .dashboard-results-container th {
+                background: #333333;
+                color: #FFFFFF;
+            }
+
+            .dashboard-results-container td {
+                padding: 10px;
+                background: rgba(0,0,0, 0.1);
             }
 
             #form-box-login-feedback,
@@ -411,6 +470,12 @@
                 display: none;
             }
 
+            #menu-top-user-name,
+            #menu-mobile-user-name
+            {
+                color: #ba7d0a;
+            }
+
             #menu-mobile {
                 position: absolute;
                 top: 0;
@@ -454,6 +519,7 @@
 
                 }
 
+                #pa-view,
                 #my-links-view {
                     width: 50%;
                     max-width: unset;
@@ -762,7 +828,6 @@
                         }
                     });
 
-                    //TODO: add device width, height
                     var dWidth = (window.innerWidth > 0) ? window.innerWidth : screen.width;
                     var dHeight = (window.innerHeight > 0) ? window.innerHeight : screen.height;
                     var ua = navigator.userAgent;
@@ -1522,15 +1587,31 @@
                                         }
                                     }
                                 },
+                                PA: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('menu-top-admin-dashboard');
+                                    },
+                                    initialize: function () {
+                                        if (this.hasInitialized === false) {
+                                            this.el().onclick = function (e) {
+                                               window.App.Components.PA.show();
+                                            };
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                }
                             },
                             initialize: function () {
                                 this.Items.LogoutBtn.initialize();
+                                this.Items.PA.initialize();
                             }
                         },
                         initialize: function () {
                             if (this.hasInitialized == false) {
                                 const $this = this;
                                 this.el().onclick = function (e) {
+                                    e.stopPropagation();
 
                                     if ($this.isOpen) {
                                         $this.close();
@@ -3986,7 +4067,349 @@
                             this.Components.CloseBtn.initialize();
                             this.Components.LoginBtn.initialize();
                         }
-                    }
+                    },
+                    PA: {
+                        hasInitialized: false,
+                        el: function () {
+                            return document.getElementById('pa-view');
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        hideAllDashboardItems: function(except = []) {
+                            const components = Object.keys(this.Components);
+                            for(var i = 0; i < components.length; i++) {
+                                const componentName = components[i];
+                                if (except.indexOf(componentName) >= 0) {
+                                    continue;
+                                }
+                                if (
+                                    typeof this.Components[componentName].dashboardItem !== 'undefined'
+                                    &&
+                                    this.Components[componentName].dashboardItem === true
+                                    &&
+                                    typeof this.Components[componentName].hide === 'function'
+                                ) {
+                                    this.Components[componentName].hide();
+                                }
+                            }
+                        },
+                        showAllDashboardItems: function(except = []) {
+                            const components = Object.keys(this.Components);
+                            for(var i = 0; i < components.length; i++) {
+                                const componentName = components[i];
+                                if (except.indexOf(componentName) >= 0) {
+                                    continue;
+                                }
+                                if (
+                                    typeof this.Components[componentName].dashboardItem !== 'undefined'
+                                    &&
+                                    this.Components[componentName].dashboardItem === true
+                                    &&
+                                    typeof this.Components[componentName].show === 'function'
+                                ) {
+                                    this.Components[componentName].show();
+                                }
+                            }
+                        },
+                        Components: {
+                            CloseBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('pa-view-close-btn');
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Components.PA.hide();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            BackButton: {
+                                hasInitialized: false,
+                                customBackFunc: null,
+                                el: function () {
+                                    return document.getElementById('dashboard-back-button');
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                show: function () {
+                                    this.initialize();
+                                    this.customBackFunc = null;
+                                    this.el().style.display = 'block';
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                typeof $this.customBackFunc === 'function'
+                                            ) {
+                                                $this.customBackFunc();
+                                                return;
+                                            }
+                                            window.App.Components.PA.showAllDashboardItems();
+                                            $this.hide();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Filters: {
+                                el: function () {
+                                    return document.getElementById('dashboard-filter-container');
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                show: function () {
+                                    this.el().style.display = 'block';
+                                },
+                                Components: {
+                                    DateSince: {
+                                        el: function () {
+                                            return document.getElementById('dashboard-filter-date-since');
+                                        },
+                                        inputEl: function () {
+                                            return document.getElementById('dashboard-filter-date-since-input');
+                                        },
+                                        setDate: function (date) {
+                                            this.inputEl().value = date;
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                        show: function (defaultDate = null) {
+                                            if (defaultDate != null) {
+                                                this.setDate(defaultDate);
+                                            }
+                                            this.el().style.display = 'inline-block';
+                                        },
+                                    },
+                                    DateUntil: {
+                                        el: function () {
+                                            return document.getElementById('dashboard-filter-date-until');
+                                        },
+                                        inputEl: function () {
+                                            return document.getElementById('dashboard-filter-date-until-input');
+                                        },
+                                        setDate: function (date) {
+                                            this.inputEl().value = date;
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                        show: function (defaultDate = null) {
+                                            if (defaultDate != null) {
+                                                this.setDate(defaultDate);
+                                            }
+                                            this.el().style.display = 'inline-block';
+                                        },
+                                    },
+                                    View: {
+                                        el: function () {
+                                            return document.getElementById('dashboard-filter-view');
+                                        },
+                                        inputEl: function () {
+                                            return document.getElementById('dashboard-filter-view-input');
+                                        },
+                                        setView: function (view) {
+                                            this.inputEl().value = view;
+                                        },
+                                        setAvailableViews: function (availableViews) {
+                                            const inputEl = this.inputEl();
+                                            inputEl.innerHTML = '';
+                                            for(var i = 0; i < availableViews.length; i++) {
+                                                const availableView = availableViews[i];
+                                                const viewOption = document.createElement('option');
+                                                viewOption.setAttribute('value', availableView.name);
+                                                viewOption.innerText = availableView.label;
+                                                inputEl.appendChild(viewOption);
+                                            }
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                        show: function (availableViews, selectedView = null) {
+                                            this.setAvailableViews(availableViews);
+                                            if (selectedView != null) {
+                                                this.setView(selectedView);
+                                            }
+                                            this.el().style.display = 'inline-block';
+                                        },
+                                    }
+                                }
+                            },
+                            Loading: {
+                                el: function () {
+                                    return document.getElementById('dashboard-loading');
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                show: function () {
+                                    this.el().style.display = 'block';
+                                },
+                            },
+                            Stats: {
+                                dashboardItem: true,
+                                hasInitialized: false,
+                                api: "{{ url('/api/stats') }}",
+                                el: function () {
+                                    return document.getElementById('pa-stats');
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                show: function () {
+                                    this.initialize();
+                                    this.el().style.display = 'inline-block';
+                                    this.Components.ViewsList.hide();
+                                },
+                                displayFull: function () {
+                                    this.el().style.display = 'block';
+                                },
+                                Components: {
+                                    ViewsList: {
+                                        hasInitialized: false,
+                                        views: [
+                                            {
+                                                name: 'total-registered-users',
+                                                label: 'Total de utilizadores registrados'
+                                            },
+                                            {
+                                                name: 'totalShortlinksGenerated',
+                                                label: 'Total de links gerados'
+                                            },
+                                            {
+                                                name: 'shortlinksWithMostViews',
+                                                label: 'Links com maior número de visualizações'
+                                            },
+                                            {
+                                                name: 'usersWithMostViews',
+                                                label: 'Utilizadores com maior número de visualizações'
+                                            },
+                                        ],
+                                        el: function () {
+                                            return document.getElementById('pa-stats-views');
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                        show: function () {
+                                            this.initialize();
+
+                                            window.App.Components.PA.hideAllDashboardItems(['Stats']);
+                                            window.App.Components.PA.Components.Filters.hide();
+                                            window.App.Components.PA.Components.BackButton.show();
+                                            window.App.Components.PA.Components.Stats.displayFull();
+                                            window.App.Components.PA.Components.Loading.hide();
+                                            this.showStatsViews();
+
+                                            this.el().style.display = 'block';
+                                        },
+                                        renderStatsViews: function () {
+                                            $this = this;
+                                            for(var i = 0; i < this.views.length; i++) {
+                                                const view = this.views[i];
+                                                const dashboardListItem = document.createElement('div');
+                                                dashboardListItem.classList.add('dashboard-list-item');
+                                                dashboardListItem.innerText = view.label;
+                                                dashboardListItem.style.display = 'none';
+                                                dashboardListItem.setAttribute('data-view-name', view.name);
+                                                dashboardListItem.setAttribute('id', 'pa-stats-view-' + view.name);
+                                                dashboardListItem.onclick = function (e) {
+                                                    window.App.Components.PA.Components.Loading.show();
+                                                    $this.hideStatsViews([
+                                                        e.target.getAttribute('data-view-name')
+                                                    ]);
+                                                    window.App.Components.PA.Components.BackButton.customBackFunc = function () {
+                                                        window.App.Components.PA.Components.Stats.Components.ViewsList.show();
+                                                    };
+
+                                                    var xhr = new XMLHttpRequest();
+                                                    xhr.withCredentials = true;
+
+                                                    xhr.addEventListener("readystatechange", function () {
+                                                        if (this.status === 200 && this.readyState === 4) {
+                                                            const resObj = JSON.parse(this.response);
+                                                            window.App.Components.PA.Components.Loading.hide();
+                                                            window.App.Components.PA.Components.Filters.show();
+                                                            window.App.Components.PA.Components.Filters.Components.DateSince.show(resObj.since);
+                                                            window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
+                                                            window.App.Components.PA.Components.Filters.Components.View.show(resObj.availableViews, resObj.view);
+                                                        }
+                                                    });
+
+                                                    var urlStr = window.App.Components.PA.Components.Stats.api +  '/' + e.target.getAttribute('data-view-name');
+
+                                                    xhr.open(
+                                                        "POST",
+                                                        urlStr
+                                                    );
+                                                    xhr.send();
+                                                };
+
+                                                this.el().appendChild(dashboardListItem);
+                                            }
+                                        },
+                                        hideStatsViews: function (except = []) {
+                                            for(var i = 0; i < this.views.length; i++) {
+                                                const view = this.views[i];
+                                                const viewEl = document.getElementById('pa-stats-view-' + view.name);
+                                                if (except.indexOf(view.name) >= 0) {
+                                                    continue;
+                                                }
+                                                viewEl.style.display = 'none';
+                                            }
+                                        },
+                                        showStatsViews: function (except = []) {
+                                            for(var i = 0; i < this.views.length; i++) {
+                                                const view = this.views[i];
+                                                const viewEl = document.getElementById('pa-stats-view-' + view.name);
+                                                if (except.indexOf(view.name) >= 0) {
+                                                    continue;
+                                                }
+                                                viewEl.style.display = 'block';
+                                            }
+                                        },
+                                        initialize: function () {
+                                            if (this.hasInitialized === false) {
+                                                this.renderStatsViews();
+                                                this.hasInitialized = true;
+                                            }
+                                        }
+                                    },
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            $this.Components.ViewsList.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
+                        },
+                        initialize: function () {
+                            this.Components.CloseBtn.initialize();
+                            this.Components.Stats.show();
+                        }
+
+                    },
                 },
                 Views: {
                     HomePage: {
@@ -4108,7 +4531,7 @@
                             window.App.hideComponents(this.components.initiallyVisible);
                             window.App.hideComponents(this.components.initiallyHidden);
                         }
-                    }
+                    },
                 }
             };
 
@@ -4121,11 +4544,11 @@
             </script>
         @endif
 
-        <script src="https://www.google.com/recaptcha/api.js?render={{ $captchaSitekey }}"></script>
+        @if(isset($enableCaptcha) && $enableCaptcha === true)
+            <script src="https://www.google.com/recaptcha/api.js?render={{ $captchaSitekey }}"></script>
+        @endif
     </head>
-    <body
-        class="antialiased"
-    >
+    <body>
         <div id="logo-top-container">
             <img
                 id="logo-top"
@@ -4180,6 +4603,7 @@
                 </div>
                 <div id="menu-acc-items-user" style="display: none">
                     <div class="menu-item" id="menu-top-user-name" style="display: none"></div>
+                    <div class="menu-item" id="menu-top-admin-dashboard" style="display: none">Painel de Administração</div>
                     <div class="menu-item" id="menu-top-acc-logout">Sair</div>
                 </div>
             </div>
@@ -4369,6 +4793,51 @@
 
         <div
             class="form-box overlay"
+            id="pa-view" style="display: none"
+        >
+            <div class="form-box-title">Painel de Administração</div>
+            <div class="close-form-box" id="pa-view-close-btn">X</div>
+            <div class="dashboard-item-container">
+                <div class="dashboard-item" id="pa-stats">
+                    <div class="dashboard-item-img"><img src="{{ asset('/img/stats-icon.png') }}"></div>
+                    <div class="dashboard-item-name">Estátisticas</div>
+                </div>
+            </div>
+            <div class="dashboard-back-button" id="dashboard-back-button" style="display: none">Voltar</div>
+
+            <div class="dashboard-list-items-container" id="pa-stats-views" style="margin-top: 14px; display: none">
+            </div>
+
+            <div id="dashboard-filter-container" class="dashboard-filter-container" style="display: none">
+                <div class="input-container" style="display: none;" id="dashboard-filter-date-since">
+                    Desde:<br>
+                    <input type="date" id="dashboard-filter-date-since-input">
+                </div>
+
+                <div class="input-container" style="display: none;" id="dashboard-filter-date-until">
+                    Até:<br>
+                    <input type="date" id="dashboard-filter-date-until-input">
+                </div>
+
+                <div class="input-container" style="display: none;" id="dashboard-filter-view">
+                    Vista:<br>
+                    <select id="dashboard-filter-view-input"></select>
+                </div>
+            </div>
+
+            <div id="dashboard-loading" style="display: none">A carregar...</div>
+            <table id="dashboard-results-container" class="dashboard-results-container" style="display: none">
+                <thead>
+                    <tr id="dashboard-results-container-columns">
+                    </tr>
+                </thead>
+                <tbody id="dashboard-results-container-rows">
+                </tbody>
+            </table>
+        </div>
+
+        <div
+            class="form-box overlay"
             id="email-confirmed" style="display: none"
         >
             <div class="form-box-title">Email confirmado!</div>
@@ -4530,6 +4999,19 @@
                         mobileUsername.style.display = 'block';
                         desktopUsername.style.display = 'block';
 
+                    }
+
+                    if (
+                        window._authManager.isLoggedIn
+                        &&
+                        window._authManager.userPermissions !== null
+                        &&
+                        typeof window._authManager.userPermissions['is_admin'] !== 'undefined'
+                        &&
+                        window._authManager.userPermissions['is_admin'] == true
+                    ) {
+                        const desktopAdminDashboardButton = document.getElementById('menu-top-admin-dashboard');
+                        desktopAdminDashboardButton.style.display = 'block';
                     }
 
                 }

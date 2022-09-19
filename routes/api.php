@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ShortlinkController;
+use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,3 +55,5 @@ Route::post('/shortlinks/edit', [ShortlinkController::class, 'editShortlinkUrl']
 
 Route::post('/shortlinks/delete', [ShortlinkController::class, 'deleteShortlinkUrl'])
         ->middleware(['auth:sanctum']);
+
+Route::post('/stats/total-registered-users', [StatisticsController::class, 'totalRegisteredUsers']);
