@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\Actions\ShortlinkActions;
 use App\Helpers\Auth\Traits\InteractsWithAuthCookie;
 use App\Mail\ShortlinkReady;
+use App\Models\Action;
 use App\Models\Shortlink;
 use App\Models\ShortlinkUrl;
 use App\Models\Shortstring;
@@ -100,8 +101,64 @@ class ShortlinkController extends Controller
      */
     public function myLinks(Request $request)
     {
+        $selectFields = [
+            'id',
+            'destination_email',
+            'shortstring_id',
+            'created_at'
+        ];
+
+        if ($this->isLoggedIn()) {
+            $activeVisitsActionId = Action::where('name', '=', ShortlinkActions::VISITED_ACTIVE_SHORTLINK)->first();
+
+            if (
+                $activeVisitsActionId
+            ) {
+                /**
+                 * @var UserPermission
+                 */
+                $userPermissions = UserPermission::where('user_id', $request->user()->id)->first();
+
+                if (
+                    $userPermissions->canViewShortlinksTotalViews()
+                ) {
+                    array_push(
+                        $selectFields,
+                        DB::raw(
+                            '(
+                                SELECT COUNT(*) FROM user_actions
+                                WHERE
+                                    user_actions.shortlink_id = shortlinks.id
+                                    AND
+                                    user_actions.action_id = '.$activeVisitsActionId->id.'
+                            ) AS total_views')
+                    );
+                }
+
+                if (
+                    $userPermissions->canViewShortlinksTotalUniqueViews()
+                ) {
+                    array_push(
+                        $selectFields,
+                        DB::raw(
+                            '(
+                                SELECT COUNT(DISTINCT ip) FROM user_actions
+                                WHERE
+                                    user_actions.shortlink_id = shortlinks.id
+                                    AND
+                                    user_actions.action_id = '.$activeVisitsActionId->id.'
+                            ) AS total_unique_views')
+                    );
+                }
+
+            }
+
+        }
+
         $userShortlinks = $request->user()->shortlinks()
-        ->select(['id', 'destination_email', 'shortstring_id', 'created_at'])
+        ->select(
+            $selectFields
+        )
         ->with(
             [
                 'shortstring' => function ($query) {
@@ -129,9 +186,9 @@ class ShortlinkController extends Controller
             return $shortlink;
         });
 
-        if (!is_null($this->userId)) {
-            UserAction::logAction($this->userId, ShortlinkActions::VIEWED_LINKS_LIST);
-        }
+
+        UserAction::logAction($this->userId, ShortlinkActions::VIEWED_LINKS_LIST);
+
         return new Response($userShortlinks);
     }
 
@@ -505,9 +562,12 @@ class ShortlinkController extends Controller
             return new Response('', Response::HTTP_FORBIDDEN);
         }
 
+        /**
+         * @var UserPermission
+         */
         $userPermissions = UserPermission::where('user_id', $request->user()->id)->first();
 
-        if ($userPermissions->edit_shortlinks_destination_url !== 1) {
+        if ($userPermissions->canEditShortlinksDestinationUrl() == false) {
             //TODO: user has no permission to edit shortlinks destination urls
             return new Response('', Response::HTTP_FORBIDDEN);
         }
@@ -587,41 +647,6 @@ class ShortlinkController extends Controller
         );
 
         return new Response('', Response::HTTP_OK);
-    }
-
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
 
 

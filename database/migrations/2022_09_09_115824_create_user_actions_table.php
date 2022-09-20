@@ -28,6 +28,7 @@ return new class extends Migration
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('action_id')->references('id')->on('actions')->onDelete('cascade');
+            $table->foreign('shortlink_id')->references('id')->on('shortlinks')->onDelete('cascade');
         });
     }
 

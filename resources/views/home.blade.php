@@ -1208,6 +1208,17 @@
                     );
                     xhr.setRequestHeader("Authorization", "Bearer " + this.passwordRecoveryToken);
                     xhr.send();
+                },
+                userHasPermission: function (permissionName) {
+                    return (
+                        this.isLoggedIn
+                        &&
+                        this.userPermissions !== null
+                        &&
+                        typeof this.userPermissions[permissionName] !== 'undefined'
+                        &&
+                        window._authManager.userPermissions[permissionName] == true
+                    );
                 }
             };
 
@@ -3501,7 +3512,17 @@
                                         clear: function () {
                                             this.el().innerHTML = '';
                                         },
-                                        addLink: function (id, long_url, shortlink, destinationEmail, createdAt) {
+                                        addLink: function (
+                                            id,
+                                            long_url,
+                                            shortlink,
+                                            destinationEmail,
+                                            createdAt,
+                                            total_views,
+                                            total_unique_views
+                                        ) {
+                                            //TODO: reduce addLink() function size / organize.
+
                                             const listItem = document.createElement("div");
                                             listItem.classList.add('list-item');
 
@@ -3812,17 +3833,29 @@
                                             const createdAtCol = document.createElement('div');
                                             createdAtCol.classList.add('info-col');
                                             createdAtCol.innerHTML = 'Data criação: <small>' + (new Date(createdAt)).toLocaleString('pt-PT') + '</small>';
-
-
-                                            const totalViewsCol = document.createElement('div');
-                                            totalViewsCol.classList.add('info-col');
-                                            totalViewsCol.innerHTML = 'Visualizações: <small>12</small>';
-
-
                                             infoRow.appendChild(createdAtCol);
 
-                                            //TODO: uncomment line after total views are stored
-                                            //infoRow.appendChild(totalViewsCol);
+                                            if (
+                                                typeof total_views !== 'undefined'
+                                                &&
+                                                total_views != null
+                                            ) {
+                                                const totalViewsCol = document.createElement('div');
+                                                totalViewsCol.classList.add('info-col');
+                                                totalViewsCol.innerHTML = 'Visualizações: <small>' + total_views + '</small>';
+                                                infoRow.appendChild(totalViewsCol);
+                                            }
+
+                                            if (
+                                                typeof total_unique_views !== 'undefined'
+                                                &&
+                                                total_unique_views != null
+                                            ) {
+                                                const totalUniqueViewsCol = document.createElement('div');
+                                                totalUniqueViewsCol.classList.add('info-col');
+                                                totalUniqueViewsCol.innerHTML = 'Visualizações Únicas: <small>' + total_unique_views + '</small>';
+                                                infoRow.appendChild(totalUniqueViewsCol);
+                                            }
 
                                             this.el().appendChild(listItem);
 
@@ -3834,13 +3867,7 @@
                                             listItem.appendChild(longUrlLabel);
 
                                             if (
-                                                window._authManager.isLoggedIn
-                                                &&
-                                                window._authManager.userPermissions !== null
-                                                &&
-                                                typeof window._authManager.userPermissions['edit_shortlinks_destination_url'] !== 'undefined'
-                                                &&
-                                                window._authManager.userPermissions['edit_shortlinks_destination_url'] == true
+                                                window._authManager.userHasPermission('edit_shortlinks_destination_url')
                                             ) {
                                                 listItem.appendChild(editLongUrlLink);
                                                 listItem.appendChild(cancelEditLongUrlLink);
@@ -3908,7 +3935,9 @@
                                                                 resObj.data[i].long_url,
                                                                 resObj.data[i].shortlink,
                                                                 resObj.data[i].destination_email,
-                                                                resObj.data[i].created_at
+                                                                resObj.data[i].created_at,
+                                                                resObj.data[i].total_views,
+                                                                resObj.data[i].total_unique_views
                                                             );
                                                         }
 
@@ -4761,8 +4790,6 @@
 
         <div id="menu-top" style="display: none">
             <div class="menu-item" id="menu-item-my-links" style="display: none">Os meus links</div>
-            <div class="menu-item">Publicidade</div>
-            <div class="menu-item">Conheça</div>
             <div class="menu-item">Contacte</div>
         </div>
 
