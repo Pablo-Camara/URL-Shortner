@@ -4087,7 +4087,18 @@
                         },
                         show: function () {
                             this.initialize();
+
+                            this.Components.BackButton.hide();
+                            this.Components.Filters.hide();
+                            this.Components.Loading.hide();
+                            this.Components.NoResults.hide();
+                            this.Components.ResultsTable.hide();
+
+                            this.Components.Stats.show();
+
                             this.el().style.display = 'block';
+
+
                         },
                         hideAllDashboardItems: function(except = []) {
                             const components = Object.keys(this.Components);
@@ -4553,7 +4564,6 @@
                         },
                         initialize: function () {
                             this.Components.CloseBtn.initialize();
-                            this.Components.Stats.show();
                         }
 
                     },
