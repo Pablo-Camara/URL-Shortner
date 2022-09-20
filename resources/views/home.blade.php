@@ -297,6 +297,13 @@
                 margin-right: 10px;
             }
 
+            .dashboard-filter-container .button {
+                display: inline-block;
+                margin-bottom: 10px;
+            }
+
+
+
             .dashboard-results-container {
                 width: 100%;
             }
@@ -309,6 +316,7 @@
             .dashboard-results-container td {
                 padding: 10px;
                 background: rgba(0,0,0, 0.1);
+                text-align: center;
             }
 
             #form-box-login-feedback,
@@ -1201,6 +1209,7 @@
             window._authManager.initialize();
 
             window.App = {
+                currentView: null,
                 showComponents: function(componentNamesArr, conditionCallback = null) {
                     for (var i = 0; i < componentNamesArr.length; i++) {
                         const componentName = componentNamesArr[i];
@@ -4217,37 +4226,63 @@
                                             this.el().style.display = 'inline-block';
                                         },
                                     },
-                                    View: {
+                                    GroupBy: {
                                         el: function () {
                                             return document.getElementById('dashboard-filter-view');
                                         },
                                         inputEl: function () {
                                             return document.getElementById('dashboard-filter-view-input');
                                         },
-                                        setView: function (view) {
-                                            this.inputEl().value = view;
+                                        setGroupBy: function (groupBy) {
+                                            this.inputEl().value = groupBy;
                                         },
-                                        setAvailableViews: function (availableViews) {
+                                        setAvailableGroupBys: function (availableGroupBys) {
                                             const inputEl = this.inputEl();
                                             inputEl.innerHTML = '';
-                                            for(var i = 0; i < availableViews.length; i++) {
-                                                const availableView = availableViews[i];
-                                                const viewOption = document.createElement('option');
-                                                viewOption.setAttribute('value', availableView.name);
-                                                viewOption.innerText = availableView.label;
-                                                inputEl.appendChild(viewOption);
+                                            for(var i = 0; i < availableGroupBys.length; i++) {
+                                                const availableGroupBy = availableGroupBys[i];
+                                                const optionEl = document.createElement('option');
+                                                optionEl.setAttribute('value', availableGroupBy.name);
+                                                optionEl.innerText = availableGroupBy.label;
+                                                inputEl.appendChild(optionEl);
                                             }
                                         },
                                         hide: function () {
                                             this.el().style.display = 'none';
                                         },
-                                        show: function (availableViews, selectedView = null) {
-                                            this.setAvailableViews(availableViews);
-                                            if (selectedView != null) {
-                                                this.setView(selectedView);
+                                        show: function (availableGroupBys, selectedGroupBy = null) {
+                                            this.setAvailableGroupBys(availableGroupBys);
+                                            if (selectedGroupBy != null) {
+                                                this.setGroupBy(selectedGroupBy);
                                             }
                                             this.el().style.display = 'inline-block';
+                                        }
+                                    },
+                                    RefreshResultsBtn: {
+                                        hasInitialized: false,
+                                        el: function () {
+                                            return document.getElementById('refresh-dashboard-results');
                                         },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                        show: function () {
+                                            this.initialize();
+                                            this.el().style.display = 'inline-block';
+                                        },
+                                        initialize: function () {
+                                            if (this.hasInitialized === false) {
+
+                                                this.el().onclick = function(e) {
+                                                    window.App.Components.
+                                                        PA.Components.
+                                                        Stats.Components.
+                                                        ViewsList.fetchViewResults();
+                                                };
+
+                                                this.hasInitialized = true;
+                                            }
+                                        }
                                     }
                                 }
                             },
@@ -4261,6 +4296,56 @@
                                 show: function () {
                                     this.el().style.display = 'block';
                                 },
+                            },
+                            NoResults: {
+                                el: function () {
+                                    return document.getElementById('dashboard-no-results');
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                show: function () {
+                                    this.el().style.display = 'block';
+                                },
+                            },
+                            ResultsTable: {
+                                el: function () {
+                                    return document.getElementById('dashboard-results-container');
+                                },
+                                columnsEl:function () {
+                                    return document.getElementById('dashboard-results-container-columns');
+                                },
+                                rowsEl:function () {
+                                    return document.getElementById('dashboard-results-container-rows');
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                show: function () {
+                                    this.el().style.display = 'table';
+                                },
+                                setColumns: function (columns) {
+                                    this.columnsEl().innerHTML = '';
+                                    for(var i = 0; i < columns.length; i++) {
+                                        const columnEl = document.createElement('th');
+                                        columnEl.innerText = columns[i];
+                                        this.columnsEl().appendChild(columnEl);
+                                    }
+                                },
+                                setRows: function (rows) {
+                                    this.rowsEl().innerHTML = '';
+                                    const rowCols = Object.keys(rows[0]);
+                                    for(var i = 0; i < rows.length; i++) {
+                                        const row = document.createElement('tr');
+                                        for(var ii = 0; ii < rowCols.length; ii++) {
+                                            const colName = rowCols[ii];
+                                            const colEl = document.createElement('td');
+                                            colEl.innerText = rows[i][colName];
+                                            row.appendChild(colEl);
+                                        }
+                                        this.rowsEl().appendChild(row);
+                                    }
+                                }
                             },
                             Stats: {
                                 dashboardItem: true,
@@ -4283,9 +4368,10 @@
                                 Components: {
                                     ViewsList: {
                                         hasInitialized: false,
+                                        currentView: null,
                                         views: [
                                             {
-                                                name: 'total-registered-users',
+                                                name: 'totalRegisteredUsers',
                                                 label: 'Total de utilizadores registrados'
                                             },
                                             {
@@ -4315,9 +4401,91 @@
                                             window.App.Components.PA.Components.BackButton.show();
                                             window.App.Components.PA.Components.Stats.displayFull();
                                             window.App.Components.PA.Components.Loading.hide();
+                                            window.App.Components.PA.Components.NoResults.hide();
+                                            window.App.Components.PA.Components.ResultsTable.hide();
                                             this.showStatsViews();
 
                                             this.el().style.display = 'block';
+                                        },
+                                        fetchViewResults: function () {
+                                            window.App.Components.PA.Components.ResultsTable.hide();
+                                            window.App.Components.PA.Components.NoResults.hide();
+                                            window.App.Components.PA.Components.Loading.show();
+                                            $this.hideStatsViews([this.currentView]);
+                                            window.App.Components.PA.Components.BackButton.customBackFunc = function () {
+                                                window.App.Components.PA.Components.Stats.Components.ViewsList.show();
+                                            };
+
+                                            var xhr = new XMLHttpRequest();
+                                            xhr.withCredentials = true;
+
+                                            xhr.addEventListener("readystatechange", function () {
+                                                if (this.status === 200 && this.readyState === 4) {
+                                                    const resObj = JSON.parse(this.response);
+                                                    window.App.Components.PA.Components.Loading.hide();
+                                                    window.App.Components.PA.Components.Filters.show();
+                                                    window.App.Components.PA.Components.Filters.Components.DateSince.show(resObj.since);
+                                                    window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
+                                                    window.App.Components.PA.Components.Filters.Components.GroupBy.show(resObj.availableGroupBys, resObj.groupBy);
+                                                    window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
+
+
+                                                    if (resObj.search_results.length === 0) {
+                                                        window.App.Components.PA.Components.NoResults.show();
+                                                        return;
+                                                    }
+                                                    window.App.Components.PA.Components.NoResults.hide();
+                                                    window.App.Components.PA.Components.ResultsTable.setColumns(
+                                                        Object.keys(resObj.search_results[0])
+                                                    );
+                                                    window.App.Components.PA.Components.ResultsTable.setRows(
+                                                        resObj.search_results
+                                                    );
+
+                                                    window.App.Components.PA.Components.ResultsTable.show();
+                                                }
+                                            });
+
+                                            var urlStr = window.App.Components.PA.Components.Stats.api + '?currentView=' + this.currentView;
+
+                                            const groupBy = window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value;
+                                            const since = window.App.Components.PA.Components.Filters.Components.DateSince.inputEl().value;
+                                            const until = window.App.Components.PA.Components.Filters.Components.DateUntil.inputEl().value;
+
+                                            if (
+                                                groupBy.length > 0
+                                                ||
+                                                since.length > 0
+                                                ||
+                                                until.length > 0
+                                            ) {
+                                                var params = [];
+
+                                                if (groupBy.length > 0) {
+                                                    params['groupBy'] = groupBy;
+                                                }
+
+                                                if (since.length > 0) {
+                                                    params['since'] = since;
+                                                }
+
+                                                if (until.length > 0) {
+                                                    params['until'] = until;
+                                                }
+
+                                                var paramNames = Object.keys(params);
+
+                                                for(var i = 0; i < paramNames.length; i++) {
+                                                    const paramName = paramNames[i];
+                                                    urlStr += '&' + paramName + '=' + params[paramName];
+                                                }
+                                            }
+
+                                            xhr.open(
+                                                "POST",
+                                                urlStr
+                                            );
+                                            xhr.send();
                                         },
                                         renderStatsViews: function () {
                                             $this = this;
@@ -4330,35 +4498,14 @@
                                                 dashboardListItem.setAttribute('data-view-name', view.name);
                                                 dashboardListItem.setAttribute('id', 'pa-stats-view-' + view.name);
                                                 dashboardListItem.onclick = function (e) {
-                                                    window.App.Components.PA.Components.Loading.show();
-                                                    $this.hideStatsViews([
-                                                        e.target.getAttribute('data-view-name')
-                                                    ]);
-                                                    window.App.Components.PA.Components.BackButton.customBackFunc = function () {
-                                                        window.App.Components.PA.Components.Stats.Components.ViewsList.show();
-                                                    };
+                                                    $this.currentView = e.target.getAttribute('data-view-name');
 
-                                                    var xhr = new XMLHttpRequest();
-                                                    xhr.withCredentials = true;
+                                                    // default search , reset filters
+                                                    window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value = '';
+                                                    window.App.Components.PA.Components.Filters.Components.DateSince.inputEl().value = '';
+                                                    window.App.Components.PA.Components.Filters.Components.DateUntil.inputEl().value = '';
 
-                                                    xhr.addEventListener("readystatechange", function () {
-                                                        if (this.status === 200 && this.readyState === 4) {
-                                                            const resObj = JSON.parse(this.response);
-                                                            window.App.Components.PA.Components.Loading.hide();
-                                                            window.App.Components.PA.Components.Filters.show();
-                                                            window.App.Components.PA.Components.Filters.Components.DateSince.show(resObj.since);
-                                                            window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
-                                                            window.App.Components.PA.Components.Filters.Components.View.show(resObj.availableViews, resObj.view);
-                                                        }
-                                                    });
-
-                                                    var urlStr = window.App.Components.PA.Components.Stats.api +  '/' + e.target.getAttribute('data-view-name');
-
-                                                    xhr.open(
-                                                        "POST",
-                                                        urlStr
-                                                    );
-                                                    xhr.send();
+                                                    $this.fetchViewResults();
                                                 };
 
                                                 this.el().appendChild(dashboardListItem);
@@ -4520,6 +4667,21 @@
                     ChangePassword: {
                         components: {
                             initiallyVisible: ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ChangePassword'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
+                        }
+                    },
+                    PA: {
+                        components: {
+                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'PA'],
                             initiallyHidden: ['ShortlinkResult'],
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
@@ -4823,9 +4985,12 @@
                     Vista:<br>
                     <select id="dashboard-filter-view-input"></select>
                 </div>
+
+                <div class="button" id="refresh-dashboard-results" style="display: none">Atualizar resultados</div>
             </div>
 
             <div id="dashboard-loading" style="display: none">A carregar...</div>
+            <div id="dashboard-no-results" style="display: none">Sem nenhum resultado para mostrar..</div>
             <table id="dashboard-results-container" class="dashboard-results-container" style="display: none">
                 <thead>
                     <tr id="dashboard-results-container-columns">

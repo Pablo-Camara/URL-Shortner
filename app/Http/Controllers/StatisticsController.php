@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Actions\AuthActions;
+use App\Helpers\Actions\ShortlinkActions;
 use App\Models\UserAction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -11,30 +12,76 @@ use Illuminate\Support\Facades\DB;
 class StatisticsController extends Controller
 {
     /**
-     * Returns the total number of registered users (per register method - email/pwd / external social media login)
-     *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function totalRegisteredUsers(Request $request)
+    public function generic(Request $request)
     {
+        $currentView = $request->input('currentView', null);
+
+        if (empty($currentView)) {
+            return new Response('', Response::HTTP_BAD_REQUEST);
+        }
+
+        $viewActionsMap = [
+            'totalRegisteredUsers' => [
+                AuthActions::REGISTERED,
+                AuthActions::REGISTERED_WITH_GOOGLE,
+                AuthActions::REGISTERED_WITH_FACEBOOK,
+                AuthActions::REGISTERED_WITH_TWITTER,
+                AuthActions::REGISTERED_WITH_LINKEDIN,
+                AuthActions::REGISTERED_WITH_GITHUB
+            ],
+            'totalShortlinksGenerated' => [
+                ShortlinkActions::GENERATED_SHORTLINK_WITH_BC,
+                ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
+            ],
+            /*'shortlinksWithMostViews' => [
+                ShortlinkActions::VIS
+            ]*/
+        ];
+
+        if (!isset($viewActionsMap[$currentView])) {
+            return new Response('View "' . $currentView . '" not found', Response::HTTP_NOT_FOUND);
+        }
+
         $since = $request->input('since', null);
         $until = $request->input('until', null);
-        $view = $request->input('view', null);
+        $selectedGroupBy = $request->input('groupBy', null);
 
-        $availableViews = [
+        $availableGroupBys = [
+            [
+                'name' => 'total',
+                'label' => 'Total',
+            ],
+            [
+                'name' => 'totals_by_day',
+                'label' => 'Total por Dia',
+            ],
             [
                 'name' => 'totals_by_action',
-                'label' => 'Totais por Ação',
+                'label' => 'Total por Ação',
             ],
             [
                 'name' => 'totals_by_action_and_day',
-                'label' => 'Totais por Ação / Dia',
+                'label' => 'Total por Ação + Dia',
             ],
         ];
 
-        if (!in_array($view, $availableViews)) {
-            $view = $availableViews[0]['name'];
+
+
+        if (
+            !in_array(
+                $selectedGroupBy,
+                array_map(
+                    function ($groupByDataArr) {
+                        return $groupByDataArr['name'];
+                    },
+                    $availableGroupBys
+                )
+            )
+        ) {
+            $selectedGroupBy = $availableGroupBys[0]['name'];
         }
 
         if ($since == null && $until == null) {
@@ -48,34 +95,56 @@ class StatisticsController extends Controller
             $until = $currDateRange[0]->last_user_action_date;
         }
 
-
-
-        $select = [
-            'actions.name AS register_method',
-            DB::raw('count(*) AS total')
+        $colsToTranslateValues = [
+            __('admin-panel.action')
         ];
 
-        $groupBy = [
-            'actions.name'
-        ];
 
-        switch ($view) {
-            case 'by_day':
-                array_unshift($select, DB::raw('user_actions.created_at_day AS day'));
-                array_unshift($groupBy, DB::raw('user_actions.created_at_day'));
+
+        $select = null;
+        $groupBy = null;
+
+        switch ($selectedGroupBy) {
+            case 'total':
+                $select = [
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = null;
+                break;
+            case 'totals_by_day':
+                $select = [
+                    DB::raw('user_actions.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('user_actions.created_at_day')
+                ];
+                break;
+            case 'totals_by_action':
+                $select = [
+                    DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    'actions.name'
+                ];
+                break;
+            case 'totals_by_action_and_day':
+                $select = [
+                    DB::raw('user_actions.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('user_actions.created_at_day'),
+                    'actions.name'
+                ];
                 break;
         }
 
         $results = UserAction::select($select)
         ->leftJoin('actions', 'user_actions.action_id', '=', 'actions.id')
-        ->whereIn('actions.name', [
-            AuthActions::REGISTERED,
-            AuthActions::REGISTERED_WITH_GOOGLE,
-            AuthActions::REGISTERED_WITH_FACEBOOK,
-            AuthActions::REGISTERED_WITH_TWITTER,
-            AuthActions::REGISTERED_WITH_LINKEDIN,
-            AuthActions::REGISTERED_WITH_GITHUB
-        ]);
+        ->whereIn('actions.name', $viewActionsMap[$currentView]);
 
         if ($since != null) {
             $results = $results->where('user_actions.created_at_day', '>=', $since);
@@ -85,14 +154,32 @@ class StatisticsController extends Controller
             $results = $results->where('user_actions.created_at_day', '<=', $until);
         }
 
-        $results = $results->groupBy($groupBy)->get();
+        if ($groupBy != null) {
+            $results = $results->groupBy($groupBy);
+        }
+
+        $results = $results->get()->toArray();
+
+        $results = array_map(
+            function($row) use ($colsToTranslateValues) {
+                foreach($colsToTranslateValues as $colName) {
+                    if (!isset($row[$colName])) {
+                        continue;
+                    }
+
+                    $row[$colName] = __('admin-panel.' . $row[$colName]);
+                }
+                return $row;
+            },
+            $results
+        );
 
         return new Response(
             [
                 'since' => $since,
                 'until' => $until,
-                'view'  => $view,
-                'availableViews' => $availableViews,
+                'groupBy'  => $selectedGroupBy,
+                'availableGroupBys' => $availableGroupBys,
                 'search_results' => $results
             ]
         );

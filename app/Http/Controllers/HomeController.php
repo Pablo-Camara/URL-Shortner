@@ -119,4 +119,15 @@ class HomeController extends Controller
             'passwordRecoveryToken' => $request->bearerToken()
         ]);
     }
+
+
+    /**
+     * Display the admin panel
+     */
+    public function adminPanel() {
+        UserAction::logAction($this->userId, HomeControllerActions::OPENED_ADMIN_PANEL_PAGE_DIRECTLY);
+        return view('home', [
+            'view' => 'PA'
+        ]);
+    }
 }

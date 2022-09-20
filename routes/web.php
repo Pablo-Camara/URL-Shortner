@@ -29,6 +29,8 @@ Route::get('/alterar-palavra-passe/{token}', [HomeController::class, 'changePass
         ->middleware(['password.change', 'auth:sanctum', 'abilities:change_password'])
         ->name('changePasswordLink');
 
+/** Admin panel */
+Route::get('/painel-admin', [HomeController::class, 'adminPanel']);
 
 /**
  * routes for Login with External services
