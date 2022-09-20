@@ -9,7 +9,7 @@ class UserAction extends Model
 
     const UPDATED_AT = null;
 
-    public static function logAction($userId, $actionName) {
+    public static function logAction($userId, $actionName, $extraParams = []) {
         try {
             $action = Action::where('name', '=', $actionName)->first();
 
@@ -18,6 +18,10 @@ class UserAction extends Model
                 $userAction->user_id = $userId;
                 $userAction->action_id = $action->id;
                 $userAction->ip = request()->ip();
+
+                foreach($extraParams as $paramName => $paramValue) {
+                    $userAction->$paramName = $paramValue;
+                }
                 $userAction->save();
             }
         } catch (\Throwable $th) {

@@ -130,6 +130,11 @@
                 border: 1px solid red;
             }
 
+            .form-box .button.btn-color-hover-only:hover {
+                font-weight: normal;
+                background: linear-gradient( 120deg, rgb(102, 147, 179) 0%, rgb(75 130 193) 25%, rgb(36 87 145) 100% );
+            }
+
             .form-box .button {
                 position: relative;
                 padding: 10px;
@@ -4387,15 +4392,15 @@
                                             },
                                             {
                                                 name: 'totalShortlinksGenerated',
-                                                label: 'Total de links gerados'
+                                                label: 'Total de shortlinks gerados'
                                             },
                                             {
-                                                name: 'shortlinksWithMostViews',
-                                                label: 'Links com maior número de visualizações'
+                                                name: 'totalTrafficReceivedInShortlinks',
+                                                label: 'Total de tráfego recebido em shortlinks'
                                             },
                                             {
-                                                name: 'usersWithMostViews',
-                                                label: 'Utilizadores com maior número de visualizações'
+                                                name: 'totalUserLogins',
+                                                label: 'Total de inícios de sessão'
                                             },
                                         ],
                                         el: function () {
@@ -4742,8 +4747,6 @@
             <div class="close-btn" id="close-menu-mobile">Fechar menu</div>
             <div class="menu-group-title">Menu Principal</div>
             <div class="menu-item" id="menu-mobile-item-my-links">Os meus links</div>
-            <div class="menu-item">Publicidade</div>
-            <div class="menu-item">Conheça</div>
             <div class="menu-item">Contacte</div>
             <div class="menu-group-title">Conta</div>
             <div id="menu-mobile-acc-items-guest" style="display: none">
@@ -4996,7 +4999,7 @@
                     <select id="dashboard-filter-view-input"></select>
                 </div>
 
-                <div class="button" id="refresh-dashboard-results" style="display: none">Atualizar resultados</div>
+                <div class="button btn-color-hover-only" id="refresh-dashboard-results" style="display: none">Atualizar resultados</div>
             </div>
 
             <div id="dashboard-loading" style="display: none">A carregar...</div>

@@ -42,7 +42,13 @@ class ShortlinkController extends Controller
             $shortlink = $shortstring['shortlink'];
 
             if (!is_null($shortlink)) {
-                UserAction::logAction($this->userId, ShortlinkActions::VISITED_ACTIVE_SHORTLINK);
+                UserAction::logAction(
+                    $this->userId,
+                    ShortlinkActions::VISITED_ACTIVE_SHORTLINK,
+                    [
+                        'shortlink_id' => $shortlink->id
+                    ]
+                );
                 return Redirect::to(
                     $shortlink->redirectUrl->url, 301
                 );
@@ -52,13 +58,17 @@ class ShortlinkController extends Controller
                 $enableCaptcha = config('captcha.enable');
                 $captchaSitekey = config('captcha.sitekey');
 
+                //TODO: move to view composer
                 $enableLoginWithGoogleBtn = config('services.google.enable_login_btn');
                 $enableLoginWithFacebookBtn = config('services.facebook.enable_login_btn');
                 $enableLoginWithTwitterBtn = config('services.twitter.enable_login_btn');
                 $enableLoginWithLinkedinBtn = config('services.linkedin.enable_login_btn');
                 $enableLoginWithGithubBtn = config('services.github.enable_login_btn');
 
-                UserAction::logAction($this->userId, ShortlinkActions::VISITED_AVAILABLE_SHORTLINK);
+                UserAction::logAction(
+                    $this->userId,
+                    ShortlinkActions::VISITED_AVAILABLE_SHORTLINK
+                );
                 return view('home', [
                     'view' => 'RegisterAvailableShortlink',
                     'shortlink' => url('/' . $shortstring->shortstring),
@@ -381,9 +391,21 @@ class ShortlinkController extends Controller
             $nextAvailableShortstring->save();
 
             if ($useBcToGenerateShortstring) {
-                UserAction::logAction($newShortlink->user_id, ShortlinkActions::GENERATED_SHORTLINK_WITH_BC);
+                UserAction::logAction(
+                    $newShortlink->user_id,
+                    ShortlinkActions::GENERATED_SHORTLINK_WITH_BC,
+                    [
+                        'shortlink_id' => $newShortlink->id
+                    ]
+                );
             } else {
-                UserAction::logAction($newShortlink->user_id, ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING);
+                UserAction::logAction(
+                    $newShortlink->user_id,
+                    ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
+                    [
+                        'shortlink_id' => $newShortlink->id
+                    ]
+                );
             }
 
         } catch (\Throwable $th) {
@@ -509,7 +531,10 @@ class ShortlinkController extends Controller
 
         UserAction::logAction(
             $this->userId,
-            ShortlinkActions::EDITED_SHORTLINK_DESTINATION_URL
+            ShortlinkActions::EDITED_SHORTLINK_DESTINATION_URL,
+            [
+                'shortlink_id' => $shortlink->id
+            ]
         );
 
         return new Response('',Response::HTTP_CREATED);
@@ -555,7 +580,10 @@ class ShortlinkController extends Controller
 
         UserAction::logAction(
             $this->userId,
-            ShortlinkActions::DELETED_SHORTLINK
+            ShortlinkActions::DELETED_SHORTLINK,
+            [
+                'shortlink_id' => $shortlink->id
+            ]
         );
 
         return new Response('', Response::HTTP_OK);

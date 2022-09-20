@@ -19,6 +19,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('action_id');
 
+            $table->unsignedBigInteger('shortlink_id')->nullable();
+
             $table->string('ip', 45)->nullable()->index();
 
             $table->timestamp('created_at')->useCurrent();

@@ -36,9 +36,17 @@ class StatisticsController extends Controller
                 ShortlinkActions::GENERATED_SHORTLINK_WITH_BC,
                 ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
             ],
-            /*'shortlinksWithMostViews' => [
-                ShortlinkActions::VIS
-            ]*/
+            'totalTrafficReceivedInShortlinks' => [
+                ShortlinkActions::VISITED_ACTIVE_SHORTLINK
+            ],
+            'totalUserLogins' => [
+                AuthActions::LOGGED_IN,
+                AuthActions::LOGGED_IN_WITH_GOOGLE,
+                AuthActions::LOGGED_IN_WITH_FACEBOOK,
+                AuthActions::LOGGED_IN_WITH_TWITTER,
+                AuthActions::LOGGED_IN_WITH_LINKEDIN,
+                AuthActions::LOGGED_IN_WITH_GITHUB,
+            ]
         ];
 
         if (!isset($viewActionsMap[$currentView])) {
@@ -66,9 +74,59 @@ class StatisticsController extends Controller
                 'name' => 'totals_by_action_and_day',
                 'label' => 'Total por Ação + Dia',
             ],
+            [
+                'name' => 'totals_by_shortlink',
+                'label' => 'Total por Shortlink',
+            ],
+            [
+                'name' => 'totals_by_shortlink_and_day',
+                'label' => 'Total por Shortlink + Dia',
+            ],
+            [
+                'name' => 'totals_by_user_type',
+                'label' => 'Total por Tipo de Utilizador',
+            ],
+            [
+                'name' => 'totals_by_user_type_and_day',
+                'label' => 'Total por Tipo de Utilizador + Dia',
+            ],
+            [
+                'name' => 'totals_by_user',
+                'label' => 'Total por Utilizador',
+            ],
+            [
+                'name' => 'totals_by_user_and_day',
+                'label' => 'Total por Utilizador + Dia',
+            ],
         ];
 
 
+        $viewAvailableGroupBysMap = [
+            'totalRegisteredUsers' => [
+                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day'
+            ],
+            'totalShortlinksGenerated' => [
+                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day',
+                'totals_by_user_type', 'totals_by_user_type_and_day', 'totals_by_user', 'totals_by_user_and_day'
+            ],
+            'totalTrafficReceivedInShortlinks' => [
+                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day',
+                'totals_by_shortlink', 'totals_by_shortlink_and_day', 'totals_by_user_type', 'totals_by_user_type_and_day',
+                'totals_by_user', 'totals_by_user_and_day'
+            ],
+            'totalUserLogins' => [
+                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day'
+            ]
+        ];
+
+        $availableGroupBys = array_values(
+            array_filter(
+                $availableGroupBys,
+                function ($groupBy) use ($currentView, $viewAvailableGroupBysMap) {
+                    return in_array($groupBy['name'], $viewAvailableGroupBysMap[$currentView]);
+                }
+            )
+        );
 
         if (
             !in_array(
@@ -96,13 +154,20 @@ class StatisticsController extends Controller
         }
 
         $colsToTranslateValues = [
-            __('admin-panel.action')
+            __('admin-panel.action'),
+            __('admin-panel.user-type')
         ];
 
+        $colsToTransformValues = [
+            __('admin-panel.shortlink') => function ($shortstring) {
+                return url('/' . $shortstring);
+            }
+        ];
 
 
         $select = null;
         $groupBy = null;
+        $orderBy = null;
 
         switch ($selectedGroupBy) {
             case 'total':
@@ -140,10 +205,87 @@ class StatisticsController extends Controller
                     'actions.name'
                 ];
                 break;
+            case 'totals_by_shortlink':
+                $select = [
+                    DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('shortstrings.shortstring')
+                ];
+
+                $orderBy = [
+                    DB::raw('count(*)'),
+                    'DESC'
+                ];
+                break;
+            case 'totals_by_user_type':
+                $select = [
+                    DB::raw('CASE WHEN users.guest = 1 THEN \'guest_users\' ELSE \'registered_users\' END AS `'.__('admin-panel.user-type').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('users.guest')
+                ];
+
+                $orderBy = [
+                    DB::raw('count(*)'),
+                    'DESC'
+                ];
+                break;
+            case 'totals_by_user_type_and_day':
+                $select = [
+                    DB::raw('user_actions.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('CASE WHEN users.guest = 1 THEN \'guest_users\' ELSE \'registered_users\' END AS `'.__('admin-panel.user-type').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('user_actions.created_at_day'),
+                    DB::raw('users.guest')
+                ];
+
+                $orderBy = [
+                    DB::raw('count(*)'),
+                    'DESC'
+                ];
+                break;
+            case 'totals_by_user':
+                $select = [
+                    DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('users.id')
+                ];
+
+                $orderBy = [
+                    DB::raw('count(*)'),
+                    'DESC'
+                ];
+                break;
+            case 'totals_by_user_and_day':
+                $select = [
+                    DB::raw('user_actions.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('user_actions.created_at_day'),
+                    DB::raw('users.id')
+                ];
+
+                $orderBy = [
+                    DB::raw('count(*)'),
+                    'DESC'
+                ];
+                break;
         }
 
         $results = UserAction::select($select)
+        ->leftJoin('users', 'user_actions.user_id', '=', 'users.id')
         ->leftJoin('actions', 'user_actions.action_id', '=', 'actions.id')
+        ->leftJoin('shortlinks', 'user_actions.shortlink_id', '=', 'shortlinks.id')
+        ->leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
         ->whereIn('actions.name', $viewActionsMap[$currentView]);
 
         if ($since != null) {
@@ -158,16 +300,28 @@ class StatisticsController extends Controller
             $results = $results->groupBy($groupBy);
         }
 
+        if ($orderBy != null) {
+            $results = $results->orderBy($orderBy[0], $orderBy[1]);
+        }
+
         $results = $results->get()->toArray();
 
         $results = array_map(
-            function($row) use ($colsToTranslateValues) {
+            function($row) use ($colsToTranslateValues, $colsToTransformValues) {
                 foreach($colsToTranslateValues as $colName) {
                     if (!isset($row[$colName])) {
                         continue;
                     }
 
                     $row[$colName] = __('admin-panel.' . $row[$colName]);
+                }
+
+                foreach($colsToTransformValues as $colName => $transformFunction) {
+                    if (!isset($row[$colName])) {
+                        continue;
+                    }
+
+                    $row[$colName] = $transformFunction($row[$colName]);
                 }
                 return $row;
             },
