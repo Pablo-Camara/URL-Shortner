@@ -95,7 +95,8 @@ class ShortlinkController extends Controller
                     'view' => 'RegisterAvailableShortlink',
                     'shortlink' => url('/' . $shortstring->shortstring),
                     'shortlink_available' => true,
-                    'shortlink_shortstring' => $shortstring->shortstring
+                    'shortlink_shortstring' => $shortstring->shortstring,
+                    'isAdmin' => $this->isAdmin()
                 ]);
             }
 

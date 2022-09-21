@@ -457,7 +457,7 @@ class AuthenticationController extends Controller
             return redirect()->route('login-page');
         }
 
-        return Socialite::driver('github')->redirect();
+        return Socialite::driver('github')->stateless()->redirect();
     }
 
      /**
@@ -471,7 +471,7 @@ class AuthenticationController extends Controller
         }
 
         try {
-            $user = Socialite::driver('github')->user();
+            $user = Socialite::driver('github')->stateless()->user();
 
             // store or update github data
             GithubAccount::updateOrCreate(
@@ -549,7 +549,7 @@ class AuthenticationController extends Controller
             return redirect()->route('login-page');
         }
 
-        return Socialite::driver('facebook')->redirect();
+        return Socialite::driver('facebook')->stateless()->redirect();
     }
 
     /**
@@ -564,7 +564,7 @@ class AuthenticationController extends Controller
         }
 
         try {
-            $user = Socialite::driver('facebook')->user();
+            $user = Socialite::driver('facebook')->stateless()->user();
 
             // store or update facebook data
             FacebookAccount::updateOrCreate(
@@ -632,7 +632,7 @@ class AuthenticationController extends Controller
             return redirect()->route('login-page');
         }
 
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')->stateless()->redirect();
     }
 
     /**
@@ -647,7 +647,7 @@ class AuthenticationController extends Controller
         }
 
         try {
-            $user = Socialite::driver('google')->user();
+            $user = Socialite::driver('google')->stateless()->user();
 
             // store or update facebook data
             GoogleAccount::updateOrCreate(
@@ -719,7 +719,7 @@ class AuthenticationController extends Controller
             return redirect()->route('login-page');
         }
 
-        return Socialite::driver('linkedin')->redirect();
+        return Socialite::driver('linkedin')->stateless()->redirect();
     }
 
     /**
@@ -734,7 +734,7 @@ class AuthenticationController extends Controller
         }
 
         try {
-            $user = Socialite::driver('linkedin')->user();
+            $user = Socialite::driver('linkedin')->stateless()->user();
 
             // store or update linkedin data
             LinkedinAccount::updateOrCreate(

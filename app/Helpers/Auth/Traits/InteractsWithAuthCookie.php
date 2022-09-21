@@ -127,6 +127,10 @@ trait InteractsWithAuthCookie
         return $this->isAuthenticated() && $this->guest === 0;
     }
 
+    private function isAdmin() {
+        return $this->isAdmin == true;
+    }
+
     private function getAuthenticatedAuthResponseData() {
         if ($this->isAuthenticated()) {
             $authResponse = [
@@ -179,6 +183,10 @@ trait InteractsWithAuthCookie
                 'avatar' => $user->avatar,
                 'name' => $user->name
             ];
+
+            if ( $user->isAdmin() ) {
+                $authResponse['data']['adminPanel'] = '/painel-admin'; // hard code for now
+            }
         }
 
         return $authResponse;

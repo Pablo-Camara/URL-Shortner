@@ -56,4 +56,5 @@ Route::post('/shortlinks/edit', [ShortlinkController::class, 'editShortlinkUrl']
 Route::post('/shortlinks/delete', [ShortlinkController::class, 'deleteShortlinkUrl'])
         ->middleware(['auth:sanctum']);
 
-Route::post('/stats', [StatisticsController::class, 'generic']);
+Route::post('/stats', [StatisticsController::class, 'generic'])
+        ->middleware(['auth:sanctum', 'abilities:admin']);;

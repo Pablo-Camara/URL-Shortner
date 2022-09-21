@@ -449,6 +449,7 @@
             }
 
             #logo-top {
+                cursor: pointer;
                 display: none;
             }
 
@@ -1452,6 +1453,28 @@
                                         }
                                     }
                                 },
+                                PA: {
+                                    hasInitialized: false,
+                                    panelLocation: null,
+                                    el: function () {
+                                        return document.getElementById('menu-mobile-admin-dashboard');
+                                    },
+                                    initialize: function () {
+                                        if (this.hasInitialized === false) {
+                                            const $this = this;
+                                            this.el().onclick = function (e) {
+                                                if (
+                                                    typeof window.App.Components.PA !== 'undefined'
+                                                ) {
+                                                    window.App.Components.PA.show();
+                                                } else {
+                                                    window.location.href = $this.panelLocation;
+                                                }
+                                            };
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                }
                             },
                             initialize: function () {
                                 this.Items.LogoutBtn.initialize();
@@ -1614,13 +1637,21 @@
                                 },
                                 PA: {
                                     hasInitialized: false,
+                                    panelLocation: null,
                                     el: function () {
                                         return document.getElementById('menu-top-admin-dashboard');
                                     },
                                     initialize: function () {
                                         if (this.hasInitialized === false) {
+                                            const $this = this;
                                             this.el().onclick = function (e) {
-                                               window.App.Components.PA.show();
+                                                if (
+                                                    typeof window.App.Components.PA !== 'undefined'
+                                                ) {
+                                                    window.App.Components.PA.show();
+                                                } else {
+                                                    window.location.href = $this.panelLocation;
+                                                }
                                             };
                                             this.hasInitialized = true;
                                         }
@@ -4029,567 +4060,6 @@
                             this.Components.LoginBtn.initialize();
                         }
                     },
-                    PA: {
-                        hasInitialized: false,
-                        el: function () {
-                            return document.getElementById('pa-view');
-                        },
-                        hide: function () {
-                            this.el().style.display = 'none';
-                        },
-                        show: function () {
-                            this.initialize();
-
-                            this.Components.BackButton.hide();
-                            this.Components.Filters.hide();
-                            this.Components.Loading.hide();
-                            this.Components.NoResults.hide();
-                            this.Components.ResultsTable.hide();
-
-                            this.Components.Stats.show();
-
-                            this.el().style.display = 'block';
-
-
-                        },
-                        hideAllDashboardItems: function(except = []) {
-                            const components = Object.keys(this.Components);
-                            for(var i = 0; i < components.length; i++) {
-                                const componentName = components[i];
-                                if (except.indexOf(componentName) >= 0) {
-                                    continue;
-                                }
-                                if (
-                                    typeof this.Components[componentName].dashboardItem !== 'undefined'
-                                    &&
-                                    this.Components[componentName].dashboardItem === true
-                                    &&
-                                    typeof this.Components[componentName].hide === 'function'
-                                ) {
-                                    this.Components[componentName].hide();
-                                }
-                            }
-                        },
-                        showAllDashboardItems: function(except = []) {
-                            const components = Object.keys(this.Components);
-                            for(var i = 0; i < components.length; i++) {
-                                const componentName = components[i];
-                                if (except.indexOf(componentName) >= 0) {
-                                    continue;
-                                }
-                                if (
-                                    typeof this.Components[componentName].dashboardItem !== 'undefined'
-                                    &&
-                                    this.Components[componentName].dashboardItem === true
-                                    &&
-                                    typeof this.Components[componentName].show === 'function'
-                                ) {
-                                    this.Components[componentName].show();
-                                }
-                            }
-                        },
-                        Components: {
-                            CloseBtn: {
-                                hasInitialized: false,
-                                el: function () {
-                                    return document.getElementById('pa-view-close-btn');
-                                },
-                                initialize: function () {
-                                    if ( this.hasInitialized == false ) {
-
-                                        this.el().onclick = function (e) {
-                                            window.App.Components.PA.hide();
-                                        };
-
-                                        this.hasInitialized = true;
-                                    }
-                                }
-                            },
-                            BackButton: {
-                                hasInitialized: false,
-                                customBackFunc: null,
-                                el: function () {
-                                    return document.getElementById('dashboard-back-button');
-                                },
-                                hide: function () {
-                                    this.el().style.display = 'none';
-                                },
-                                show: function () {
-                                    this.initialize();
-                                    this.customBackFunc = null;
-                                    this.el().style.display = 'block';
-                                },
-                                initialize: function () {
-                                    if ( this.hasInitialized == false ) {
-
-                                        const $this = this;
-                                        this.el().onclick = function (e) {
-                                            if (
-                                                typeof $this.customBackFunc === 'function'
-                                            ) {
-                                                $this.customBackFunc();
-                                                return;
-                                            }
-                                            window.App.Components.PA.showAllDashboardItems();
-                                            $this.hide();
-                                        };
-
-                                        this.hasInitialized = true;
-                                    }
-                                }
-                            },
-                            Filters: {
-                                el: function () {
-                                    return document.getElementById('dashboard-filter-container');
-                                },
-                                hide: function () {
-                                    this.el().style.display = 'none';
-                                },
-                                show: function () {
-                                    this.el().style.display = 'block';
-                                },
-                                Components: {
-                                    DateSince: {
-                                        el: function () {
-                                            return document.getElementById('dashboard-filter-date-since');
-                                        },
-                                        inputEl: function () {
-                                            return document.getElementById('dashboard-filter-date-since-input');
-                                        },
-                                        setDate: function (date) {
-                                            this.inputEl().value = date;
-                                        },
-                                        hide: function () {
-                                            this.el().style.display = 'none';
-                                        },
-                                        show: function (defaultDate = null) {
-                                            if (defaultDate != null) {
-                                                this.setDate(defaultDate);
-                                            }
-                                            this.el().style.display = 'inline-block';
-                                        },
-                                    },
-                                    DateUntil: {
-                                        el: function () {
-                                            return document.getElementById('dashboard-filter-date-until');
-                                        },
-                                        inputEl: function () {
-                                            return document.getElementById('dashboard-filter-date-until-input');
-                                        },
-                                        setDate: function (date) {
-                                            this.inputEl().value = date;
-                                        },
-                                        hide: function () {
-                                            this.el().style.display = 'none';
-                                        },
-                                        show: function (defaultDate = null) {
-                                            if (defaultDate != null) {
-                                                this.setDate(defaultDate);
-                                            }
-                                            this.el().style.display = 'inline-block';
-                                        },
-                                    },
-                                    GroupBy: {
-                                        el: function () {
-                                            return document.getElementById('dashboard-filter-view');
-                                        },
-                                        inputEl: function () {
-                                            return document.getElementById('dashboard-filter-view-input');
-                                        },
-                                        setGroupBy: function (groupBy) {
-                                            this.inputEl().value = groupBy;
-                                        },
-                                        setAvailableGroupBys: function (availableGroupBys) {
-                                            const inputEl = this.inputEl();
-                                            inputEl.innerHTML = '';
-                                            for(var i = 0; i < availableGroupBys.length; i++) {
-                                                const availableGroupBy = availableGroupBys[i];
-                                                const optionEl = document.createElement('option');
-                                                optionEl.setAttribute('value', availableGroupBy.name);
-                                                optionEl.innerText = availableGroupBy.label;
-                                                inputEl.appendChild(optionEl);
-                                            }
-                                        },
-                                        hide: function () {
-                                            this.el().style.display = 'none';
-                                        },
-                                        show: function (availableGroupBys, selectedGroupBy = null) {
-                                            this.setAvailableGroupBys(availableGroupBys);
-                                            if (selectedGroupBy != null) {
-                                                this.setGroupBy(selectedGroupBy);
-                                            }
-                                            this.el().style.display = 'inline-block';
-                                        }
-                                    },
-                                    OrderBy: {
-                                        el: function () {
-                                            return document.getElementById('dashboard-filter-order');
-                                        },
-                                        inputEl: function () {
-                                            return document.getElementById('dashboard-filter-order-input');
-                                        },
-                                        setOrderBy: function (orderBy) {
-                                            this.inputEl().value = orderBy;
-                                        },
-                                        setAvailableOrderBys: function (availableOrderBys) {
-                                            const inputEl = this.inputEl();
-                                            inputEl.innerHTML = '';
-                                            for(var i = 0; i < availableOrderBys.length; i++) {
-                                                const availableOrderBy = availableOrderBys[i];
-                                                const optionEl = document.createElement('option');
-                                                optionEl.setAttribute('value', availableOrderBy.name);
-                                                optionEl.innerText = availableOrderBy.label;
-                                                inputEl.appendChild(optionEl);
-                                            }
-                                        },
-                                        hide: function () {
-                                            this.el().style.display = 'none';
-                                        },
-                                        show: function (availableOrderBys, selectedOrderBy = null) {
-                                            if (
-                                                typeof availableOrderBys === 'undefined'
-                                                ||
-                                                !availableOrderBys
-                                            ) {
-                                                this.hide();
-                                                return;
-                                            }
-                                            this.setAvailableOrderBys(availableOrderBys);
-                                            if (selectedOrderBy != null) {
-                                                this.setOrderBy(selectedOrderBy);
-                                            }
-                                            this.el().style.display = 'inline-block';
-                                        }
-                                    },
-                                    RefreshResultsBtn: {
-                                        hasInitialized: false,
-                                        el: function () {
-                                            return document.getElementById('refresh-dashboard-results');
-                                        },
-                                        hide: function () {
-                                            this.el().style.display = 'none';
-                                        },
-                                        show: function () {
-                                            this.initialize();
-                                            this.el().style.display = 'inline-block';
-                                        },
-                                        initialize: function () {
-                                            if (this.hasInitialized === false) {
-
-                                                this.el().onclick = function(e) {
-                                                    window.App.Components.
-                                                        PA.Components.
-                                                        Stats.Components.
-                                                        ViewsList.fetchViewResults();
-                                                };
-
-                                                this.hasInitialized = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            Loading: {
-                                el: function () {
-                                    return document.getElementById('dashboard-loading');
-                                },
-                                hide: function () {
-                                    this.el().style.display = 'none';
-                                },
-                                show: function () {
-                                    this.el().style.display = 'block';
-                                },
-                            },
-                            NoResults: {
-                                el: function () {
-                                    return document.getElementById('dashboard-no-results');
-                                },
-                                hide: function () {
-                                    this.el().style.display = 'none';
-                                },
-                                show: function () {
-                                    this.el().style.display = 'block';
-                                },
-                            },
-                            ResultsTable: {
-                                el: function () {
-                                    return document.getElementById('dashboard-results-container');
-                                },
-                                columnsEl:function () {
-                                    return document.getElementById('dashboard-results-container-columns');
-                                },
-                                rowsEl:function () {
-                                    return document.getElementById('dashboard-results-container-rows');
-                                },
-                                paginationEl: function () {
-                                    return document.getElementById('dashboard-results-pagination');
-                                },
-                                hide: function () {
-                                    this.el().style.display = 'none';
-                                    this.paginationEl().innerHTML = '';
-                                    window.App.Helpers.Pagination.resetPaginationFor('DashboardResultList');
-                                },
-                                show: function () {
-                                    this.el().style.display = 'table';
-                                },
-                                setColumns: function (columns) {
-                                    this.columnsEl().innerHTML = '';
-                                    for(var i = 0; i < columns.length; i++) {
-                                        const columnEl = document.createElement('th');
-                                        columnEl.innerText = columns[i];
-                                        this.columnsEl().appendChild(columnEl);
-                                    }
-                                },
-                                setRows: function (rows) {
-                                    this.rowsEl().innerHTML = '';
-                                    const rowCols = Object.keys(rows[0]);
-                                    for(var i = 0; i < rows.length; i++) {
-                                        const row = document.createElement('tr');
-                                        for(var ii = 0; ii < rowCols.length; ii++) {
-                                            const colName = rowCols[ii];
-                                            const colEl = document.createElement('td');
-                                            colEl.innerText = rows[i][colName];
-                                            row.appendChild(colEl);
-                                        }
-                                        this.rowsEl().appendChild(row);
-                                    }
-                                }
-                            },
-                            Stats: {
-                                dashboardItem: true,
-                                hasInitialized: false,
-                                api: "{{ url('/api/stats') }}",
-                                el: function () {
-                                    return document.getElementById('pa-stats');
-                                },
-                                hide: function () {
-                                    this.el().style.display = 'none';
-                                },
-                                show: function () {
-                                    this.initialize();
-                                    this.el().style.display = 'inline-block';
-                                    this.Components.ViewsList.hide();
-                                },
-                                displayFull: function () {
-                                    this.el().style.display = 'block';
-                                },
-                                Components: {
-                                    ViewsList: {
-                                        hasInitialized: false,
-                                        currentView: null,
-                                        views: [
-                                            {
-                                                name: 'totalRegisteredUsers',
-                                                label: 'Total de utilizadores registrados'
-                                            },
-                                            {
-                                                name: 'totalShortlinksGenerated',
-                                                label: 'Total de shortlinks gerados'
-                                            },
-                                            {
-                                                name: 'totalTrafficReceivedInShortlinks',
-                                                label: 'Total de tráfego recebido em shortlinks'
-                                            },
-                                            {
-                                                name: 'totalUserLogins',
-                                                label: 'Total de inícios de sessão'
-                                            },
-                                            {
-                                                name: 'appUsageByDevices',
-                                                label: 'Dispositivos usados pelos utilizadores da plataforma'
-                                            },
-                                        ],
-                                        el: function () {
-                                            return document.getElementById('pa-stats-views');
-                                        },
-                                        hide: function () {
-                                            this.el().style.display = 'none';
-                                        },
-                                        show: function () {
-                                            this.initialize();
-
-                                            window.App.Components.PA.hideAllDashboardItems(['Stats']);
-                                            window.App.Components.PA.Components.Filters.hide();
-                                            window.App.Components.PA.Components.BackButton.show();
-                                            window.App.Components.PA.Components.Stats.displayFull();
-                                            window.App.Components.PA.Components.Loading.hide();
-                                            window.App.Components.PA.Components.NoResults.hide();
-                                            window.App.Components.PA.Components.ResultsTable.hide();
-                                            this.showStatsViews();
-
-                                            this.el().style.display = 'block';
-                                        },
-                                        fetchViewResults: function (pageNumber = 1) {
-                                            window.App.Components.PA.Components.ResultsTable.hide();
-                                            window.App.Components.PA.Components.NoResults.hide();
-                                            window.App.Components.PA.Components.Loading.show();
-                                            this.hideStatsViews([this.currentView]);
-                                            window.App.Components.PA.Components.BackButton.customBackFunc = function () {
-                                                window.App.Components.PA.Components.Stats.Components.ViewsList.show();
-                                            };
-
-                                            var xhr = new XMLHttpRequest();
-                                            xhr.withCredentials = true;
-
-                                            xhr.addEventListener("readystatechange", function () {
-                                                if (this.status === 200 && this.readyState === 4) {
-                                                    const resObj = JSON.parse(this.response);
-                                                    window.App.Components.PA.Components.Loading.hide();
-                                                    window.App.Components.PA.Components.Filters.show();
-                                                    window.App.Components.PA.Components.Filters.Components.DateSince.show(resObj.since);
-                                                    window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
-                                                    window.App.Components.PA.Components.Filters.Components.GroupBy.show(resObj.availableGroupBys, resObj.groupBy);
-                                                    window.App.Components.PA.Components.Filters.Components.OrderBy.show(resObj.availableOrderBys, resObj.orderBy);
-                                                    window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
-
-
-                                                    if (resObj.search_results.total === 0) {
-                                                        window.App.Components.PA.Components.NoResults.show();
-                                                        return;
-                                                    }
-                                                    window.App.Components.PA.Components.NoResults.hide();
-                                                    window.App.Components.PA.Components.ResultsTable.setColumns(
-                                                        Object.keys(resObj.search_results.data[0])
-                                                    );
-                                                    window.App.Components.PA.Components.ResultsTable.setRows(
-                                                        resObj.search_results.data
-                                                    );
-
-                                                    const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
-                                                    paginationEl.innerHTML = '';
-                                                    paginationEl.appendChild(
-                                                        window.App.Helpers.Pagination.createEl(
-                                                            resObj.search_results.current_page,
-                                                            resObj.search_results.last_page,
-                                                            'DashboardResultList',
-                                                            function(param) {
-                                                                window.App.Components.PA.Components.Stats.Components.ViewsList.fetchViewResults(param);
-                                                            }
-                                                        )
-                                                    );
-
-                                                    window.App.Components.PA.Components.ResultsTable.show();
-                                                }
-                                            });
-
-                                            var urlStr = window.App.Components.PA.Components.Stats.api + '?currentView=' + this.currentView + '&page=' + pageNumber;
-
-                                            const groupBy = window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value;
-                                            const orderBy = window.App.Components.PA.Components.Filters.Components.OrderBy.inputEl().value;
-                                            const since = window.App.Components.PA.Components.Filters.Components.DateSince.inputEl().value;
-                                            const until = window.App.Components.PA.Components.Filters.Components.DateUntil.inputEl().value;
-
-                                            if (
-                                                groupBy.length > 0
-                                                ||
-                                                orderBy.length > 0
-                                                ||
-                                                since.length > 0
-                                                ||
-                                                until.length > 0
-                                            ) {
-                                                var params = [];
-
-                                                if (orderBy.length > 0) {
-                                                    params['orderBy'] = orderBy;
-                                                }
-
-                                                if (groupBy.length > 0) {
-                                                    params['groupBy'] = groupBy;
-                                                }
-
-                                                if (since.length > 0) {
-                                                    params['since'] = since;
-                                                }
-
-                                                if (until.length > 0) {
-                                                    params['until'] = until;
-                                                }
-
-                                                var paramNames = Object.keys(params);
-
-                                                for(var i = 0; i < paramNames.length; i++) {
-                                                    const paramName = paramNames[i];
-                                                    urlStr += '&' + paramName + '=' + params[paramName];
-                                                }
-                                            }
-
-                                            xhr.open(
-                                                "POST",
-                                                urlStr
-                                            );
-                                            xhr.send();
-                                        },
-                                        renderStatsViews: function () {
-                                            const $this = this;
-                                            for(var i = 0; i < this.views.length; i++) {
-                                                const view = this.views[i];
-                                                const dashboardListItem = document.createElement('div');
-                                                dashboardListItem.classList.add('dashboard-list-item');
-                                                dashboardListItem.innerText = view.label;
-                                                dashboardListItem.style.display = 'none';
-                                                dashboardListItem.setAttribute('data-view-name', view.name);
-                                                dashboardListItem.setAttribute('id', 'pa-stats-view-' + view.name);
-                                                dashboardListItem.onclick = function (e) {
-                                                    $this.currentView = e.target.getAttribute('data-view-name');
-
-                                                    // default search , reset filters
-                                                    window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value = '';
-                                                    window.App.Components.PA.Components.Filters.Components.OrderBy.inputEl().value = '';
-                                                    window.App.Components.PA.Components.Filters.Components.DateSince.inputEl().value = '';
-                                                    window.App.Components.PA.Components.Filters.Components.DateUntil.inputEl().value = '';
-
-                                                    $this.fetchViewResults();
-                                                };
-
-                                                this.el().appendChild(dashboardListItem);
-                                            }
-                                        },
-                                        hideStatsViews: function (except = []) {
-                                            for(var i = 0; i < this.views.length; i++) {
-                                                const view = this.views[i];
-                                                const viewEl = document.getElementById('pa-stats-view-' + view.name);
-                                                if (except.indexOf(view.name) >= 0) {
-                                                    continue;
-                                                }
-                                                viewEl.style.display = 'none';
-                                            }
-                                        },
-                                        showStatsViews: function (except = []) {
-                                            for(var i = 0; i < this.views.length; i++) {
-                                                const view = this.views[i];
-                                                const viewEl = document.getElementById('pa-stats-view-' + view.name);
-                                                if (except.indexOf(view.name) >= 0) {
-                                                    continue;
-                                                }
-                                                viewEl.style.display = 'block';
-                                            }
-                                        },
-                                        initialize: function () {
-                                            if (this.hasInitialized === false) {
-                                                this.renderStatsViews();
-                                                this.hasInitialized = true;
-                                            }
-                                        }
-                                    },
-                                },
-                                initialize: function () {
-                                    if ( this.hasInitialized == false ) {
-                                        const $this = this;
-                                        this.el().onclick = function (e) {
-                                            $this.Components.ViewsList.show();
-                                        };
-
-                                        this.hasInitialized = true;
-                                    }
-                                }
-                            }
-                        },
-                        initialize: function () {
-                            this.Components.CloseBtn.initialize();
-                        }
-
-                    },
                 },
                 Views: {
                     HomePage: {
@@ -4700,21 +4170,6 @@
                     ChangePassword: {
                         components: {
                             initiallyVisible: ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ChangePassword'],
-                            initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
-                        },
-                        show: function () {
-                            window.App.hideComponents(this.components.initiallyHidden);
-                            window.App.showComponents(this.components.initiallyVisible);
-                        },
-                        hide: function () {
-                            window.App.hideComponents(this.components.initiallyVisible);
-                            window.App.hideComponents(this.components.initiallyHidden);
-                        }
-                    },
-                    PA: {
-                        components: {
-                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'PA'],
                             initiallyHidden: ['ShortlinkResult'],
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
@@ -4851,11 +4306,591 @@
                         }
                     },
                 }
-
             };
-
-
         </script>
+
+        @if ($isAdmin)
+            <script>
+                window.App.Components.PA = {
+                    hasInitialized: false,
+                    el: function () {
+                        return document.getElementById('pa-view');
+                    },
+                    hide: function () {
+                        this.el().style.display = 'none';
+                    },
+                    show: function () {
+                        this.initialize();
+
+                        this.Components.BackButton.hide();
+                        this.Components.Filters.hide();
+                        this.Components.Loading.hide();
+                        this.Components.NoResults.hide();
+                        this.Components.ResultsTable.hide();
+
+                        this.Components.Stats.show();
+
+                        this.el().style.display = 'block';
+
+
+                    },
+                    hideAllDashboardItems: function(except = []) {
+                        const components = Object.keys(this.Components);
+                        for(var i = 0; i < components.length; i++) {
+                            const componentName = components[i];
+                            if (except.indexOf(componentName) >= 0) {
+                                continue;
+                            }
+                            if (
+                                typeof this.Components[componentName].dashboardItem !== 'undefined'
+                                &&
+                                this.Components[componentName].dashboardItem === true
+                                &&
+                                typeof this.Components[componentName].hide === 'function'
+                            ) {
+                                this.Components[componentName].hide();
+                            }
+                        }
+                    },
+                    showAllDashboardItems: function(except = []) {
+                        const components = Object.keys(this.Components);
+                        for(var i = 0; i < components.length; i++) {
+                            const componentName = components[i];
+                            if (except.indexOf(componentName) >= 0) {
+                                continue;
+                            }
+                            if (
+                                typeof this.Components[componentName].dashboardItem !== 'undefined'
+                                &&
+                                this.Components[componentName].dashboardItem === true
+                                &&
+                                typeof this.Components[componentName].show === 'function'
+                            ) {
+                                this.Components[componentName].show();
+                            }
+                        }
+                    },
+                    Components: {
+                        CloseBtn: {
+                            hasInitialized: false,
+                            el: function () {
+                                return document.getElementById('pa-view-close-btn');
+                            },
+                            initialize: function () {
+                                if ( this.hasInitialized == false ) {
+
+                                    this.el().onclick = function (e) {
+                                        window.App.Components.PA.hide();
+                                    };
+
+                                    this.hasInitialized = true;
+                                }
+                            }
+                        },
+                        BackButton: {
+                            hasInitialized: false,
+                            customBackFunc: null,
+                            el: function () {
+                                return document.getElementById('dashboard-back-button');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.customBackFunc = null;
+                                this.el().style.display = 'block';
+                            },
+                            initialize: function () {
+                                if ( this.hasInitialized == false ) {
+
+                                    const $this = this;
+                                    this.el().onclick = function (e) {
+                                        if (
+                                            typeof $this.customBackFunc === 'function'
+                                        ) {
+                                            $this.customBackFunc();
+                                            return;
+                                        }
+                                        window.App.Components.PA.showAllDashboardItems();
+                                        $this.hide();
+                                    };
+
+                                    this.hasInitialized = true;
+                                }
+                            }
+                        },
+                        Filters: {
+                            el: function () {
+                                return document.getElementById('dashboard-filter-container');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            show: function () {
+                                this.el().style.display = 'block';
+                            },
+                            Components: {
+                                DateSince: {
+                                    el: function () {
+                                        return document.getElementById('dashboard-filter-date-since');
+                                    },
+                                    inputEl: function () {
+                                        return document.getElementById('dashboard-filter-date-since-input');
+                                    },
+                                    setDate: function (date) {
+                                        this.inputEl().value = date;
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    show: function (defaultDate = null) {
+                                        if (defaultDate != null) {
+                                            this.setDate(defaultDate);
+                                        }
+                                        this.el().style.display = 'inline-block';
+                                    },
+                                },
+                                DateUntil: {
+                                    el: function () {
+                                        return document.getElementById('dashboard-filter-date-until');
+                                    },
+                                    inputEl: function () {
+                                        return document.getElementById('dashboard-filter-date-until-input');
+                                    },
+                                    setDate: function (date) {
+                                        this.inputEl().value = date;
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    show: function (defaultDate = null) {
+                                        if (defaultDate != null) {
+                                            this.setDate(defaultDate);
+                                        }
+                                        this.el().style.display = 'inline-block';
+                                    },
+                                },
+                                GroupBy: {
+                                    el: function () {
+                                        return document.getElementById('dashboard-filter-view');
+                                    },
+                                    inputEl: function () {
+                                        return document.getElementById('dashboard-filter-view-input');
+                                    },
+                                    setGroupBy: function (groupBy) {
+                                        this.inputEl().value = groupBy;
+                                    },
+                                    setAvailableGroupBys: function (availableGroupBys) {
+                                        const inputEl = this.inputEl();
+                                        inputEl.innerHTML = '';
+                                        for(var i = 0; i < availableGroupBys.length; i++) {
+                                            const availableGroupBy = availableGroupBys[i];
+                                            const optionEl = document.createElement('option');
+                                            optionEl.setAttribute('value', availableGroupBy.name);
+                                            optionEl.innerText = availableGroupBy.label;
+                                            inputEl.appendChild(optionEl);
+                                        }
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    show: function (availableGroupBys, selectedGroupBy = null) {
+                                        this.setAvailableGroupBys(availableGroupBys);
+                                        if (selectedGroupBy != null) {
+                                            this.setGroupBy(selectedGroupBy);
+                                        }
+                                        this.el().style.display = 'inline-block';
+                                    }
+                                },
+                                OrderBy: {
+                                    el: function () {
+                                        return document.getElementById('dashboard-filter-order');
+                                    },
+                                    inputEl: function () {
+                                        return document.getElementById('dashboard-filter-order-input');
+                                    },
+                                    setOrderBy: function (orderBy) {
+                                        this.inputEl().value = orderBy;
+                                    },
+                                    setAvailableOrderBys: function (availableOrderBys) {
+                                        const inputEl = this.inputEl();
+                                        inputEl.innerHTML = '';
+                                        for(var i = 0; i < availableOrderBys.length; i++) {
+                                            const availableOrderBy = availableOrderBys[i];
+                                            const optionEl = document.createElement('option');
+                                            optionEl.setAttribute('value', availableOrderBy.name);
+                                            optionEl.innerText = availableOrderBy.label;
+                                            inputEl.appendChild(optionEl);
+                                        }
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    show: function (availableOrderBys, selectedOrderBy = null) {
+                                        if (
+                                            typeof availableOrderBys === 'undefined'
+                                            ||
+                                            !availableOrderBys
+                                        ) {
+                                            this.hide();
+                                            return;
+                                        }
+                                        this.setAvailableOrderBys(availableOrderBys);
+                                        if (selectedOrderBy != null) {
+                                            this.setOrderBy(selectedOrderBy);
+                                        }
+                                        this.el().style.display = 'inline-block';
+                                    }
+                                },
+                                RefreshResultsBtn: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('refresh-dashboard-results');
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    show: function () {
+                                        this.initialize();
+                                        this.el().style.display = 'inline-block';
+                                    },
+                                    initialize: function () {
+                                        if (this.hasInitialized === false) {
+
+                                            this.el().onclick = function(e) {
+                                                window.App.Components.
+                                                    PA.Components.
+                                                    Stats.Components.
+                                                    ViewsList.fetchViewResults();
+                                            };
+
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        Loading: {
+                            el: function () {
+                                return document.getElementById('dashboard-loading');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            show: function () {
+                                this.el().style.display = 'block';
+                            },
+                        },
+                        NoResults: {
+                            el: function () {
+                                return document.getElementById('dashboard-no-results');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            show: function () {
+                                this.el().style.display = 'block';
+                            },
+                        },
+                        ResultsTable: {
+                            el: function () {
+                                return document.getElementById('dashboard-results-container');
+                            },
+                            columnsEl:function () {
+                                return document.getElementById('dashboard-results-container-columns');
+                            },
+                            rowsEl:function () {
+                                return document.getElementById('dashboard-results-container-rows');
+                            },
+                            paginationEl: function () {
+                                return document.getElementById('dashboard-results-pagination');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                                this.paginationEl().innerHTML = '';
+                                window.App.Helpers.Pagination.resetPaginationFor('DashboardResultList');
+                            },
+                            show: function () {
+                                this.el().style.display = 'table';
+                            },
+                            setColumns: function (columns) {
+                                this.columnsEl().innerHTML = '';
+                                for(var i = 0; i < columns.length; i++) {
+                                    const columnEl = document.createElement('th');
+                                    columnEl.innerText = columns[i];
+                                    this.columnsEl().appendChild(columnEl);
+                                }
+                            },
+                            setRows: function (rows) {
+                                this.rowsEl().innerHTML = '';
+                                const rowCols = Object.keys(rows[0]);
+                                for(var i = 0; i < rows.length; i++) {
+                                    const row = document.createElement('tr');
+                                    for(var ii = 0; ii < rowCols.length; ii++) {
+                                        const colName = rowCols[ii];
+                                        const colEl = document.createElement('td');
+                                        colEl.innerText = rows[i][colName];
+                                        row.appendChild(colEl);
+                                    }
+                                    this.rowsEl().appendChild(row);
+                                }
+                            }
+                        },
+                        Stats: {
+                            dashboardItem: true,
+                            hasInitialized: false,
+                            api: "{{ url('/api/stats') }}",
+                            el: function () {
+                                return document.getElementById('pa-stats');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.el().style.display = 'inline-block';
+                                this.Components.ViewsList.hide();
+                            },
+                            displayFull: function () {
+                                this.el().style.display = 'block';
+                            },
+                            Components: {
+                                ViewsList: {
+                                    hasInitialized: false,
+                                    currentView: null,
+                                    views: [
+                                        {
+                                            name: 'totalRegisteredUsers',
+                                            label: 'Total de utilizadores registrados'
+                                        },
+                                        {
+                                            name: 'totalShortlinksGenerated',
+                                            label: 'Total de shortlinks gerados'
+                                        },
+                                        {
+                                            name: 'totalTrafficReceivedInShortlinks',
+                                            label: 'Total de tráfego recebido em shortlinks'
+                                        },
+                                        {
+                                            name: 'totalUserLogins',
+                                            label: 'Total de inícios de sessão'
+                                        },
+                                        {
+                                            name: 'appUsageByDevices',
+                                            label: 'Dispositivos usados pelos utilizadores da plataforma'
+                                        },
+                                    ],
+                                    el: function () {
+                                        return document.getElementById('pa-stats-views');
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    show: function () {
+                                        this.initialize();
+
+                                        window.App.Components.PA.hideAllDashboardItems(['Stats']);
+                                        window.App.Components.PA.Components.Filters.hide();
+                                        window.App.Components.PA.Components.BackButton.show();
+                                        window.App.Components.PA.Components.Stats.displayFull();
+                                        window.App.Components.PA.Components.Loading.hide();
+                                        window.App.Components.PA.Components.NoResults.hide();
+                                        window.App.Components.PA.Components.ResultsTable.hide();
+                                        this.showStatsViews();
+
+                                        this.el().style.display = 'block';
+                                    },
+                                    fetchViewResults: function (pageNumber = 1) {
+                                        window.App.Components.PA.Components.ResultsTable.hide();
+                                        window.App.Components.PA.Components.NoResults.hide();
+                                        window.App.Components.PA.Components.Loading.show();
+                                        this.hideStatsViews([this.currentView]);
+                                        window.App.Components.PA.Components.BackButton.customBackFunc = function () {
+                                            window.App.Components.PA.Components.Stats.Components.ViewsList.show();
+                                        };
+
+                                        var xhr = new XMLHttpRequest();
+                                        xhr.withCredentials = true;
+
+                                        xhr.addEventListener("readystatechange", function () {
+                                            if (this.status === 200 && this.readyState === 4) {
+                                                const resObj = JSON.parse(this.response);
+                                                window.App.Components.PA.Components.Loading.hide();
+                                                window.App.Components.PA.Components.Filters.show();
+                                                window.App.Components.PA.Components.Filters.Components.DateSince.show(resObj.since);
+                                                window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
+                                                window.App.Components.PA.Components.Filters.Components.GroupBy.show(resObj.availableGroupBys, resObj.groupBy);
+                                                window.App.Components.PA.Components.Filters.Components.OrderBy.show(resObj.availableOrderBys, resObj.orderBy);
+                                                window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
+
+
+                                                if (resObj.search_results.total === 0) {
+                                                    window.App.Components.PA.Components.NoResults.show();
+                                                    return;
+                                                }
+                                                window.App.Components.PA.Components.NoResults.hide();
+                                                window.App.Components.PA.Components.ResultsTable.setColumns(
+                                                    Object.keys(resObj.search_results.data[0])
+                                                );
+                                                window.App.Components.PA.Components.ResultsTable.setRows(
+                                                    resObj.search_results.data
+                                                );
+
+                                                const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
+                                                paginationEl.innerHTML = '';
+                                                paginationEl.appendChild(
+                                                    window.App.Helpers.Pagination.createEl(
+                                                        resObj.search_results.current_page,
+                                                        resObj.search_results.last_page,
+                                                        'DashboardResultList',
+                                                        function(param) {
+                                                            window.App.Components.PA.Components.Stats.Components.ViewsList.fetchViewResults(param);
+                                                        }
+                                                    )
+                                                );
+
+                                                window.App.Components.PA.Components.ResultsTable.show();
+                                            }
+                                        });
+
+                                        var urlStr = window.App.Components.PA.Components.Stats.api + '?currentView=' + this.currentView + '&page=' + pageNumber;
+
+                                        const groupBy = window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value;
+                                        const orderBy = window.App.Components.PA.Components.Filters.Components.OrderBy.inputEl().value;
+                                        const since = window.App.Components.PA.Components.Filters.Components.DateSince.inputEl().value;
+                                        const until = window.App.Components.PA.Components.Filters.Components.DateUntil.inputEl().value;
+
+                                        if (
+                                            groupBy.length > 0
+                                            ||
+                                            orderBy.length > 0
+                                            ||
+                                            since.length > 0
+                                            ||
+                                            until.length > 0
+                                        ) {
+                                            var params = [];
+
+                                            if (orderBy.length > 0) {
+                                                params['orderBy'] = orderBy;
+                                            }
+
+                                            if (groupBy.length > 0) {
+                                                params['groupBy'] = groupBy;
+                                            }
+
+                                            if (since.length > 0) {
+                                                params['since'] = since;
+                                            }
+
+                                            if (until.length > 0) {
+                                                params['until'] = until;
+                                            }
+
+                                            var paramNames = Object.keys(params);
+
+                                            for(var i = 0; i < paramNames.length; i++) {
+                                                const paramName = paramNames[i];
+                                                urlStr += '&' + paramName + '=' + params[paramName];
+                                            }
+                                        }
+
+                                        xhr.open(
+                                            "POST",
+                                            urlStr
+                                        );
+                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                        xhr.send();
+                                    },
+                                    renderStatsViews: function () {
+                                        const $this = this;
+                                        for(var i = 0; i < this.views.length; i++) {
+                                            const view = this.views[i];
+                                            const dashboardListItem = document.createElement('div');
+                                            dashboardListItem.classList.add('dashboard-list-item');
+                                            dashboardListItem.innerText = view.label;
+                                            dashboardListItem.style.display = 'none';
+                                            dashboardListItem.setAttribute('data-view-name', view.name);
+                                            dashboardListItem.setAttribute('id', 'pa-stats-view-' + view.name);
+                                            dashboardListItem.onclick = function (e) {
+                                                $this.currentView = e.target.getAttribute('data-view-name');
+
+                                                // default search , reset filters
+                                                window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value = '';
+                                                window.App.Components.PA.Components.Filters.Components.OrderBy.inputEl().value = '';
+                                                window.App.Components.PA.Components.Filters.Components.DateSince.inputEl().value = '';
+                                                window.App.Components.PA.Components.Filters.Components.DateUntil.inputEl().value = '';
+
+                                                $this.fetchViewResults();
+                                            };
+
+                                            this.el().appendChild(dashboardListItem);
+                                        }
+                                    },
+                                    hideStatsViews: function (except = []) {
+                                        for(var i = 0; i < this.views.length; i++) {
+                                            const view = this.views[i];
+                                            const viewEl = document.getElementById('pa-stats-view-' + view.name);
+                                            if (except.indexOf(view.name) >= 0) {
+                                                continue;
+                                            }
+                                            viewEl.style.display = 'none';
+                                        }
+                                    },
+                                    showStatsViews: function (except = []) {
+                                        for(var i = 0; i < this.views.length; i++) {
+                                            const view = this.views[i];
+                                            const viewEl = document.getElementById('pa-stats-view-' + view.name);
+                                            if (except.indexOf(view.name) >= 0) {
+                                                continue;
+                                            }
+                                            viewEl.style.display = 'block';
+                                        }
+                                    },
+                                    initialize: function () {
+                                        if (this.hasInitialized === false) {
+                                            this.renderStatsViews();
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                            },
+                            initialize: function () {
+                                if ( this.hasInitialized == false ) {
+                                    const $this = this;
+                                    this.el().onclick = function (e) {
+                                        $this.Components.ViewsList.show();
+                                    };
+
+                                    this.hasInitialized = true;
+                                }
+                            }
+                        }
+                    },
+                    initialize: function () {
+                        this.Components.CloseBtn.initialize();
+                    }
+
+                };
+
+                window.App.Views.PA = {
+                    components: {
+                        initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'PA'],
+                        initiallyHidden: ['ShortlinkResult'],
+                        sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                    },
+                    show: function () {
+                        window.App.hideComponents(this.components.initiallyHidden);
+                        window.App.showComponents(this.components.initiallyVisible);
+                    },
+                    hide: function () {
+                        window.App.hideComponents(this.components.initiallyVisible);
+                        window.App.hideComponents(this.components.initiallyHidden);
+                    }
+                };
+            </script>
+        @endif
 
         @if (isset($passwordRecoveryToken))
             <script>
@@ -4872,9 +4907,11 @@
             <img
                 id="logo-top"
                 src="{{ $logoTop }}"
+                onclick="window.location.href='/';"
             />
             <img id="logo-top-mobile"
                 src="{{ $logoTopMobile }}"
+                onclick="window.location.href='/';"
             >
             <div id="logo-top-mobile-desc">url shortner<br/>em português</div>
         </div>
@@ -4897,6 +4934,7 @@
             </div>
             <div id="menu-mobile-acc-items-user" style="display: none">
                 <div class="menu-item" id="menu-mobile-user-name" style="display: none"></div>
+                <div class="menu-item" id="menu-mobile-admin-dashboard" style="display: none">Painel de Administração</div>
                 <div class="menu-item" id="menu-mobile-acc-logout">Sair</div>
             </div>
         </div>
@@ -5106,59 +5144,61 @@
             <div id="form-box-acc-links" class="list-container" style="display: none"></div>
         </div>
 
-        <div
-            class="form-box overlay"
-            id="pa-view" style="display: none"
-        >
-            <div class="form-box-title">Painel de Administração</div>
-            <div class="close-form-box" id="pa-view-close-btn">X</div>
-            <div class="dashboard-item-container">
-                <div class="dashboard-item" id="pa-stats">
-                    <div class="dashboard-item-img"><img src="{{ asset('/img/stats-icon.png') }}"></div>
-                    <div class="dashboard-item-name">Estátisticas</div>
+        @if ($isAdmin)
+            <div
+                class="form-box overlay"
+                id="pa-view" style="display: none"
+            >
+                <div class="form-box-title">Painel de Administração</div>
+                <div class="close-form-box" id="pa-view-close-btn">X</div>
+                <div class="dashboard-item-container">
+                    <div class="dashboard-item" id="pa-stats">
+                        <div class="dashboard-item-img"><img src="{{ asset('/img/stats-icon.png') }}"></div>
+                        <div class="dashboard-item-name">Estátisticas</div>
+                    </div>
                 </div>
+                <div class="dashboard-back-button" id="dashboard-back-button" style="display: none">Voltar</div>
+
+                <div class="dashboard-list-items-container" id="pa-stats-views" style="margin-top: 14px; display: none">
+                </div>
+
+                <div id="dashboard-filter-container" class="dashboard-filter-container" style="display: none">
+                    <div class="input-container" style="display: none;" id="dashboard-filter-date-since">
+                        Desde:<br>
+                        <input type="date" id="dashboard-filter-date-since-input">
+                    </div>
+
+                    <div class="input-container" style="display: none;" id="dashboard-filter-date-until">
+                        Até:<br>
+                        <input type="date" id="dashboard-filter-date-until-input">
+                    </div>
+
+                    <div class="input-container" style="display: none;" id="dashboard-filter-view">
+                        Vista:<br>
+                        <select id="dashboard-filter-view-input"></select>
+                    </div>
+
+                    <div class="input-container" style="display: none;" id="dashboard-filter-order">
+                        Ordenação:<br>
+                        <select id="dashboard-filter-order-input"></select>
+                    </div>
+
+                    <div class="button btn-color-hover-only" id="refresh-dashboard-results" style="display: none">Atualizar resultados</div>
+                </div>
+
+                <div id="dashboard-loading" style="display: none">A carregar...</div>
+                <div id="dashboard-no-results" style="display: none">Sem nenhum resultado para mostrar..</div>
+                <table id="dashboard-results-container" class="dashboard-results-container" style="display: none">
+                    <thead>
+                        <tr id="dashboard-results-container-columns">
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard-results-container-rows">
+                    </tbody>
+                </table>
+                <div id="dashboard-results-pagination"></div>
             </div>
-            <div class="dashboard-back-button" id="dashboard-back-button" style="display: none">Voltar</div>
-
-            <div class="dashboard-list-items-container" id="pa-stats-views" style="margin-top: 14px; display: none">
-            </div>
-
-            <div id="dashboard-filter-container" class="dashboard-filter-container" style="display: none">
-                <div class="input-container" style="display: none;" id="dashboard-filter-date-since">
-                    Desde:<br>
-                    <input type="date" id="dashboard-filter-date-since-input">
-                </div>
-
-                <div class="input-container" style="display: none;" id="dashboard-filter-date-until">
-                    Até:<br>
-                    <input type="date" id="dashboard-filter-date-until-input">
-                </div>
-
-                <div class="input-container" style="display: none;" id="dashboard-filter-view">
-                    Vista:<br>
-                    <select id="dashboard-filter-view-input"></select>
-                </div>
-
-                <div class="input-container" style="display: none;" id="dashboard-filter-order">
-                    Ordenação:<br>
-                    <select id="dashboard-filter-order-input"></select>
-                </div>
-
-                <div class="button btn-color-hover-only" id="refresh-dashboard-results" style="display: none">Atualizar resultados</div>
-            </div>
-
-            <div id="dashboard-loading" style="display: none">A carregar...</div>
-            <div id="dashboard-no-results" style="display: none">Sem nenhum resultado para mostrar..</div>
-            <table id="dashboard-results-container" class="dashboard-results-container" style="display: none">
-                <thead>
-                    <tr id="dashboard-results-container-columns">
-                    </tr>
-                </thead>
-                <tbody id="dashboard-results-container-rows">
-                </tbody>
-            </table>
-            <div id="dashboard-results-pagination"></div>
-        </div>
+        @endif
 
         <div
             class="form-box overlay"
@@ -5290,6 +5330,17 @@
             }
 
 
+            function showAdminMenuItem() {
+                if (
+                    window._authManager.userHasPermission('is_admin')
+                ) {
+                    const desktopAdminDashboardButton = document.getElementById('menu-top-admin-dashboard');
+                    const mobileAdminDashboardButton = document.getElementById('menu-mobile-admin-dashboard');
+                    desktopAdminDashboardButton.style.display = 'block';
+                    window.App.Components.MenuAccTop.UserItems.Items.PA.panelLocation = window._authManager.userData.adminPanel;
+                    window.App.Components.MenuMobile.UserItems.Items.PA.panelLocation = window._authManager.userData.adminPanel;
+                }
+            }
 
             document.addEventListener('userAuthenticated', (e) => {
                 enableAuthenticationDependentButtons();
@@ -5325,18 +5376,7 @@
 
                     }
 
-                    if (
-                        window._authManager.isLoggedIn
-                        &&
-                        window._authManager.userPermissions !== null
-                        &&
-                        typeof window._authManager.userPermissions['is_admin'] !== 'undefined'
-                        &&
-                        window._authManager.userPermissions['is_admin'] == true
-                    ) {
-                        const desktopAdminDashboardButton = document.getElementById('menu-top-admin-dashboard');
-                        desktopAdminDashboardButton.style.display = 'block';
-                    }
+                    showAdminMenuItem();
 
                 }
 
@@ -5393,6 +5433,8 @@
                         window.App.viewToShowAfterLogin
                     ].show();
                 }
+
+                showAdminMenuItem();
             }, false);
 
             document.addEventListener('userLoginFailed', (e) => {

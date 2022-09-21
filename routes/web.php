@@ -32,15 +32,15 @@ Route::get('/alterar-palavra-passe/{token}', [HomeController::class, 'changePass
 /** Admin panel */
 Route::get('/painel-admin', [HomeController::class, 'adminPanel']);
 
+
 /**
  * routes for Login with External services
  */
-
- /** Google */
+/** Google */
 Route::get('/auth/google/redirect', [AuthenticationController::class, 'googleRedirect']);
 Route::get('/auth/google/callback', [AuthenticationController::class, 'googleCallback']);
 
- /** Facebook */
+/** Facebook */
 Route::get('/auth/facebook/redirect', [AuthenticationController::class, 'facebookRedirect']);
 Route::get('/auth/facebook/callback', [AuthenticationController::class, 'facebookCallback']);
 
@@ -48,15 +48,25 @@ Route::get('/auth/facebook/callback', [AuthenticationController::class, 'faceboo
 Route::get('/auth/linkedin/redirect', [AuthenticationController::class, 'linkedinRedirect']);
 Route::get('/auth/linkedin/callback', [AuthenticationController::class, 'linkedinCallback']);
 
-/** Twitter */
-Route::get('/auth/twitter/redirect', [AuthenticationController::class, 'twitterRedirect']);
-Route::get('/auth/twitter/callback', [AuthenticationController::class, 'twitterCallback']);
 
- /** Github */
+/** Github */
 Route::get('/auth/github/redirect', [AuthenticationController::class, 'githubRedirect']);
 Route::get('/auth/github/callback', [AuthenticationController::class, 'githubCallback']);
 
- /** -- */
+/**
+ * Laravel docs says:
+ * Stateless authentication is not available for the Twitter OAuth 1.0 driver.
+ * ( which might be a problem to solve if the app ever has to scale horizontally )
+ */
+Route::middleware(['sessionful'])->group(function () {
+
+    /** Twitter */
+    Route::get('/auth/twitter/redirect', [AuthenticationController::class, 'twitterRedirect']);
+    Route::get('/auth/twitter/callback', [AuthenticationController::class, 'twitterCallback']);
+
+});
+/** -- */
+
 
 
 Route::get('/{shortstring}', [ShortlinkController::class, 'visit']);

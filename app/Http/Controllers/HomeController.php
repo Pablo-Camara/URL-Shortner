@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\UserAction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\View;
 
 class HomeController extends Controller
 {
@@ -17,6 +18,7 @@ class HomeController extends Controller
 
     public function __construct() {
         $this->getUserDataFromCookie();
+        View::share('isAdmin', $this->isAdmin());
     }
     /**
      * Display homepage
@@ -125,6 +127,10 @@ class HomeController extends Controller
      * Display the admin panel
      */
     public function adminPanel() {
+        if (false == $this->isAdmin()) {
+            return redirect('/');
+        }
+
         UserAction::logAction($this->userId, HomeControllerActions::OPENED_ADMIN_PANEL_PAGE_DIRECTLY);
         return view('home', [
             'view' => 'PA'
