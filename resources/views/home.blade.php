@@ -350,21 +350,21 @@
 
             }
 
-            .form-box .list-container .pagination-container {
+            .pagination-container {
                 font-size: 12px;
                 text-align: center;
             }
 
-            .form-box .list-container .pagination-container a {
+            .pagination-container a {
                 margin-right: 12px;
             }
 
-            .form-box .list-container .pagination-container a.current {
+            .pagination-container a.current {
                 text-decoration: none;
                 color: #888;
             }
 
-            .form-box .list-container .pagination-container a:last-child {
+            .pagination-container a:last-child {
                 margin-right: 0;
             }
 
@@ -3912,7 +3912,7 @@
                                             window.App.Components.MyLinks.Components.Links.Components.GuestMsg.hide();
                                             window.App.Components.MyLinks.Components.Links.Components.Loading.show();
 
-                                            var $this = this;
+                                            const $this = this;
 
                                             var xhr = new XMLHttpRequest();
                                             xhr.withCredentials = true;
@@ -4321,8 +4321,13 @@
                                 rowsEl:function () {
                                     return document.getElementById('dashboard-results-container-rows');
                                 },
+                                paginationEl: function () {
+                                    return document.getElementById('dashboard-results-pagination');
+                                },
                                 hide: function () {
                                     this.el().style.display = 'none';
+                                    this.paginationEl().innerHTML = '';
+                                    window.App.Helpers.Pagination.resetPaginationFor('DashboardResultList');
                                 },
                                 show: function () {
                                     this.el().style.display = 'table';
@@ -4414,11 +4419,11 @@
 
                                             this.el().style.display = 'block';
                                         },
-                                        fetchViewResults: function () {
+                                        fetchViewResults: function (pageNumber = 1) {
                                             window.App.Components.PA.Components.ResultsTable.hide();
                                             window.App.Components.PA.Components.NoResults.hide();
                                             window.App.Components.PA.Components.Loading.show();
-                                            $this.hideStatsViews([this.currentView]);
+                                            this.hideStatsViews([this.currentView]);
                                             window.App.Components.PA.Components.BackButton.customBackFunc = function () {
                                                 window.App.Components.PA.Components.Stats.Components.ViewsList.show();
                                             };
@@ -4438,23 +4443,36 @@
                                                     window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
 
 
-                                                    if (resObj.search_results.length === 0) {
+                                                    if (resObj.search_results.total === 0) {
                                                         window.App.Components.PA.Components.NoResults.show();
                                                         return;
                                                     }
                                                     window.App.Components.PA.Components.NoResults.hide();
                                                     window.App.Components.PA.Components.ResultsTable.setColumns(
-                                                        Object.keys(resObj.search_results[0])
+                                                        Object.keys(resObj.search_results.data[0])
                                                     );
                                                     window.App.Components.PA.Components.ResultsTable.setRows(
-                                                        resObj.search_results
+                                                        resObj.search_results.data
+                                                    );
+
+                                                    const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
+                                                    paginationEl.innerHTML = '';
+                                                    paginationEl.appendChild(
+                                                        window.App.Helpers.Pagination.createEl(
+                                                            resObj.search_results.current_page,
+                                                            resObj.search_results.last_page,
+                                                            'DashboardResultList',
+                                                            function(param) {
+                                                                window.App.Components.PA.Components.Stats.Components.ViewsList.fetchViewResults(param);
+                                                            }
+                                                        )
                                                     );
 
                                                     window.App.Components.PA.Components.ResultsTable.show();
                                                 }
                                             });
 
-                                            var urlStr = window.App.Components.PA.Components.Stats.api + '?currentView=' + this.currentView;
+                                            var urlStr = window.App.Components.PA.Components.Stats.api + '?currentView=' + this.currentView + '&page=' + pageNumber;
 
                                             const groupBy = window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value;
                                             const orderBy = window.App.Components.PA.Components.Filters.Components.OrderBy.inputEl().value;
@@ -4503,7 +4521,7 @@
                                             xhr.send();
                                         },
                                         renderStatsViews: function () {
-                                            $this = this;
+                                            const $this = this;
                                             for(var i = 0; i < this.views.length; i++) {
                                                 const view = this.views[i];
                                                 const dashboardListItem = document.createElement('div');
@@ -4728,6 +4746,13 @@
                         getCurrentPage: function(paginationIdentifier) {
                             this.paginations[paginationIdentifier].currentPage = currentPage;
                         },
+                        resetPaginationFor: function(paginationIdentifier) {
+                            if (
+                                typeof this.paginations[paginationIdentifier] !== 'undefined'
+                            ) {
+                                delete this.paginations[paginationIdentifier];
+                            }
+                        },
                         createEl: function (currentPage, lastPage, paginationIdentifier, fetchFunc) {
                             if (
                                 typeof this.paginations[paginationIdentifier] !== 'undefined'
@@ -4803,7 +4828,7 @@
                                 }
                             }
 
-                            $this = this;
+                            const $this = this;
 
                             for(i = 0; i < paginationWithDots.length; i++) {
                                 const paginationLink = document.createElement('a');
@@ -5132,6 +5157,7 @@
                 <tbody id="dashboard-results-container-rows">
                 </tbody>
             </table>
+            <div id="dashboard-results-pagination"></div>
         </div>
 
         <div

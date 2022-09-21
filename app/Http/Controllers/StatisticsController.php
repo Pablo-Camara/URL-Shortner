@@ -614,9 +614,9 @@ class StatisticsController extends Controller
             $results = $results->orderBy($orderBy[0], $orderBy[1]);
         }
 
-        $results = $results->get()->toArray();
+        $results = $results->paginate(100)->toArray();
 
-        $results = array_map(
+        $results['data'] = array_map(
             function($row) use ($colsToTranslateValues, $colsToTransformValues) {
                 foreach($colsToTranslateValues as $colName) {
                     if (!isset($row[$colName])) {
@@ -635,7 +635,7 @@ class StatisticsController extends Controller
                 }
                 return $row;
             },
-            $results
+            $results['data']
         );
 
 
