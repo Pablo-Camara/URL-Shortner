@@ -3565,7 +3565,7 @@
 
                                                             if (this.status === 200) {
                                                                 const totalListItems = $this.el().getElementsByClassName('list-item').length;
-                                                                var currPage = window.App.Components.MyLinks.Components.Links.Components.List.Components.Pagination.currentPage;
+                                                                var currPage = window.App.Helpers.Pagination.getCurrentPage('MyLinksComponent');
                                                                 if (currPage > 1 && totalListItems === 1) {
                                                                     currPage -= 1;
                                                                 }
@@ -3946,9 +3946,16 @@
                                                                 window.App.Components.MyLinks.Components.Links.Components.GuestMsg.show();
                                                             }
 
-                                                            $this.Components.Pagination.setCurrentPage(resObj.current_page);
+                                                            window.App.Helpers.Pagination.setCurrentPage('MyLinksComponent', resObj.current_page);
                                                             if (resObj.last_page > 1) {
-                                                                const paginationLinks = $this.Components.Pagination.createEl(resObj.current_page, resObj.last_page);
+                                                                const paginationLinks = window.App.Helpers.Pagination.createEl(
+                                                                    resObj.current_page,
+                                                                    resObj.last_page,
+                                                                    'MyLinksComponent',
+                                                                    function(param) {
+                                                                        window.App.Components.MyLinks.Components.Links.Components.List.fetch(param);
+                                                                    }
+                                                                );
                                                                 $this.el().appendChild(paginationLinks);
                                                             }
 
@@ -3961,95 +3968,6 @@
                                             xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
                                             xhr.send();
                                         },
-                                        Components: {
-                                            Pagination: {
-                                                currentPage: null,
-                                                setCurrentPage: function(currentPage) {
-                                                    this.currentPage = currentPage;
-                                                },
-                                                createEl: function (currentPage, lastPage) {
-
-                                                    const paginationContainer = document.createElement('div');
-                                                    paginationContainer.classList.add('pagination-container');
-
-                                                    const numbersBeginning = 2;
-                                                    const numbersBefore = 2;
-                                                    const numbersAfter = 2;
-                                                    const numbersEnd = 2;
-
-                                                    var i;
-                                                    var pagination = [];
-                                                    for(i = 1; i <= numbersBeginning; i++) {
-                                                        pagination.push(i);
-                                                    }
-                                                    for(i = currentPage; i >= currentPage - numbersBefore; i--) {
-                                                        pagination.push(i);
-                                                    }
-                                                    pagination.push(currentPage);
-                                                    for(i = currentPage; i <= currentPage + numbersAfter; i++) {
-                                                        pagination.push(i);
-                                                    }
-                                                    for(i = lastPage; i > lastPage - numbersEnd; i--) {
-                                                        pagination.push(i);
-                                                    }
-
-                                                    pagination = pagination.filter(function(pageNumber) {
-                                                        return pageNumber > 0 && pageNumber <= lastPage;
-                                                    });
-
-                                                    pagination = pagination.filter(function(value, index, self) {
-                                                        return self.indexOf(value) === index;
-                                                    });
-
-                                                    pagination = pagination.sort(function(a, b) {
-                                                        if( a === Infinity )
-                                                            return 1;
-                                                        else if( isNaN(a))
-                                                            return -1;
-                                                        else
-                                                            return a - b;
-                                                    });
-
-                                                    var paginationWithDots = [];
-                                                    for(i = 0; i < pagination.length; i++) {
-                                                        const pageNum = pagination[i];
-                                                        paginationWithDots.push(pageNum);
-
-                                                        var nextPageNum = null;
-                                                        if ( (i + 1) < pagination.length ) {
-                                                            nextPageNum = pagination[i + 1];
-                                                        }
-
-                                                        if (
-                                                            nextPageNum != null
-                                                            &&
-                                                            pageNum+1 < nextPageNum
-                                                        ) {
-                                                            paginationWithDots.push('...');
-                                                        }
-                                                    }
-
-                                                    for(i = 0; i < paginationWithDots.length; i++) {
-                                                        const paginationLink = document.createElement('a');
-                                                        paginationLink.href = 'javascript:void(0);';
-                                                        paginationLink.innerHTML = paginationWithDots[i];
-
-                                                        if (paginationWithDots[i] === currentPage) {
-                                                            paginationLink.classList.add('current');
-                                                        } else {
-                                                            if (paginationWithDots[i] !== '...') {
-                                                                paginationLink.onclick = function (e) {
-                                                                    window.App.Components.MyLinks.Components.Links.Components.List.fetch(e.target.innerText);
-                                                                };
-                                                            }
-                                                        }
-
-                                                        paginationContainer.appendChild(paginationLink);
-                                                    }
-                                                    return paginationContainer;
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
@@ -4791,7 +4709,124 @@
                             window.App.hideComponents(this.components.initiallyHidden);
                         }
                     },
+                },
+                Helpers: {
+                    Pagination: {
+                        paginations: {},
+                        setCurrentPage: function(paginationIdentifier, currentPage) {
+                            if (
+                                typeof this.paginations[paginationIdentifier] !== 'undefined'
+                            ) {
+                                this.paginations[paginationIdentifier].currentPage = currentPage;
+                                return;
+                            }
+
+                            this.paginations[paginationIdentifier] = {
+                                currentPage: currentPage
+                            };
+                        },
+                        getCurrentPage: function(paginationIdentifier) {
+                            this.paginations[paginationIdentifier].currentPage = currentPage;
+                        },
+                        createEl: function (currentPage, lastPage, paginationIdentifier, fetchFunc) {
+                            if (
+                                typeof this.paginations[paginationIdentifier] !== 'undefined'
+                            ) {
+                                this.paginations[paginationIdentifier].currentPage = currentPage;
+                                this.paginations[paginationIdentifier].lastPage = lastPage;
+                                this.paginations[paginationIdentifier].fetchFunc = fetchFunc;
+                            } else {
+                                this.paginations[paginationIdentifier] = {
+                                    currentPage: currentPage,
+                                    lastPage: lastPage,
+                                    fetchFunc: fetchFunc
+                                };
+                            }
+
+                            const paginationContainer = document.createElement('div');
+                            paginationContainer.classList.add('pagination-container');
+
+                            const numbersBeginning = 2;
+                            const numbersBefore = 2;
+                            const numbersAfter = 2;
+                            const numbersEnd = 2;
+
+                            var i;
+                            var pagination = [];
+                            for(i = 1; i <= numbersBeginning; i++) {
+                                pagination.push(i);
+                            }
+                            for(i = currentPage; i >= currentPage - numbersBefore; i--) {
+                                pagination.push(i);
+                            }
+                            pagination.push(currentPage);
+                            for(i = currentPage; i <= currentPage + numbersAfter; i++) {
+                                pagination.push(i);
+                            }
+                            for(i = lastPage; i > lastPage - numbersEnd; i--) {
+                                pagination.push(i);
+                            }
+
+                            pagination = pagination.filter(function(pageNumber) {
+                                return pageNumber > 0 && pageNumber <= lastPage;
+                            });
+
+                            pagination = pagination.filter(function(value, index, self) {
+                                return self.indexOf(value) === index;
+                            });
+
+                            pagination = pagination.sort(function(a, b) {
+                                if( a === Infinity )
+                                    return 1;
+                                else if( isNaN(a))
+                                    return -1;
+                                else
+                                    return a - b;
+                            });
+
+                            var paginationWithDots = [];
+                            for(i = 0; i < pagination.length; i++) {
+                                const pageNum = pagination[i];
+                                paginationWithDots.push(pageNum);
+
+                                var nextPageNum = null;
+                                if ( (i + 1) < pagination.length ) {
+                                    nextPageNum = pagination[i + 1];
+                                }
+
+                                if (
+                                    nextPageNum != null
+                                    &&
+                                    pageNum+1 < nextPageNum
+                                ) {
+                                    paginationWithDots.push('...');
+                                }
+                            }
+
+                            $this = this;
+
+                            for(i = 0; i < paginationWithDots.length; i++) {
+                                const paginationLink = document.createElement('a');
+                                paginationLink.href = 'javascript:void(0);';
+                                paginationLink.innerHTML = paginationWithDots[i];
+
+                                if (paginationWithDots[i] === currentPage) {
+                                    paginationLink.classList.add('current');
+                                } else {
+                                    if (paginationWithDots[i] !== '...') {
+                                        paginationLink.onclick = function (e) {
+                                            $this.paginations[paginationIdentifier].fetchFunc(e.target.innerText);
+                                        };
+                                    }
+                                }
+
+                                paginationContainer.appendChild(paginationLink);
+                            }
+                            return paginationContainer;
+                        }
+                    },
                 }
+
             };
 
 
