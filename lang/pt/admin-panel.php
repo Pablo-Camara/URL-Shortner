@@ -14,6 +14,11 @@ return [
     'guest_users' => 'Utilizadores não registrados',
     'registered_users' => 'Utilizadores registrados',
 
+    'browser' => 'Navegador',
+    'device_height' => 'Altura Ecrã',
+    'device_width' => 'Largura Ecrã',
+    'device' => 'Dispositivo',
+    'platform' => 'Plataforma',
 
     'REGISTERED' => 'Registro com Email/Password',
     'REGISTERED_WITH_GITHUB' => 'Registro com Github',

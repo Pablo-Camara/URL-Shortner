@@ -8,6 +8,8 @@ use Jenssegers\Agent\Agent;
 class UserDevice extends Model
 {
 
+    const UPDATED_AT = null;
+
     /**
      * Creates a new User Device record, associated to an user
      *

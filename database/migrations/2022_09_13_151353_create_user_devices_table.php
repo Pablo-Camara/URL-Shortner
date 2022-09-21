@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -32,7 +33,7 @@ return new class extends Migration
 
 
             $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->date('created_at_day')->default(DB::raw('CURRENT_DATE'))->index();
 
             $table->foreign('user_id')->references('id')->on('users');
         });

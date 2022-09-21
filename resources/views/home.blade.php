@@ -4431,6 +4431,10 @@
                                                 name: 'totalUserLogins',
                                                 label: 'Total de inícios de sessão'
                                             },
+                                            {
+                                                name: 'appUsageByDevices',
+                                                label: 'Dispositivos usados pelos utilizadores da plataforma'
+                                            },
                                         ],
                                         el: function () {
                                             return document.getElementById('pa-stats-views');

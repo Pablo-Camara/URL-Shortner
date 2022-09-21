@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\Actions\AuthActions;
 use App\Helpers\Actions\ShortlinkActions;
 use App\Models\UserAction;
+use App\Models\UserDevice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,10 @@ class StatisticsController extends Controller
 
         if (empty($currentView)) {
             return new Response('', Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($currentView === 'appUsageByDevices') {
+            return $this->userDevices($request);
         }
 
         $viewActionsMap = [
@@ -294,6 +299,154 @@ class StatisticsController extends Controller
 
         if ($until != null) {
             $results = $results->where('user_actions.created_at_day', '<=', $until);
+        }
+
+        if ($groupBy != null) {
+            $results = $results->groupBy($groupBy);
+        }
+
+        if ($orderBy != null) {
+            $results = $results->orderBy($orderBy[0], $orderBy[1]);
+        }
+
+        $results = $results->get()->toArray();
+
+        $results = array_map(
+            function($row) use ($colsToTranslateValues, $colsToTransformValues) {
+                foreach($colsToTranslateValues as $colName) {
+                    if (!isset($row[$colName])) {
+                        continue;
+                    }
+
+                    $row[$colName] = __('admin-panel.' . $row[$colName]);
+                }
+
+                foreach($colsToTransformValues as $colName => $transformFunction) {
+                    if (!isset($row[$colName])) {
+                        continue;
+                    }
+
+                    $row[$colName] = $transformFunction($row[$colName]);
+                }
+                return $row;
+            },
+            $results
+        );
+
+        return new Response(
+            [
+                'since' => $since,
+                'until' => $until,
+                'groupBy'  => $selectedGroupBy,
+                'availableGroupBys' => $availableGroupBys,
+                'search_results' => $results
+            ]
+        );
+
+    }
+
+
+    /**
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function userDevices(Request $request)
+    {
+        $since = $request->input('since', null);
+        $until = $request->input('until', null);
+        $selectedGroupBy = $request->input('groupBy', null);
+
+        $availableGroupBys = [
+            [
+                'name' => 'total',
+                'label' => 'Total',
+            ],
+            [
+                'name' => 'totals_by_day',
+                'label' => 'Total por Dia',
+            ],
+        ];
+
+        if (
+            !in_array(
+                $selectedGroupBy,
+                array_map(
+                    function ($groupByDataArr) {
+                        return $groupByDataArr['name'];
+                    },
+                    $availableGroupBys
+                )
+            )
+        ) {
+            $selectedGroupBy = $availableGroupBys[0]['name'];
+        }
+
+        if ($since == null && $until == null) {
+            // get date of first and last user action, for default filter values
+            $currDateRange = UserDevice::select([
+                DB::raw('COALESCE(MIN(created_at_day), CURRENT_DATE) AS first_date'),
+                DB::raw('COALESCE(MAX(created_at_day), CURRENT_DATE) AS last_date')
+            ])->get();
+
+            $since = $currDateRange[0]->first_date;
+            $until = $currDateRange[0]->last_date;
+        }
+
+        $colsToTranslateValues = [];
+
+        $colsToTransformValues = [];
+
+        $select = null;
+        $groupBy = null;
+        $orderBy = null;
+
+        switch ($selectedGroupBy) {
+            case 'total':
+                $select = [
+                    DB::raw('user_devices.browser AS `'.__('admin-panel.browser').'`'),
+                    DB::raw('user_devices.device_height AS `'.__('admin-panel.device_height').'`'),
+                    DB::raw('user_devices.device_width AS `'.__('admin-panel.device_width').'`'),
+                    DB::raw('user_devices.device AS `'.__('admin-panel.device').'`'),
+                    DB::raw('user_devices.platform AS `'.__('admin-panel.platform').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    'user_devices.browser',
+                    'user_devices.device_height',
+                    'user_devices.device_width',
+                    'user_devices.device',
+                    'user_devices.platform'
+                ];
+                break;
+            case 'totals_by_day':
+                $select = [
+                    DB::raw('user_devices.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('user_devices.browser AS `'.__('admin-panel.browser').'`'),
+                    DB::raw('user_devices.device_height AS `'.__('admin-panel.device_height').'`'),
+                    DB::raw('user_devices.device_width AS `'.__('admin-panel.device_width').'`'),
+                    DB::raw('user_devices.device AS `'.__('admin-panel.device').'`'),
+                    DB::raw('user_devices.platform AS `'.__('admin-panel.platform').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('user_devices.created_at_day'),
+                    'user_devices.browser',
+                    'user_devices.device_height',
+                    'user_devices.device_width',
+                    'user_devices.device',
+                    'user_devices.platform'
+                ];
+                break;
+        }
+
+        $results = UserDevice::select($select);
+
+        if ($since != null) {
+            $results = $results->where('user_devices.created_at_day', '>=', $since);
+        }
+
+        if ($until != null) {
+            $results = $results->where('user_devices.created_at_day', '<=', $until);
         }
 
         if ($groupBy != null) {
