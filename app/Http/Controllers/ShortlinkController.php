@@ -43,18 +43,48 @@ class ShortlinkController extends Controller
             $shortlink = $shortstring['shortlink'];
 
             if (!is_null($shortlink)) {
-                UserAction::logAction(
-                    $this->userId,
-                    ShortlinkActions::VISITED_ACTIVE_SHORTLINK,
-                    [
-                        'shortlink_id' => $shortlink->id
-                    ]
-                );
-                return Redirect::to(
-                    $shortlink->redirectUrl->url, 301
-                );
+
+                if ($shortlink->status_id === Shortlink::STATUS_ACTIVE) {
+                    UserAction::logAction(
+                        $this->userId,
+                        ShortlinkActions::VISITED_ACTIVE_SHORTLINK,
+                        [
+                            'shortlink_id' => $shortlink->id
+                        ]
+                    );
+                    return Redirect::to(
+                        $shortlink->redirectUrl->url, 301
+                    );
+                }
+
+                if ($shortlink->status_id === Shortlink::STATUS_SUSPENDED) {
+                    UserAction::logAction(
+                        $this->userId,
+                        ShortlinkActions::VISITED_SUSPENDED_SHORTLINK,
+                        [
+                            'shortlink_id' => $shortlink->id
+                        ]
+                    );
+                    return Redirect::to('/');
+                }
+
+                if ($shortlink->status_id === Shortlink::STATUS_DELETED) {
+                    UserAction::logAction(
+                        $this->userId,
+                        ShortlinkActions::VISITED_DELETED_SHORTLINK,
+                        [
+                            'shortlink_id' => $shortlink->id
+                        ]
+                    );
+                    return Redirect::to('/');
+                }
+
             }
 
+            // view to register custom urls
+            // TODO: change this, no longer will depend only on "is_available" / preseeded shortstring
+            // but also on user permission, if user has permission he will be able to create
+            // a new cusotm shortstring
             if ($shortstring->is_available) {
 
                 UserAction::logAction(
