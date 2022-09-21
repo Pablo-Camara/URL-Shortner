@@ -56,15 +56,6 @@ class ShortlinkController extends Controller
             }
 
             if ($shortstring->is_available) {
-                $enableCaptcha = config('captcha.enable');
-                $captchaSitekey = config('captcha.sitekey');
-
-                //TODO: move to view composer
-                $enableLoginWithGoogleBtn = config('services.google.enable_login_btn');
-                $enableLoginWithFacebookBtn = config('services.facebook.enable_login_btn');
-                $enableLoginWithTwitterBtn = config('services.twitter.enable_login_btn');
-                $enableLoginWithLinkedinBtn = config('services.linkedin.enable_login_btn');
-                $enableLoginWithGithubBtn = config('services.github.enable_login_btn');
 
                 UserAction::logAction(
                     $this->userId,
@@ -74,14 +65,7 @@ class ShortlinkController extends Controller
                     'view' => 'RegisterAvailableShortlink',
                     'shortlink' => url('/' . $shortstring->shortstring),
                     'shortlink_available' => true,
-                    'shortlink_shortstring' => $shortstring->shortstring,
-                    'captchaSitekey' => $captchaSitekey,
-                    'enableCaptcha' => $enableCaptcha,
-                    'enableLoginWithGoogleBtn' => $enableLoginWithGoogleBtn,
-                    'enableLoginWithFacebookBtn' => $enableLoginWithFacebookBtn,
-                    'enableLoginWithTwitterBtn' => $enableLoginWithTwitterBtn,
-                    'enableLoginWithLinkedinBtn' => $enableLoginWithLinkedinBtn,
-                    'enableLoginWithGithubBtn' => $enableLoginWithGithubBtn,
+                    'shortlink_shortstring' => $shortstring->shortstring
                 ]);
             }
 
