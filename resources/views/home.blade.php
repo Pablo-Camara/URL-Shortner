@@ -1466,6 +1466,7 @@
                                                 if (
                                                     typeof window.App.Components.PA !== 'undefined'
                                                 ) {
+                                                    window.history.pushState(null, 'Painel de Administração', $this.panelLocation);
                                                     window.App.Components.PA.show();
                                                 } else {
                                                     window.location.href = $this.panelLocation;
@@ -1648,6 +1649,7 @@
                                                 if (
                                                     typeof window.App.Components.PA !== 'undefined'
                                                 ) {
+                                                    window.history.pushState(null, 'Painel de Administração', $this.panelLocation);
                                                     window.App.Components.PA.show();
                                                 } else {
                                                     window.location.href = $this.panelLocation;
@@ -4737,18 +4739,21 @@
                                                     resObj.search_results.data
                                                 );
 
-                                                const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
-                                                paginationEl.innerHTML = '';
-                                                paginationEl.appendChild(
-                                                    window.App.Helpers.Pagination.createEl(
-                                                        resObj.search_results.current_page,
-                                                        resObj.search_results.last_page,
-                                                        'DashboardResultList',
-                                                        function(param) {
-                                                            window.App.Components.PA.Components.Stats.Components.ViewsList.fetchViewResults(param);
-                                                        }
-                                                    )
-                                                );
+                                                if (resObj.search_results.last_page > 1) {
+                                                    const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
+                                                    paginationEl.innerHTML = '';
+                                                    paginationEl.appendChild(
+                                                        window.App.Helpers.Pagination.createEl(
+                                                            resObj.search_results.current_page,
+                                                            resObj.search_results.last_page,
+                                                            'DashboardResultList',
+                                                            function(param) {
+                                                                window.App.Components.PA.Components.Stats.Components.ViewsList.fetchViewResults(param);
+                                                            }
+                                                        )
+                                                    );
+                                                }
+
 
                                                 window.App.Components.PA.Components.ResultsTable.show();
                                             }
