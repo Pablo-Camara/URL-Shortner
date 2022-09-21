@@ -84,6 +84,38 @@ class StatisticsController extends Controller
                 'label' => 'Total por Dia',
             ],
             [
+                'name' => 'totals_by_browser',
+                'label' => 'Total por Navegador',
+            ],
+            [
+                'name' => 'totals_by_browser_and_day',
+                'label' => 'Total por Navegador + Dia',
+            ],
+            [
+                'name' => 'total_by_device_width_and_height',
+                'label' => 'Total por Largura/Altura de Ecrã',
+            ],
+            [
+                'name' => 'total_by_device_width_and_height_and_day',
+                'label' => 'Total por Largura/Altura de Ecrã + Dia',
+            ],
+            [
+                'name' => 'total_by_device',
+                'label' => 'Total por Dispositivo',
+            ],
+            [
+                'name' => 'total_by_device_and_day',
+                'label' => 'Total por Dispositivo + Dia',
+            ],
+            [
+                'name' => 'total_by_platform',
+                'label' => 'Total por Plataforma',
+            ],
+            [
+                'name' => 'total_by_platform_and_day',
+                'label' => 'Total por Plataforma + Dia',
+            ],
+            [
                 'name' => 'totals_by_day',
                 'label' => 'Total por Dia',
             ],
@@ -157,7 +189,10 @@ class StatisticsController extends Controller
                 'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day'
             ],
             'appUsageByDevices' => [
-                'total_by_all_devices', 'total_by_all_devices_and_day'
+                'total_by_all_devices', 'total_by_all_devices_and_day', 'totals_by_browser',
+                'totals_by_browser_and_day', 'total_by_device_width_and_height',
+                'total_by_device_width_and_height_and_day', 'total_by_device',
+                'total_by_device_and_day', 'total_by_platform', 'total_by_platform_and_day'
             ]
         ];
 
@@ -201,7 +236,31 @@ class StatisticsController extends Controller
             ],
             'total_by_all_devices_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
-            ]
+            ],
+            'totals_by_browser' => [
+                'total_desc', 'total_asc'
+            ],
+            'totals_by_browser_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_device_width_and_height' => [
+                'total_desc', 'total_asc'
+            ],
+            'total_by_device_width_and_height_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_device' => [
+                'total_desc', 'total_asc'
+            ],
+            'total_by_device_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_platform' => [
+                'total_desc', 'total_asc'
+            ],
+            'total_by_platform_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
         ];
 
         $availableGroupBys = array_values(
@@ -325,6 +384,93 @@ class StatisticsController extends Controller
                     $table . '.platform'
                 ];
                 break;
+            case 'totals_by_browser':
+                $select = [
+                    DB::raw($table . '.browser AS `'.__('admin-panel.browser').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    $table . '.browser',
+                ];
+                break;
+            case 'totals_by_browser_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.browser AS `'.__('admin-panel.browser').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    $table . '.browser'
+                ];
+                break;
+            case 'total_by_device_width_and_height':
+                $select = [
+                    DB::raw($table . '.device_height AS `'.__('admin-panel.device_height').'`'),
+                    DB::raw($table . '.device_width AS `'.__('admin-panel.device_width').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    $table . '.device_height',
+                    $table . '.device_width',
+                ];
+                break;
+            case 'total_by_device_width_and_height_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.device_height AS `'.__('admin-panel.device_height').'`'),
+                    DB::raw($table . '.device_width AS `'.__('admin-panel.device_width').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    $table . '.device_height',
+                    $table . '.device_width',
+                ];
+                break;
+
+            case 'total_by_device':
+                $select = [
+                    DB::raw($table . '.device AS `'.__('admin-panel.device').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    $table . '.device'
+                ];
+                break;
+            case 'total_by_device_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.device AS `'.__('admin-panel.device').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    $table . '.device'
+                ];
+                break;
+
+            case 'total_by_platform':
+                $select = [
+                    DB::raw($table . '.platform AS `'.__('admin-panel.platform').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    $table . '.platform'
+                ];
+                break;
+            case 'total_by_platform_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.platform AS `'.__('admin-panel.platform').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    $table . '.platform'
+                ];
+                break;
+
             case 'totals_by_day':
                 $select = [
                     DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
