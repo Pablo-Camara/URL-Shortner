@@ -4303,6 +4303,46 @@
                                             this.el().style.display = 'inline-block';
                                         }
                                     },
+                                    OrderBy: {
+                                        el: function () {
+                                            return document.getElementById('dashboard-filter-order');
+                                        },
+                                        inputEl: function () {
+                                            return document.getElementById('dashboard-filter-order-input');
+                                        },
+                                        setOrderBy: function (orderBy) {
+                                            this.inputEl().value = orderBy;
+                                        },
+                                        setAvailableOrderBys: function (availableOrderBys) {
+                                            const inputEl = this.inputEl();
+                                            inputEl.innerHTML = '';
+                                            for(var i = 0; i < availableOrderBys.length; i++) {
+                                                const availableOrderBy = availableOrderBys[i];
+                                                const optionEl = document.createElement('option');
+                                                optionEl.setAttribute('value', availableOrderBy.name);
+                                                optionEl.innerText = availableOrderBy.label;
+                                                inputEl.appendChild(optionEl);
+                                            }
+                                        },
+                                        hide: function () {
+                                            this.el().style.display = 'none';
+                                        },
+                                        show: function (availableOrderBys, selectedOrderBy = null) {
+                                            if (
+                                                typeof availableOrderBys === 'undefined'
+                                                ||
+                                                !availableOrderBys
+                                            ) {
+                                                this.hide();
+                                                return;
+                                            }
+                                            this.setAvailableOrderBys(availableOrderBys);
+                                            if (selectedOrderBy != null) {
+                                                this.setOrderBy(selectedOrderBy);
+                                            }
+                                            this.el().style.display = 'inline-block';
+                                        }
+                                    },
                                     RefreshResultsBtn: {
                                         hasInitialized: false,
                                         el: function () {
@@ -4476,6 +4516,7 @@
                                                     window.App.Components.PA.Components.Filters.Components.DateSince.show(resObj.since);
                                                     window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
                                                     window.App.Components.PA.Components.Filters.Components.GroupBy.show(resObj.availableGroupBys, resObj.groupBy);
+                                                    window.App.Components.PA.Components.Filters.Components.OrderBy.show(resObj.availableOrderBys, resObj.orderBy);
                                                     window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
 
 
@@ -4498,17 +4539,24 @@
                                             var urlStr = window.App.Components.PA.Components.Stats.api + '?currentView=' + this.currentView;
 
                                             const groupBy = window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value;
+                                            const orderBy = window.App.Components.PA.Components.Filters.Components.OrderBy.inputEl().value;
                                             const since = window.App.Components.PA.Components.Filters.Components.DateSince.inputEl().value;
                                             const until = window.App.Components.PA.Components.Filters.Components.DateUntil.inputEl().value;
 
                                             if (
                                                 groupBy.length > 0
                                                 ||
+                                                orderBy.length > 0
+                                                ||
                                                 since.length > 0
                                                 ||
                                                 until.length > 0
                                             ) {
                                                 var params = [];
+
+                                                if (orderBy.length > 0) {
+                                                    params['orderBy'] = orderBy;
+                                                }
 
                                                 if (groupBy.length > 0) {
                                                     params['groupBy'] = groupBy;
@@ -4551,6 +4599,7 @@
 
                                                     // default search , reset filters
                                                     window.App.Components.PA.Components.Filters.Components.GroupBy.inputEl().value = '';
+                                                    window.App.Components.PA.Components.Filters.Components.OrderBy.inputEl().value = '';
                                                     window.App.Components.PA.Components.Filters.Components.DateSince.inputEl().value = '';
                                                     window.App.Components.PA.Components.Filters.Components.DateUntil.inputEl().value = '';
 
@@ -5028,6 +5077,11 @@
                 <div class="input-container" style="display: none;" id="dashboard-filter-view">
                     Vista:<br>
                     <select id="dashboard-filter-view-input"></select>
+                </div>
+
+                <div class="input-container" style="display: none;" id="dashboard-filter-order">
+                    Ordenação:<br>
+                    <select id="dashboard-filter-order-input"></select>
                 </div>
 
                 <div class="button btn-color-hover-only" id="refresh-dashboard-results" style="display: none">Atualizar resultados</div>

@@ -24,9 +24,20 @@ class StatisticsController extends Controller
             return new Response('', Response::HTTP_BAD_REQUEST);
         }
 
-        if ($currentView === 'appUsageByDevices') {
-            return $this->userDevices($request);
+        $viewModelMap = [
+            'appUsageByDevices' => UserDevice::class,
+            'totalRegisteredUsers' => UserAction::class,
+            'totalShortlinksGenerated' => UserAction::class,
+            'totalTrafficReceivedInShortlinks' => UserAction::class,
+            'totalUserLogins' => UserAction::class,
+        ];
+
+        if (!in_array($currentView, array_keys($viewModelMap))) {
+            return new Response('View model not found / not set', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+
+        $model = app($viewModelMap[$currentView]);
+        $table = $model->getTable();
 
         $viewActionsMap = [
             'totalRegisteredUsers' => [
@@ -54,18 +65,23 @@ class StatisticsController extends Controller
             ]
         ];
 
-        if (!isset($viewActionsMap[$currentView])) {
-            return new Response('View "' . $currentView . '" not found', Response::HTTP_NOT_FOUND);
-        }
-
         $since = $request->input('since', null);
         $until = $request->input('until', null);
         $selectedGroupBy = $request->input('groupBy', null);
+        $selectedOrderBy = $request->input('orderBy', null);
 
         $availableGroupBys = [
             [
                 'name' => 'total',
                 'label' => 'Total',
+            ],
+            [
+                'name' => 'total_by_all_devices',
+                'label' => 'Total',
+            ],
+            [
+                'name' => 'total_by_all_devices_and_day',
+                'label' => 'Total por Dia',
             ],
             [
                 'name' => 'totals_by_day',
@@ -105,6 +121,24 @@ class StatisticsController extends Controller
             ],
         ];
 
+        $availableOrderBys = [
+            [
+                'name' => 'total_desc',
+                'label' => 'Total (descendente)',
+            ],
+            [
+                'name' => 'total_asc',
+                'label' => 'Total (ascendente)',
+            ],
+            [
+                'name' => 'day_desc',
+                'label' => 'Dia (descendente)',
+            ],
+            [
+                'name' => 'day_asc',
+                'label' => 'Dia (ascendente)',
+            ],
+        ];
 
         $viewAvailableGroupBysMap = [
             'totalRegisteredUsers' => [
@@ -121,6 +155,52 @@ class StatisticsController extends Controller
             ],
             'totalUserLogins' => [
                 'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day'
+            ],
+            'appUsageByDevices' => [
+                'total_by_all_devices', 'total_by_all_devices_and_day'
+            ]
+        ];
+
+        //depending on the group by, we may have certain order bys
+        $groupByOrderBysMap = [
+            'totals_by_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'totals_by_action' => [
+                'total_desc', 'total_asc'
+            ],
+            'totals_by_action_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'totals_by_user_type' => [
+                'total_desc', 'total_asc'
+            ],
+            'totals_by_user_type_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'totals_by_user' => [
+                'total_desc', 'total_asc'
+            ],
+            'totals_by_user_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'totals_by_shortlink' => [
+                'total_desc', 'total_asc'
+            ],
+            'totals_by_shortlink_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'totals_by_user_type' => [
+                'total_desc', 'total_asc'
+            ],
+            'totals_by_user_type_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_all_devices' => [
+                'total_desc', 'total_asc'
+            ],
+            'total_by_all_devices_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ]
         ];
 
@@ -147,15 +227,43 @@ class StatisticsController extends Controller
             $selectedGroupBy = $availableGroupBys[0]['name'];
         }
 
+        $availableOrderBys = array_values(
+            array_filter(
+                $availableOrderBys,
+                function ($orderBy) use ($selectedGroupBy, $groupByOrderBysMap) {
+                    if (!isset($groupByOrderBysMap[$selectedGroupBy])) {
+                        return false;
+                    }
+                    return in_array($orderBy['name'], $groupByOrderBysMap[$selectedGroupBy]);
+                }
+            )
+        );
+
+        if (
+            isset($groupByOrderBysMap[$selectedGroupBy])
+            &&
+            !in_array(
+                $selectedOrderBy,
+                array_map(
+                    function ($orderByDataArr) {
+                        return $orderByDataArr['name'];
+                    },
+                    $availableOrderBys
+                )
+            )
+        ) {
+            $selectedOrderBy = $groupByOrderBysMap[$selectedGroupBy][0];
+        }
+
         if ($since == null && $until == null) {
             // get date of first and last user action, for default filter values
-            $currDateRange = UserAction::select([
-                DB::raw('COALESCE(MIN(created_at_day), CURRENT_DATE) AS first_user_action_date'),
-                DB::raw('COALESCE(MAX(created_at_day), CURRENT_DATE) AS last_user_action_date')
+            $currDateRange = $model::select([
+                DB::raw('COALESCE(MIN(created_at_day), CURRENT_DATE) AS first_date'),
+                DB::raw('COALESCE(MAX(created_at_day), CURRENT_DATE) AS last_date')
             ])->get();
 
-            $since = $currDateRange[0]->first_user_action_date;
-            $until = $currDateRange[0]->last_user_action_date;
+            $since = $currDateRange[0]->first_date;
+            $until = $currDateRange[0]->last_date;
         }
 
         $colsToTranslateValues = [
@@ -181,13 +289,49 @@ class StatisticsController extends Controller
                 ];
                 $groupBy = null;
                 break;
-            case 'totals_by_day':
+            case 'total_by_all_devices':
                 $select = [
-                    DB::raw('user_actions.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.browser AS `'.__('admin-panel.browser').'`'),
+                    DB::raw($table . '.device_height AS `'.__('admin-panel.device_height').'`'),
+                    DB::raw($table . '.device_width AS `'.__('admin-panel.device_width').'`'),
+                    DB::raw($table . '.device AS `'.__('admin-panel.device').'`'),
+                    DB::raw($table . '.platform AS `'.__('admin-panel.platform').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
                 ];
                 $groupBy = [
-                    DB::raw('user_actions.created_at_day')
+                    $table . '.browser',
+                    $table . '.device_height',
+                    $table . '.device_width',
+                    $table . '.device',
+                    $table . '.platform'
+                ];
+                break;
+            case 'total_by_all_devices_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.browser AS `'.__('admin-panel.browser').'`'),
+                    DB::raw($table . '.device_height AS `'.__('admin-panel.device_height').'`'),
+                    DB::raw($table . '.device_width AS `'.__('admin-panel.device_width').'`'),
+                    DB::raw($table . '.device AS `'.__('admin-panel.device').'`'),
+                    DB::raw($table . '.platform AS `'.__('admin-panel.platform').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    $table . '.browser',
+                    $table . '.device_height',
+                    $table . '.device_width',
+                    $table . '.device',
+                    $table . '.platform'
+                ];
+                break;
+            case 'totals_by_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day')
                 ];
                 break;
             case 'totals_by_action':
@@ -201,12 +345,12 @@ class StatisticsController extends Controller
                 break;
             case 'totals_by_action_and_day':
                 $select = [
-                    DB::raw('user_actions.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
                 ];
                 $groupBy = [
-                    DB::raw('user_actions.created_at_day'),
+                    DB::raw($table . '.created_at_day'),
                     'actions.name'
                 ];
                 break;
@@ -218,11 +362,6 @@ class StatisticsController extends Controller
                 $groupBy = [
                     DB::raw('shortstrings.shortstring')
                 ];
-
-                $orderBy = [
-                    DB::raw('count(*)'),
-                    'DESC'
-                ];
                 break;
             case 'totals_by_user_type':
                 $select = [
@@ -232,26 +371,16 @@ class StatisticsController extends Controller
                 $groupBy = [
                     DB::raw('users.guest')
                 ];
-
-                $orderBy = [
-                    DB::raw('count(*)'),
-                    'DESC'
-                ];
                 break;
             case 'totals_by_user_type_and_day':
                 $select = [
-                    DB::raw('user_actions.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('CASE WHEN users.guest = 1 THEN \'guest_users\' ELSE \'registered_users\' END AS `'.__('admin-panel.user-type').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
                 ];
                 $groupBy = [
-                    DB::raw('user_actions.created_at_day'),
+                    DB::raw($table . '.created_at_day'),
                     DB::raw('users.guest')
-                ];
-
-                $orderBy = [
-                    DB::raw('count(*)'),
-                    'DESC'
                 ];
                 break;
             case 'totals_by_user':
@@ -262,43 +391,73 @@ class StatisticsController extends Controller
                 $groupBy = [
                     DB::raw('users.id')
                 ];
-
-                $orderBy = [
-                    DB::raw('count(*)'),
-                    'DESC'
-                ];
                 break;
             case 'totals_by_user_and_day':
                 $select = [
-                    DB::raw('user_actions.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
                 ];
                 $groupBy = [
-                    DB::raw('user_actions.created_at_day'),
+                    DB::raw($table . '.created_at_day'),
                     DB::raw('users.id')
                 ];
+                break;
+        }
 
+        switch ($selectedOrderBy) {
+            case 'total_desc':
                 $orderBy = [
                     DB::raw('count(*)'),
                     'DESC'
                 ];
                 break;
+            case 'total_asc':
+                $orderBy = [
+                    DB::raw('count(*)'),
+                    'ASC'
+                ];
+                break;
+            case 'day_desc':
+                $orderBy = [
+                    DB::raw($table . '.created_at_day'),
+                    'DESC'
+                ];
+                break;
+            case 'day_asc':
+                $orderBy = [
+                    DB::raw($table . '.created_at_day'),
+                    'ASC'
+                ];
+                break;
         }
 
-        $results = UserAction::select($select)
-        ->leftJoin('users', 'user_actions.user_id', '=', 'users.id')
-        ->leftJoin('actions', 'user_actions.action_id', '=', 'actions.id')
-        ->leftJoin('shortlinks', 'user_actions.shortlink_id', '=', 'shortlinks.id')
-        ->leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
-        ->whereIn('actions.name', $viewActionsMap[$currentView]);
+        $results = $model::select($select);
+
+        // joins
+        switch ($table) {
+            case 'user_actions':
+                $results = $results->leftJoin('users', 'user_actions.user_id', '=', 'users.id')
+                ->leftJoin('actions', 'user_actions.action_id', '=', 'actions.id')
+                ->leftJoin('shortlinks', 'user_actions.shortlink_id', '=', 'shortlinks.id')
+                ->leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id');
+                break;
+        }
+
+        // custom wheres ( will probably change later how i handle wheres)
+        switch ($table) {
+            case 'user_actions':
+                $results = $results->whereIn('actions.name', $viewActionsMap[$currentView]);
+                break;
+        }
+
 
         if ($since != null) {
-            $results = $results->where('user_actions.created_at_day', '>=', $since);
+            $results = $results->where($table . '.created_at_day', '>=', $since);
         }
 
         if ($until != null) {
-            $results = $results->where('user_actions.created_at_day', '<=', $until);
+            $results = $results->where($table . '.created_at_day', '<=', $until);
         }
 
         if ($groupBy != null) {
@@ -333,163 +492,24 @@ class StatisticsController extends Controller
             $results
         );
 
-        return new Response(
-            [
-                'since' => $since,
-                'until' => $until,
-                'groupBy'  => $selectedGroupBy,
-                'availableGroupBys' => $availableGroupBys,
-                'search_results' => $results
-            ]
-        );
 
-    }
-
-
-    /**
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function userDevices(Request $request)
-    {
-        $since = $request->input('since', null);
-        $until = $request->input('until', null);
-        $selectedGroupBy = $request->input('groupBy', null);
-
-        $availableGroupBys = [
-            [
-                'name' => 'total',
-                'label' => 'Total',
-            ],
-            [
-                'name' => 'totals_by_day',
-                'label' => 'Total por Dia',
-            ],
+        $resData = [
+            'since' => $since,
+            'until' => $until,
+            'groupBy'  => $selectedGroupBy,
+            'availableGroupBys' => $availableGroupBys,
+            'search_results' => $results
         ];
 
-        if (
-            !in_array(
-                $selectedGroupBy,
-                array_map(
-                    function ($groupByDataArr) {
-                        return $groupByDataArr['name'];
-                    },
-                    $availableGroupBys
-                )
-            )
-        ) {
-            $selectedGroupBy = $availableGroupBys[0]['name'];
+        if (!empty($availableOrderBys)) {
+            $resData['orderBy'] = $selectedOrderBy;
+            $resData['availableOrderBys'] = $availableOrderBys;
         }
-
-        if ($since == null && $until == null) {
-            // get date of first and last user action, for default filter values
-            $currDateRange = UserDevice::select([
-                DB::raw('COALESCE(MIN(created_at_day), CURRENT_DATE) AS first_date'),
-                DB::raw('COALESCE(MAX(created_at_day), CURRENT_DATE) AS last_date')
-            ])->get();
-
-            $since = $currDateRange[0]->first_date;
-            $until = $currDateRange[0]->last_date;
-        }
-
-        $colsToTranslateValues = [];
-
-        $colsToTransformValues = [];
-
-        $select = null;
-        $groupBy = null;
-        $orderBy = null;
-
-        switch ($selectedGroupBy) {
-            case 'total':
-                $select = [
-                    DB::raw('user_devices.browser AS `'.__('admin-panel.browser').'`'),
-                    DB::raw('user_devices.device_height AS `'.__('admin-panel.device_height').'`'),
-                    DB::raw('user_devices.device_width AS `'.__('admin-panel.device_width').'`'),
-                    DB::raw('user_devices.device AS `'.__('admin-panel.device').'`'),
-                    DB::raw('user_devices.platform AS `'.__('admin-panel.platform').'`'),
-                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
-                ];
-                $groupBy = [
-                    'user_devices.browser',
-                    'user_devices.device_height',
-                    'user_devices.device_width',
-                    'user_devices.device',
-                    'user_devices.platform'
-                ];
-                break;
-            case 'totals_by_day':
-                $select = [
-                    DB::raw('user_devices.created_at_day AS `'.__('admin-panel.day').'`'),
-                    DB::raw('user_devices.browser AS `'.__('admin-panel.browser').'`'),
-                    DB::raw('user_devices.device_height AS `'.__('admin-panel.device_height').'`'),
-                    DB::raw('user_devices.device_width AS `'.__('admin-panel.device_width').'`'),
-                    DB::raw('user_devices.device AS `'.__('admin-panel.device').'`'),
-                    DB::raw('user_devices.platform AS `'.__('admin-panel.platform').'`'),
-                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
-                ];
-                $groupBy = [
-                    DB::raw('user_devices.created_at_day'),
-                    'user_devices.browser',
-                    'user_devices.device_height',
-                    'user_devices.device_width',
-                    'user_devices.device',
-                    'user_devices.platform'
-                ];
-                break;
-        }
-
-        $results = UserDevice::select($select);
-
-        if ($since != null) {
-            $results = $results->where('user_devices.created_at_day', '>=', $since);
-        }
-
-        if ($until != null) {
-            $results = $results->where('user_devices.created_at_day', '<=', $until);
-        }
-
-        if ($groupBy != null) {
-            $results = $results->groupBy($groupBy);
-        }
-
-        if ($orderBy != null) {
-            $results = $results->orderBy($orderBy[0], $orderBy[1]);
-        }
-
-        $results = $results->get()->toArray();
-
-        $results = array_map(
-            function($row) use ($colsToTranslateValues, $colsToTransformValues) {
-                foreach($colsToTranslateValues as $colName) {
-                    if (!isset($row[$colName])) {
-                        continue;
-                    }
-
-                    $row[$colName] = __('admin-panel.' . $row[$colName]);
-                }
-
-                foreach($colsToTransformValues as $colName => $transformFunction) {
-                    if (!isset($row[$colName])) {
-                        continue;
-                    }
-
-                    $row[$colName] = $transformFunction($row[$colName]);
-                }
-                return $row;
-            },
-            $results
-        );
 
         return new Response(
-            [
-                'since' => $since,
-                'until' => $until,
-                'groupBy'  => $selectedGroupBy,
-                'availableGroupBys' => $availableGroupBys,
-                'search_results' => $results
-            ]
+            $resData
         );
 
     }
+
 }
