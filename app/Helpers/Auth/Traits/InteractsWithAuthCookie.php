@@ -175,7 +175,7 @@ trait InteractsWithAuthCookie
             if ($userPermissions) {
                 $authResponse['permissions'] = array_merge(
                     $authResponse['permissions'],
-                    $userPermissions->toArray()
+                    $userPermissions->toPermissionsArray()
                 );
             }
 
