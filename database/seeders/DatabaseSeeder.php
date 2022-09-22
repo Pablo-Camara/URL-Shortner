@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminAbilitiesSeeder::class,
             ShortlinkStatusSeeder::class,
-            ActionsSeeder::class
+            ActionsSeeder::class,
+            PermissionGroupsSeeder::class
         ]);
     }
 }

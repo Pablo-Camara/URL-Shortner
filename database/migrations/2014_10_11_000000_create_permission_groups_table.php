@@ -13,8 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('user_permissions', function (Blueprint $table) {
-            $table->unsignedBigInteger('user_id');
+        Schema::create('permission_groups', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('name');
+
+            $table->boolean('default')->default(0)->index();
 
             $table->boolean('edit_shortlinks_destination_url')->default(1);
             $table->boolean('view_shortlinks_total_views')->default(1);
@@ -23,8 +27,7 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
 
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->primary('user_id');
+
         });
     }
 

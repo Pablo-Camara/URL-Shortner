@@ -64,11 +64,9 @@ class User extends Authenticatable
         );
     }
 
-    /**
-     * Gets the permissions configured for this user
-     */
-    public function userPermissions() {
-        return $this->hasOne(UserPermission::class);
+
+    public function permissionGroup() {
+        return $this->belongsTo(PermissionGroup::class);
     }
 
     /**
@@ -125,26 +123,17 @@ class User extends Authenticatable
         $email,
         $password
     ) {
-
-        $user = new User();
-        $user->guest = 0;
-        $user->name = $name;
-        $user->email = $email;
-        $user->password = Hash::make($password);
-
-        DB::beginTransaction();
         try {
+            $user = new User();
+            $user->guest = 0;
+            $user->name = $name;
+            $user->email = $email;
+            $user->password = Hash::make($password);
+            $user->permission_group_id = PermissionGroup::where('default', '=', 1)->first()->id;
             $user->save();
-
-            $userPermissions = new UserPermission();
-            $userPermissions->user_id = $user->id;
-            $userPermissions->save();
         } catch (\Throwable $th) {
-            DB::rollBack();
             return null;
         }
-        DB::commit();
-
         return $user;
     }
 
@@ -154,25 +143,18 @@ class User extends Authenticatable
         $email,
         $avatar
     ) {
-        $existingUser = User::find($guestUserId);
-        $existingUser->guest = 0;
-        $existingUser->name = $name;
-        $existingUser->email = $email;
-        $existingUser->avatar = $avatar;
-
-        DB::beginTransaction();
+        // TODO: send email to user, to allow him to create a password
         try {
+            $existingUser = User::find($guestUserId);
+            $existingUser->guest = 0;
+            $existingUser->name = $name;
+            $existingUser->email = $email;
+            $existingUser->avatar = $avatar;
+            $existingUser->permission_group_id = PermissionGroup::where('default', '=', 1)->first()->id;
             $existingUser->save();
-
-            $userPermissions = new UserPermission();
-            $userPermissions->user_id = $existingUser->id;
-            $userPermissions->save();
         } catch (\Throwable $th) {
-            DB::rollBack();
             return null;
         }
-        DB::commit();
-
         return $existingUser;
     }
 

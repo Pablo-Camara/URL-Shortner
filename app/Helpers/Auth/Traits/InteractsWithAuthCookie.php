@@ -171,7 +171,7 @@ trait InteractsWithAuthCookie
                 'is_admin' => $user->isAdmin()
             ];
 
-            $userPermissions = $user->userPermissions()->first();
+            $userPermissions = $user->permissionGroup()->first();
             if ($userPermissions) {
                 $authResponse['permissions'] = array_merge(
                     $authResponse['permissions'],

@@ -10,7 +10,7 @@ use App\Models\Shortlink;
 use App\Models\ShortlinkUrl;
 use App\Models\Shortstring;
 use App\Models\UserAction;
-use App\Models\UserPermission;
+use App\Models\PermissionGroup;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -130,9 +130,9 @@ class ShortlinkController extends Controller
                 $activeVisitsActionId
             ) {
                 /**
-                 * @var UserPermission
+                 * @var PermissionGroup
                  */
-                $userPermissions = UserPermission::where('user_id', $request->user()->id)->first();
+                $userPermissions = $request->user()->permissionGroup;
 
                 if (
                     $userPermissions->canViewShortlinksTotalViews()
@@ -578,9 +578,9 @@ class ShortlinkController extends Controller
         }
 
         /**
-         * @var UserPermission
+         * @var PermissionGroup
          */
-        $userPermissions = UserPermission::where('user_id', $request->user()->id)->first();
+        $userPermissions = $request->user()->permissionGroup;
 
         if ($userPermissions->canEditShortlinksDestinationUrl() == false) {
             //TODO: user has no permission to edit shortlinks destination urls

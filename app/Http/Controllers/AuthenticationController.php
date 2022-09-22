@@ -22,8 +22,6 @@ use App\Models\Shortlink;
 use App\Models\TwitterAccount;
 use App\Models\UserAction;
 use App\Models\UserDevice;
-use App\Models\UserPermission;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Socialite\Facades\Socialite;

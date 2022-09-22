@@ -21,9 +21,13 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->text('avatar')->nullable();
-            $table->rememberToken();
+
+            $table->unsignedBigInteger('permission_group_id')->nullable();
+
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+
+            $table->foreign('permission_group_id')->references('id')->on('permission_groups');
         });
     }
 
