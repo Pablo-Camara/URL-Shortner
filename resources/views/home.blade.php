@@ -4943,7 +4943,7 @@
                                                             resObj.search_results.last_page,
                                                             'PermissionGroupsList',
                                                             function(param) {
-                                                                window.App.Components.PA.Components.PermissionGroupsList.fetchPermissionGroups(param);
+                                                                window.App.Components.PA.Components.PermissionGroups.Components.PermissionGroupsList.fetchPermissionGroups(param);
                                                             }
                                                         )
                                                     );

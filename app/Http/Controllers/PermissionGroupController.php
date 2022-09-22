@@ -46,7 +46,7 @@ class PermissionGroupController extends Controller
         ]);
 
 
-        $results = $results->paginate(2)->toArray();
+        $results = $results->paginate(100)->toArray();
 
         $results['data'] = array_map(
             function($row) use ($colsToTranslateValues, $colsToTransformValues) {
