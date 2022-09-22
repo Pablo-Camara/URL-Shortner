@@ -18,7 +18,12 @@ class HomeController extends Controller
 
     public function __construct() {
         $this->getUserDataFromCookie();
+
         View::share('isAdmin', $this->isAdmin());
+        View::share('authToken', $this->authToken);
+        View::share('isLoggedIn', $this->guest == 0 ? 'true' : 'false');
+        View::share('userPermissions', json_encode($this->userPermissions));
+        View::share('userData', json_encode($this->userData));
     }
     /**
      * Display homepage

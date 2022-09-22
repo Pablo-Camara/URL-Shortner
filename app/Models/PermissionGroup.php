@@ -30,4 +30,14 @@ class PermissionGroup extends Model
         return $this->view_shortlinks_total_unique_views;
     }
 
+    public function toArray()
+    {
+        return [
+            'edit_shortlinks_destination_url' => $this->edit_shortlinks_destination_url,
+            'view_shortlinks_total_views' => $this->view_shortlinks_total_views,
+            'view_shortlinks_total_unique_views' => $this->view_shortlinks_total_unique_views,
+        ];
+
+    }
+
 }

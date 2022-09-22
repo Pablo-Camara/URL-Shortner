@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\View;
 use Illuminate\Validation\ValidationException;
 
 class ShortlinkController extends Controller
@@ -27,6 +28,12 @@ class ShortlinkController extends Controller
 
     public function __construct() {
         $this->getUserDataFromCookie();
+
+        View::share('isAdmin', $this->isAdmin());
+        View::share('authToken', $this->authToken);
+        View::share('isLoggedIn', $this->guest == 0 ? 'true' : 'false');
+        View::share('userPermissions', json_encode($this->userPermissions));
+        View::share('userData', json_encode($this->userData));
     }
 
      /**
@@ -95,8 +102,7 @@ class ShortlinkController extends Controller
                     'view' => 'RegisterAvailableShortlink',
                     'shortlink' => url('/' . $shortstring->shortstring),
                     'shortlink_available' => true,
-                    'shortlink_shortstring' => $shortstring->shortstring,
-                    'isAdmin' => $this->isAdmin()
+                    'shortlink_shortstring' => $shortstring->shortstring
                 ]);
             }
 

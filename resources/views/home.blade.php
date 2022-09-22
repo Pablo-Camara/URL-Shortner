@@ -819,8 +819,6 @@
                         true,
                         true
                     );
-
-                    this.authenticate();
                 },
 
                 authenticate: function () {
@@ -5715,5 +5713,32 @@
 
             window.App.Components.MenuToggleMobile.initialize();
         </script>
+
+        @if (
+            isset($authToken)
+            &&
+            isset($isLoggedIn)
+            &&
+            isset($userPermissions)
+            &&
+            isset($userData)
+        )
+            <script>
+                window._authManager.at = '{{ $authToken }}';
+                window._authManager.isLoggedIn = {{ $isLoggedIn }};
+                window._authManager.isAuthenticated = true;
+                window._authManager.userPermissions = {!! $userPermissions !!};
+                window._authManager.userData = {!! $userData !!};
+                // trigger userAuthenticated event
+                document.dispatchEvent(
+                                window._authManager.customEvents
+                                    .userAuthenticatedEvent
+                            );
+            </script>
+        @else
+            <script>
+                window._authManager.authenticate();
+            </script>
+        @endif
     </body>
 </html>
