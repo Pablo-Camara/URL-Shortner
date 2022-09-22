@@ -4700,6 +4700,10 @@
                                             name: 'appUsageByDevices',
                                             label: 'Dispositivos usados pelos utilizadores da plataforma'
                                         },
+                                        {
+                                            name: 'appUsageByAction',
+                                            label: 'Total de Ações / Usagem geral da plataforma'
+                                        },
                                     ],
                                     el: function () {
                                         return document.getElementById('pa-stats-views');
@@ -4745,7 +4749,7 @@
                                                 window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
 
 
-                                                if (resObj.search_results.total === 0) {
+                                                if (resObj.search_results.data.length === 0) {
                                                     window.App.Components.PA.Components.NoResults.show();
                                                     return;
                                                 }
@@ -4757,7 +4761,7 @@
                                                     resObj.search_results.data
                                                 );
 
-                                                if (resObj.search_results.last_page > 1) {
+                                                if (resObj.search_results.data.length > resObj.search_results.per_page) {
                                                     const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
                                                     paginationEl.innerHTML = '';
                                                     paginationEl.appendChild(
@@ -4922,7 +4926,7 @@
                                                 const resObj = JSON.parse(this.response);
                                                 window.App.Components.PA.Components.Loading.hide();
 
-                                                if (resObj.search_results.total === 0) {
+                                                if (resObj.search_results.data.length === 0) {
                                                     window.App.Components.PA.Components.NoResults.show();
                                                     return;
                                                 }
@@ -4934,7 +4938,7 @@
                                                     resObj.search_results.data
                                                 );
 
-                                                if (resObj.search_results.last_page > 1) {
+                                                if (resObj.search_results.data.length > resObj.search_results.per_page) {
                                                     const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
                                                     paginationEl.innerHTML = '';
                                                     paginationEl.appendChild(
@@ -5011,7 +5015,7 @@
                                                 const resObj = JSON.parse(this.response);
                                                 window.App.Components.PA.Components.Loading.hide();
 
-                                                if (resObj.search_results.total === 0) {
+                                                if (resObj.search_results.data.length === 0) {
                                                     window.App.Components.PA.Components.NoResults.show();
                                                     return;
                                                 }
@@ -5023,7 +5027,7 @@
                                                     resObj.search_results.data
                                                 );
 
-                                                if (resObj.search_results.last_page > 1) {
+                                                if (resObj.search_results.data.length > resObj.search_results.per_page) {
                                                     const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
                                                     paginationEl.innerHTML = '';
                                                     paginationEl.appendChild(

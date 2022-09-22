@@ -31,6 +31,7 @@ class StatisticsController extends Controller
 
         $viewModelMap = [
             'appUsageByDevices' => UserDevice::class,
+            'appUsageByAction' => UserAction::class,
             'totalRegisteredUsers' => UserAction::class,
             'totalShortlinksGenerated' => UserAction::class,
             'totalTrafficReceivedInShortlinks' => UserAction::class,
@@ -58,7 +59,9 @@ class StatisticsController extends Controller
                 ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
             ],
             'totalTrafficReceivedInShortlinks' => [
-                ShortlinkActions::VISITED_ACTIVE_SHORTLINK
+                ShortlinkActions::VISITED_ACTIVE_SHORTLINK,
+                ShortlinkActions::VISITED_DELETED_SHORTLINK,
+                ShortlinkActions::VISITED_SUSPENDED_SHORTLINK,
             ],
             'totalUserLogins' => [
                 AuthActions::LOGGED_IN,
@@ -141,6 +144,14 @@ class StatisticsController extends Controller
                 'label' => 'Total por Shortlink + Dia',
             ],
             [
+                'name' => 'totals_by_shortlink_and_action',
+                'label' => 'Total por Shortlink + Ação',
+            ],
+            [
+                'name' => 'totals_by_shortlink_and_action_and_day',
+                'label' => 'Total por Shortlink + Ação + Dia',
+            ],
+            [
                 'name' => 'totals_by_user_type',
                 'label' => 'Total por Tipo de Utilizador',
             ],
@@ -198,6 +209,11 @@ class StatisticsController extends Controller
                 'totals_by_browser_and_day', 'total_by_device_width_and_height',
                 'total_by_device_width_and_height_and_day', 'total_by_device',
                 'total_by_device_and_day', 'total_by_platform', 'total_by_platform_and_day'
+            ],
+            'appUsageByAction' => [
+                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day',
+                'totals_by_user_type', 'totals_by_user_type_and_day', 'totals_by_user', 'totals_by_user_and_day',
+                'totals_by_shortlink', 'totals_by_shortlink_and_day', 'totals_by_shortlink_and_action', 'totals_by_shortlink_and_action_and_day'
             ]
         ];
 
@@ -229,6 +245,12 @@ class StatisticsController extends Controller
             ],
             'totals_by_shortlink_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'totals_by_shortlink_and_action' => [
+                'total_desc', 'total_asc'
+            ],
+            'totals_by_shortlink_and_action_and_day' => [
+                'total_desc', 'total_asc'
             ],
             'totals_by_user_type' => [
                 'total_desc', 'total_asc'
@@ -514,6 +536,41 @@ class StatisticsController extends Controller
                     DB::raw('shortstrings.shortstring')
                 ];
                 break;
+            case 'totals_by_shortlink_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    DB::raw('shortstrings.shortstring')
+                ];
+                break;
+            case 'totals_by_shortlink_and_action':
+                $select = [
+                    DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
+                    DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('shortstrings.shortstring'),
+                    'actions.name'
+                ];
+                break;
+            case 'totals_by_shortlink_and_action_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
+                    DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    DB::raw('shortstrings.shortstring'),
+                    'actions.name'
+                ];
+                break;
             case 'totals_by_user_type':
                 $select = [
                     DB::raw('CASE WHEN users.guest = 1 THEN \'guest_users\' ELSE \'registered_users\' END AS `'.__('admin-panel.user-type').'`'),
@@ -598,7 +655,25 @@ class StatisticsController extends Controller
         // custom wheres ( will probably change later how i handle wheres)
         switch ($table) {
             case 'user_actions':
-                $results = $results->whereIn('actions.name', $viewActionsMap[$currentView]);
+                if (isset($viewActionsMap[$currentView])) {
+                    $results = $results->whereIn('actions.name', $viewActionsMap[$currentView]);
+                }
+
+                if (
+                    $currentView === 'appUsageByAction'
+                    &&
+                    in_array(
+                        $selectedGroupBy,
+                        [
+                            'totals_by_shortlink',
+                            'totals_by_shortlink_and_day',
+                            'totals_by_shortlink_and_action',
+                            'totals_by_shortlink_and_action_and_day'
+                        ]
+                    )
+                ) {
+                    $results = $results->whereNotNull($table . '.shortlink_id');
+                }
                 break;
         }
 
