@@ -4216,6 +4216,14 @@
                                 delete this.paginations[paginationIdentifier];
                             }
                         },
+                        resetAllPaginations: function () {
+                            const paginations = Object.keys(this.paginations);
+
+                            for(var i = 0; i < paginations.length; i++) {
+                                const pagId = paginations[i];
+                                this.resetPaginationFor(pagId);
+                            }
+                        },
                         createEl: function (currentPage, lastPage, paginationIdentifier, fetchFunc) {
                             if (
                                 typeof this.paginations[paginationIdentifier] !== 'undefined'
@@ -4629,7 +4637,8 @@
                             hide: function () {
                                 this.el().style.display = 'none';
                                 this.paginationEl().innerHTML = '';
-                                window.App.Helpers.Pagination.resetPaginationFor('DashboardResultList');
+
+                                window.App.Helpers.Pagination.resetAllPaginations();
                             },
                             show: function () {
                                 this.el().style.display = 'table';
@@ -4761,7 +4770,7 @@
                                                     resObj.search_results.data
                                                 );
 
-                                                if (resObj.search_results.data.length > resObj.search_results.per_page) {
+                                                if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
                                                     const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
                                                     paginationEl.innerHTML = '';
                                                     paginationEl.appendChild(
@@ -4938,7 +4947,7 @@
                                                     resObj.search_results.data
                                                 );
 
-                                                if (resObj.search_results.data.length > resObj.search_results.per_page) {
+                                                if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
                                                     const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
                                                     paginationEl.innerHTML = '';
                                                     paginationEl.appendChild(
@@ -5027,7 +5036,7 @@
                                                     resObj.search_results.data
                                                 );
 
-                                                if (resObj.search_results.data.length > resObj.search_results.per_page) {
+                                                if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
                                                     const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
                                                     paginationEl.innerHTML = '';
                                                     paginationEl.appendChild(
