@@ -264,6 +264,7 @@
                 text-align: center;
                 display: inline-block;
                 cursor: pointer;
+                margin-right: 14px;
             }
 
             .dashboard-item-container .dashboard-item .dashboard-item-img img {
@@ -308,6 +309,10 @@
             }
 
 
+            #dashboard-results-table-container {
+                overflow: auto;
+                margin-top: 4px;
+            }
 
             .dashboard-results-container {
                 width: 100%;
@@ -316,6 +321,7 @@
             .dashboard-results-container th {
                 background: #333333;
                 color: #FFFFFF;
+                padding: 10px;
             }
 
             .dashboard-results-container td {
@@ -4330,7 +4336,7 @@
                         this.Components.NoResults.hide();
                         this.Components.ResultsTable.hide();
 
-                        this.Components.Stats.show();
+                        this.showAllDashboardItems();
 
                         this.el().style.display = 'block';
 
@@ -4354,21 +4360,28 @@
                             }
                         }
                     },
-                    showAllDashboardItems: function(except = []) {
+                    showAllDashboardItems: function() {
                         const components = Object.keys(this.Components);
                         for(var i = 0; i < components.length; i++) {
                             const componentName = components[i];
-                            if (except.indexOf(componentName) >= 0) {
-                                continue;
-                            }
                             if (
                                 typeof this.Components[componentName].dashboardItem !== 'undefined'
-                                &&
-                                this.Components[componentName].dashboardItem === true
-                                &&
-                                typeof this.Components[componentName].show === 'function'
                             ) {
-                                this.Components[componentName].show();
+
+                                if (
+                                    this.Components[componentName].dashboardItem === true
+                                ) {
+                                    if (typeof this.Components[componentName].show === 'function') {
+                                        this.Components[componentName].show();
+                                    }
+                                } else {
+                                    if (
+                                        typeof this.Components[componentName].hide === 'function'
+                                    ) {
+                                        this.Components[componentName].hide();
+                                    }
+                                }
+
                             }
                         }
                     },
@@ -4390,6 +4403,7 @@
                             }
                         },
                         BackButton: {
+                            dashboardItem: false,
                             hasInitialized: false,
                             customBackFunc: null,
                             el: function () {
@@ -4423,6 +4437,7 @@
                             }
                         },
                         Filters: {
+                            dashboardItem: false,
                             el: function () {
                                 return document.getElementById('dashboard-filter-container');
                             },
@@ -4574,6 +4589,7 @@
                             }
                         },
                         Loading: {
+                            dashboardItem: false,
                             el: function () {
                                 return document.getElementById('dashboard-loading');
                             },
@@ -4585,6 +4601,7 @@
                             },
                         },
                         NoResults: {
+                            dashboardItem: false,
                             el: function () {
                                 return document.getElementById('dashboard-no-results');
                             },
@@ -4596,6 +4613,7 @@
                             },
                         },
                         ResultsTable: {
+                            dashboardItem: false,
                             el: function () {
                                 return document.getElementById('dashboard-results-container');
                             },
@@ -4866,6 +4884,95 @@
                                     const $this = this;
                                     this.el().onclick = function (e) {
                                         $this.Components.ViewsList.show();
+                                    };
+
+                                    this.hasInitialized = true;
+                                }
+                            }
+                        },
+                        PermissionGroups: {
+                            dashboardItem: true,
+                            hasInitialized: false,
+                            el: function () {
+                                return document.getElementById('pa-permission-groups');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.el().style.display = 'inline-block';
+                            },
+                            displayFull: function () {
+                                this.el().style.display = 'block';
+                            },
+                            Components: {
+                                PermissionGroupsList: {
+                                    api: "{{ url('/api/permission-groups') }}",
+                                    fetchPermissionGroups: function (pageNumber = 1) {
+                                        window.App.Components.PA.Components.ResultsTable.hide();
+                                        window.App.Components.PA.Components.NoResults.hide();
+                                        window.App.Components.PA.Components.Loading.show();
+
+                                        var xhr = new XMLHttpRequest();
+                                        xhr.withCredentials = true;
+
+                                        xhr.addEventListener("readystatechange", function () {
+                                            if (this.status === 200 && this.readyState === 4) {
+                                                const resObj = JSON.parse(this.response);
+                                                window.App.Components.PA.Components.Loading.hide();
+
+                                                if (resObj.search_results.total === 0) {
+                                                    window.App.Components.PA.Components.NoResults.show();
+                                                    return;
+                                                }
+                                                window.App.Components.PA.Components.NoResults.hide();
+                                                window.App.Components.PA.Components.ResultsTable.setColumns(
+                                                    Object.keys(resObj.search_results.data[0])
+                                                );
+                                                window.App.Components.PA.Components.ResultsTable.setRows(
+                                                    resObj.search_results.data
+                                                );
+
+                                                if (resObj.search_results.last_page > 1) {
+                                                    const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
+                                                    paginationEl.innerHTML = '';
+                                                    paginationEl.appendChild(
+                                                        window.App.Helpers.Pagination.createEl(
+                                                            resObj.search_results.current_page,
+                                                            resObj.search_results.last_page,
+                                                            'PermissionGroupsList',
+                                                            function(param) {
+                                                                window.App.Components.PA.Components.PermissionGroupsList.fetchPermissionGroups(param);
+                                                            }
+                                                        )
+                                                    );
+                                                }
+
+
+                                                window.App.Components.PA.Components.ResultsTable.show();
+                                            }
+                                        });
+
+                                        var urlStr = this.api + '?page=' + pageNumber;
+
+                                        xhr.open(
+                                            "POST",
+                                            urlStr
+                                        );
+                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                        xhr.send();
+                                    },
+                                },
+                            },
+                            initialize: function () {
+                                if ( this.hasInitialized == false ) {
+                                    const $this = this;
+                                    this.el().onclick = function (e) {
+                                        window.App.Components.PA.hideAllDashboardItems(['PermissionGroups']);
+                                        $this.displayFull();
+                                        window.App.Components.PA.Components.BackButton.show();
+                                        $this.Components.PermissionGroupsList.fetchPermissionGroups();
                                     };
 
                                     this.hasInitialized = true;
@@ -5157,9 +5264,13 @@
                 <div class="form-box-title">Painel de Administração</div>
                 <div class="close-form-box" id="pa-view-close-btn">X</div>
                 <div class="dashboard-item-container">
-                    <div class="dashboard-item" id="pa-stats">
+                    <div class="dashboard-item" id="pa-stats" style="display: none">
                         <div class="dashboard-item-img"><img src="{{ asset('/img/stats-icon.png') }}"></div>
                         <div class="dashboard-item-name">Estátisticas</div>
+                    </div>
+                    <div class="dashboard-item" id="pa-permission-groups" style="display: none">
+                        <div class="dashboard-item-img"><img src="{{ asset('/img/permission-groups-icon.png') }}"></div>
+                        <div class="dashboard-item-name">Grupos de Permissões</div>
                     </div>
                 </div>
                 <div class="dashboard-back-button" id="dashboard-back-button" style="display: none">Voltar</div>
@@ -5193,14 +5304,16 @@
 
                 <div id="dashboard-loading" style="display: none">A carregar...</div>
                 <div id="dashboard-no-results" style="display: none">Sem nenhum resultado para mostrar..</div>
-                <table id="dashboard-results-container" class="dashboard-results-container" style="display: none">
-                    <thead>
-                        <tr id="dashboard-results-container-columns">
-                        </tr>
-                    </thead>
-                    <tbody id="dashboard-results-container-rows">
-                    </tbody>
-                </table>
+                <div id="dashboard-results-table-container">
+                    <table id="dashboard-results-container" class="dashboard-results-container" style="display: none">
+                        <thead>
+                            <tr id="dashboard-results-container-columns">
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-results-container-rows">
+                        </tbody>
+                    </table>
+                </div>
                 <div id="dashboard-results-pagination"></div>
             </div>
         @endif

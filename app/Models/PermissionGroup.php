@@ -18,17 +18,6 @@ class PermissionGroup extends Model
         'view_shortlinks_total_unique_views' => 'boolean',
     ];
 
-    /**
-     * The attributes that should be visible in arrays.
-     *
-     * @var array
-     */
-    protected $visible = [
-        'edit_shortlinks_destination_url',
-        'view_shortlinks_total_views',
-        'view_shortlinks_total_unique_views'
-    ];
-
     public function canEditShortlinksDestinationUrl() {
         return $this->edit_shortlinks_destination_url;
     }

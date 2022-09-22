@@ -6,6 +6,16 @@ use Illuminate\Http\Response;
 
 class AuthResponses {
 
+    public static function notAuthorized() {
+        return response()->json([
+            //TODO: translate msg str
+            'error_id' => 'not_authorized',
+            // TODO: translate
+            // in theory should never be shown in the frontend.
+            'message' => 'Não tens permissões para isto.'
+        ], Response::HTTP_UNAUTHORIZED);
+    }
+
 
     public static function notAuthenticated() {
         return response()->json([

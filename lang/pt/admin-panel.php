@@ -2,6 +2,21 @@
 
 return [
 
+    'name' => 'Nome',
+
+    'created_at' => 'Data Criação',
+    'updated_at' => 'Última Edição',
+
+    'yes' => 'sim',
+    'no' => 'não',
+
+    'permission-group-id' => 'Id Grupo',
+    'default-permission-group' => 'Grupo Predefinido para Novos Utilizadores',
+
+    'edit_shortlinks_destination_url' => 'Editar URL Destino',
+    'view_shortlinks_total_views' => 'Ver Total de Visualizações',
+    'view_shortlinks_total_unique_views' => 'Ver Total de Visualizações Únicas',
+
     'action' => 'Ação',
     'day' => 'Dia',
     'total' => 'Total',

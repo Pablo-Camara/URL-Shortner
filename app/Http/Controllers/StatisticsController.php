@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Actions\AuthActions;
 use App\Helpers\Actions\ShortlinkActions;
+use App\Helpers\Responses\AuthResponses;
 use App\Models\UserAction;
 use App\Models\UserDevice;
 use Illuminate\Http\Request;
@@ -18,6 +19,10 @@ class StatisticsController extends Controller
      */
     public function generic(Request $request)
     {
+        if (!$request->user()->isAdmin()) {
+            return AuthResponses::notAuthorized();
+        }
+
         $currentView = $request->input('currentView', null);
 
         if (empty($currentView)) {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\PermissionGroupController;
 use App\Http\Controllers\ShortlinkController;
 use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
@@ -57,4 +58,7 @@ Route::post('/shortlinks/delete', [ShortlinkController::class, 'deleteShortlinkU
         ->middleware(['auth:sanctum']);
 
 Route::post('/stats', [StatisticsController::class, 'generic'])
-        ->middleware(['auth:sanctum', 'abilities:admin']);;
+        ->middleware(['auth:sanctum']);;
+
+Route::post('/permission-groups', [PermissionGroupController::class, 'list'])
+        ->middleware(['auth:sanctum']);;
