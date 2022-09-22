@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\PermissionGroupController;
 use App\Http\Controllers\ShortlinkController;
 use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -61,4 +62,7 @@ Route::post('/stats', [StatisticsController::class, 'generic'])
         ->middleware(['auth:sanctum']);;
 
 Route::post('/permission-groups', [PermissionGroupController::class, 'list'])
+        ->middleware(['auth:sanctum']);;
+
+Route::post('/users-list', [UserController::class, 'list'])
         ->middleware(['auth:sanctum']);;

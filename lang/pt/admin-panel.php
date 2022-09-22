@@ -5,12 +5,13 @@ return [
     'name' => 'Nome',
 
     'created_at' => 'Data Criação',
-    'updated_at' => 'Última Edição',
+    'updated_at' => 'Última Atualização',
 
     'yes' => 'sim',
     'no' => 'não',
 
     'permission-group-id' => 'Id Grupo',
+    'permission-group' => 'Grupo de Permissões',
     'default-permission-group' => 'Grupo Predefinido para Novos Utilizadores',
 
     'edit_shortlinks_destination_url' => 'Editar URL Destino',
@@ -24,10 +25,14 @@ return [
     'shortlink' => 'Shortlink',
 
     'user-id' => 'Id Utilizador',
+    'email' => 'Email',
+    'has-verified-email' => 'Email Verificado',
+    'has-password' => 'Tem password',
 
     'user-type' => 'Tipo de Utilizador',
     'guest_users' => 'Utilizadores não registrados',
     'registered_users' => 'Utilizadores registrados',
+
 
     'browser' => 'Navegador',
     'device_height' => 'Altura Ecrã',

@@ -4978,7 +4978,96 @@
                                     this.hasInitialized = true;
                                 }
                             }
-                        }
+                        },
+                        Users: {
+                            dashboardItem: true,
+                            hasInitialized: false,
+                            el: function () {
+                                return document.getElementById('pa-users');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.el().style.display = 'inline-block';
+                            },
+                            displayFull: function () {
+                                this.el().style.display = 'block';
+                            },
+                            Components: {
+                                UsersList: {
+                                    api: "{{ url('/api/users-list') }}",
+                                    fetchUsersList: function (pageNumber = 1) {
+                                        window.App.Components.PA.Components.ResultsTable.hide();
+                                        window.App.Components.PA.Components.NoResults.hide();
+                                        window.App.Components.PA.Components.Loading.show();
+
+                                        var xhr = new XMLHttpRequest();
+                                        xhr.withCredentials = true;
+
+                                        xhr.addEventListener("readystatechange", function () {
+                                            if (this.status === 200 && this.readyState === 4) {
+                                                const resObj = JSON.parse(this.response);
+                                                window.App.Components.PA.Components.Loading.hide();
+
+                                                if (resObj.search_results.total === 0) {
+                                                    window.App.Components.PA.Components.NoResults.show();
+                                                    return;
+                                                }
+                                                window.App.Components.PA.Components.NoResults.hide();
+                                                window.App.Components.PA.Components.ResultsTable.setColumns(
+                                                    Object.keys(resObj.search_results.data[0])
+                                                );
+                                                window.App.Components.PA.Components.ResultsTable.setRows(
+                                                    resObj.search_results.data
+                                                );
+
+                                                if (resObj.search_results.last_page > 1) {
+                                                    const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
+                                                    paginationEl.innerHTML = '';
+                                                    paginationEl.appendChild(
+                                                        window.App.Helpers.Pagination.createEl(
+                                                            resObj.search_results.current_page,
+                                                            resObj.search_results.last_page,
+                                                            'UsersList',
+                                                            function(param) {
+                                                                window.App.Components.PA.Components.Users.Components.UsersList.fetchUsersList(param);
+                                                            }
+                                                        )
+                                                    );
+                                                }
+
+
+                                                window.App.Components.PA.Components.ResultsTable.show();
+                                            }
+                                        });
+
+                                        var urlStr = this.api + '?page=' + pageNumber;
+
+                                        xhr.open(
+                                            "POST",
+                                            urlStr
+                                        );
+                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                        xhr.send();
+                                    },
+                                },
+                            },
+                            initialize: function () {
+                                if ( this.hasInitialized == false ) {
+                                    const $this = this;
+                                    this.el().onclick = function (e) {
+                                        window.App.Components.PA.hideAllDashboardItems(['Users']);
+                                        $this.displayFull();
+                                        window.App.Components.PA.Components.BackButton.show();
+                                        $this.Components.UsersList.fetchUsersList();
+                                    };
+
+                                    this.hasInitialized = true;
+                                }
+                            }
+                        },
                     },
                     initialize: function () {
                         this.Components.CloseBtn.initialize();
@@ -5271,6 +5360,10 @@
                     <div class="dashboard-item" id="pa-permission-groups" style="display: none">
                         <div class="dashboard-item-img"><img src="{{ asset('/img/permission-groups-icon.png') }}"></div>
                         <div class="dashboard-item-name">Grupos de Permissões</div>
+                    </div>
+                    <div class="dashboard-item" id="pa-users" style="display: none">
+                        <div class="dashboard-item-img"><img src="{{ asset('/img/users-icon.png') }}"></div>
+                        <div class="dashboard-item-name">Lista de Utilizadores</div>
                     </div>
                 </div>
                 <div class="dashboard-back-button" id="dashboard-back-button" style="display: none">Voltar</div>
