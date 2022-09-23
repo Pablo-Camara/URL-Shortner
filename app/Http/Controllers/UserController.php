@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Responses\AuthResponses;
+use App\Models\PermissionGroup;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -73,10 +75,94 @@ class UserController extends Controller
 
         return new Response(
             [
-                'search_results' => $results
+                'search_results' => $results,
+                'pagination_identifier' => 'UsersList',
+                'edit_config' => [
+                    'primary_key_column' =>  __('admin-panel.user-id')
+                ]
             ]
         );
 
     }
 
+    /**
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function prepareEditForm(Request $request)
+    {
+        if (!$request->user()->isAdmin()) {
+            return AuthResponses::notAuthorized();
+        }
+
+        $user = User::findOrFail($request->input('id'));
+
+        return [
+            'form_title' => 'Editar utilizador',
+            'save_endpoint' => url('/api/users/edit'),
+            'form_fields' => [
+                [
+                    'label' => __('admin-panel.user-id'),
+                    'element_type' => 'input',
+                    'element_attributes' => [
+                        'name' => 'id',
+                        'type' => 'text',
+                        'disabled' => 'disabled',
+                        'value' => $user->id,
+                    ]
+                ],
+                [
+                    'label' => __('admin-panel.name'),
+                    'element_type' => 'input',
+                    'element_attributes' => [
+                        'name' => 'name',
+                        'type' => 'text',
+                        'disabled' => 'disabled',
+                        'value' => $user->name,
+                    ],
+                ],
+                [
+                    'label' => __('admin-panel.permission-group'),
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        'name' => 'permission_group_id',
+                        'value' => $user->permission_group_id,
+                    ],
+                    'options' => PermissionGroup::all([
+                        DB::raw('id AS value'),
+                        DB::raw('name AS text')
+                    ]),
+                ]
+            ]
+        ];
+    }
+
+
+    /**
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Request $request)
+    {
+        if (!$request->user()->isAdmin()) {
+            return AuthResponses::notAuthorized();
+        }
+
+        $validations = [
+            'id' => 'required|numeric',
+            'permission_group_id' => 'required|numeric',
+        ];
+
+        $request->validate($validations);
+
+        $user = User::findOrFail($request->input('id'));
+        PermissionGroup::findOrFail($request->input('permission_group_id'));
+
+        $user->permission_group_id = $request->input('permission_group_id');
+        $user->save();
+
+        return new Response([
+            'message' => 'Guardado! ( ' . (Carbon::now()->toDateTimeString()) . ' )'
+        ], 200);
+    }
 }

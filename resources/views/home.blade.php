@@ -240,6 +240,10 @@
                 color: red;
             }
 
+            .form-box-feedback.success {
+                color: green;
+            }
+
             .form-box-feedback.info {
                 color: gray;
             }
@@ -258,6 +262,19 @@
             #pa-view,
             #my-links-view {
                 width: 85%;
+            }
+
+            .loading-overlay {
+                position: absolute;
+                background-color: rgba(255,255,255,0.5);
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 50px;
+                background-image: url("{{ asset('/img/loading.gif') }}");
             }
 
             .dashboard-item-container .dashboard-item {
@@ -283,10 +300,6 @@
                 cursor: pointer;
             }
 
-            .dashboard-list-items-container {
-
-            }
-
             .dashboard-list-items-container .dashboard-list-item {
                 padding: 10px;
                 background: #245691;
@@ -309,6 +322,23 @@
             }
 
 
+            #dashboard-edit {
+                padding: 10px;
+                border: 1px solid #EEE;
+                margin: 20px 0;
+            }
+
+            #dashboard-edit .button {
+                display: inline-block;
+                margin-right: 10px;
+            }
+
+            #dashboard-edit-title {
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+
             #dashboard-results-table-container {
                 overflow: auto;
                 margin-top: 4px;
@@ -316,6 +346,12 @@
 
             .dashboard-results-container {
                 width: 100%;
+            }
+
+            .dashboard-results-container tr:hover td {
+                background: rgba(0,0,0, 0.3);
+                color: white;
+                cursor: pointer;
             }
 
             .dashboard-results-container th {
@@ -4205,7 +4241,14 @@
                             };
                         },
                         getCurrentPage: function(paginationIdentifier) {
-                            this.paginations[paginationIdentifier].currentPage = currentPage;
+                            if (
+                                typeof this.paginations[paginationIdentifier] !== 'undefined'
+                                &&
+                                typeof this.paginations[paginationIdentifier].currentPage !== 'undefined'
+                            ) {
+                                return this.paginations[paginationIdentifier].currentPage;
+                            }
+                            return 1;
                         },
                         resetPaginationFor: function(paginationIdentifier) {
                             if (
@@ -4392,6 +4435,17 @@
                         }
                     },
                     Components: {
+                        LoadingOverlay: {
+                            el: function () {
+                                return document.getElementById('pa-view-loading');
+                            },
+                            show: function () {
+                                this.el().style.display = 'block';
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                            },
+                        },
                         CloseBtn: {
                             hasInitialized: false,
                             el: function () {
@@ -4618,6 +4672,270 @@
                                 this.el().style.display = 'block';
                             },
                         },
+                        Edit: {
+                            dashboardItem: false,
+                            apis: {
+                                Users: "{{ url('/api/users/prepare-edit-form') }}"
+                            },
+                            el: function () {
+                                return document.getElementById('dashboard-edit');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+                                this.Components.Title.clear();
+                                this.Components.Fields.reset();
+                                this.Components.SaveBtn.reset();
+                                this.Components.Feedback.hide();
+                            },
+                            show: function () {
+                                this.initialize();
+                                this.el().style.display = 'block';
+                            },
+                            startEditing: function (apiEntityName, entityId, refreshFunc) {
+                                if (
+                                    typeof this.apis[apiEntityName] == 'undefined'
+                                ) {
+                                    return;
+                                }
+
+                                var xhr = new XMLHttpRequest();
+                                xhr.withCredentials = true;
+
+                                const $this = this;
+
+                                window.App.Components.PA.Components.LoadingOverlay.show();
+                                xhr.addEventListener("readystatechange", function () {
+                                    if (this.status === 200 && this.readyState === 4) {
+                                        window.App.Components.PA.Components.LoadingOverlay.hide();
+                                        const resObj = JSON.parse(this.response);
+
+                                        $this.Components.Title.set(resObj.form_title);
+                                        $this.Components.SaveBtn.setSaveEndpoint(resObj.save_endpoint);
+                                        $this.Components.SaveBtn.setRefreshListFunction(refreshFunc);
+
+                                        $this.Components.Fields.reset();
+                                        for(var i = 0; i < resObj.form_fields.length; i++) {
+                                            $this.Components.Fields.add(
+                                                resObj.form_fields[i]
+                                            );
+                                        }
+
+                                        $this.show();
+                                        location.href = "#dashboard-edit";
+                                    }
+                                });
+
+                                var urlStr = this.apis[apiEntityName] + '?id=' + entityId;
+                                xhr.open(
+                                    "POST",
+                                    urlStr
+                                );
+                                xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                xhr.send();
+                            },
+                            Components: {
+                                Title: {
+                                    el: function () {
+                                        return document.getElementById('dashboard-edit-title');
+                                    },
+                                    set: function (title) {
+                                        this.el().innerText = title;
+                                    },
+                                    clear: function () {
+                                        this.el().innerText = '';
+                                    }
+                                },
+                                Fields: {
+                                    el: function () {
+                                        return document.getElementById('dashboard-edit-fields');
+                                    },
+                                    reset: function () {
+                                        this.el().innerHTML = '';
+                                    },
+                                    add: function (fieldDataArr) {
+                                        const fieldContainer = document.createElement('div');
+                                        fieldContainer.classList.add('input-container');
+
+                                        const labelEl = document.createElement('div');
+                                        labelEl.innerText = fieldDataArr['label'];
+
+                                        fieldContainer.appendChild(labelEl);
+
+                                        var inputEl = document.createElement(
+                                            fieldDataArr['element_type']
+                                        );
+
+                                        if (
+                                            typeof fieldDataArr['element_attributes'] !== 'undefined'
+                                        ) {
+
+                                            const attrNames = Object.keys(fieldDataArr['element_attributes']);
+                                            for(var ii = 0; ii < attrNames.length; ii++) {
+                                                const attrName = attrNames[ii];
+                                                const attrValue = fieldDataArr['element_attributes'][attrName];
+                                                inputEl.setAttribute(attrName, attrValue);
+                                            }
+                                        }
+
+                                        if (
+                                            fieldDataArr['element_type'] === 'select'
+                                            &&
+                                            Array.isArray(fieldDataArr['options'])
+                                            &&
+                                            fieldDataArr['options'].length > 0
+                                        ) {
+                                            for(var oi = 0; oi < fieldDataArr['options'].length; oi++) {
+                                                const optionEl = document.createElement('option');
+                                                optionEl.value = fieldDataArr['options'][oi].value;
+                                                optionEl.innerText = fieldDataArr['options'][oi].text;
+
+                                                if (
+                                                    typeof fieldDataArr['element_attributes'] !== 'undefined'
+                                                    &&
+                                                    typeof fieldDataArr['element_attributes']['value'] !== 'undefined'
+                                                    &&
+                                                    String(fieldDataArr['element_attributes']['value']) === String(optionEl.value)
+                                                ) {
+                                                    optionEl.setAttribute('selected', 'selected');
+                                                }
+                                                inputEl.appendChild(optionEl);
+                                            }
+                                        }
+
+                                        fieldContainer.appendChild(inputEl);
+                                        this.el().appendChild(fieldContainer);
+                                    }
+                                },
+                                Feedback: {
+                                    el: function () {
+                                        return document.getElementById('dashboard-edit-feedback');
+                                    },
+                                    hide: function () {
+                                        const el = this.el();
+                                        el.style.display = 'none';
+                                        el.innerText = '';
+                                    },
+                                    showInfo: function(message) {
+                                        const el = this.el();
+                                        el.innerText = message;
+                                        el.classList.remove('error');
+                                        el.classList.remove('success');
+                                        el.classList.add('info');
+                                        el.style.display = 'block';
+                                    },
+                                    showError: function(message) {
+                                        const el = this.el();
+                                        el.innerText = message;
+                                        el.classList.remove('info');
+                                        el.classList.remove('success');
+                                        el.classList.add('error');
+                                        el.style.display = 'block';
+                                    },
+                                    showSuccess: function(message) {
+                                        const el = this.el();
+                                        el.innerText = message;
+                                        el.classList.remove('info');
+                                        el.classList.remove('error');
+                                        el.classList.add('success');
+                                        el.style.display = 'block';
+                                    },
+                                },
+                                SaveBtn: {
+                                    hasInitialized: false,
+                                    saveEndpoint: null,
+                                    refreshListFunction: null,
+                                    setSaveEndpoint: function(endpoint) {
+                                        this.saveEndpoint = endpoint;
+                                    },
+                                    setRefreshListFunction: function(func) {
+                                        this.refreshListFunction = func;
+                                    },
+                                    reset: function () {
+                                        this.saveEndpoint = null;
+                                        this.refreshListFunction = null;
+                                    },
+                                    el: function () {
+                                        return document.getElementById('dashboard-edit-save');
+                                    },
+                                    initialize: function () {
+                                        if ( this.hasInitialized === false ) {
+                                            const $this = this;
+                                            this.el().onclick = function (e) {
+                                                const fieldsContainerEl = window.App.Components.PA.Components.Edit.Components.Fields.el();
+                                                const namedElements = fieldsContainerEl.querySelectorAll('[name]');
+
+                                                var urlParams = '?';
+                                                for(var i = 0; i < namedElements.length; i++) {
+                                                    const inputVal = namedElements[i].value;
+                                                    const paramName = namedElements[i].getAttribute('name');
+
+                                                    urlParams += paramName + '=' + inputVal;
+
+                                                    if (i+1 < namedElements.length) {
+                                                        urlParams += '&';
+                                                    }
+                                                }
+
+                                                var xhr = new XMLHttpRequest();
+                                                xhr.withCredentials = true;
+
+                                                xhr.addEventListener("readystatechange", function () {
+                                                    if (this.readyState === 4) {
+                                                        const resObj = JSON.parse(this.response);
+
+                                                        if (
+                                                            this.status === 200
+                                                            ||
+                                                            this.status === 201
+                                                        ) {
+                                                            window.App.Components.PA.Components.Edit.Components.Feedback.showSuccess(
+                                                                resObj.message
+                                                            );
+                                                            if (
+                                                                typeof $this.refreshListFunction === 'function'
+                                                            ) {
+                                                                $this.refreshListFunction();
+                                                            }
+                                                            return;
+                                                        }
+
+                                                        window.App.Components.PA.Components.Edit.Components.Feedback.showError(
+                                                            resObj.message
+                                                        );
+                                                    }
+                                                });
+
+                                                xhr.open(
+                                                    "POST",
+                                                    $this.saveEndpoint + urlParams
+                                                );
+                                                xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                                xhr.send();
+                                            };
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                                CancelBtn: {
+                                    hasInitialized: false,
+                                    el: function () {
+                                        return document.getElementById('dashboard-edit-cancel');
+                                    },
+                                    initialize: function () {
+                                        if ( this.hasInitialized === false ) {
+                                            this.el().onclick = function (e) {
+                                                window.App.Components.PA.Components.Edit.hide();
+                                            };
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                }
+                            },
+                            initialize: function () {
+                                this.Components.SaveBtn.initialize();
+                                this.Components.CancelBtn.initialize();
+                            }
+                        },
                         ResultsTable: {
                             dashboardItem: false,
                             el: function () {
@@ -4649,7 +4967,7 @@
                                     this.columnsEl().appendChild(columnEl);
                                 }
                             },
-                            setRows: function (rows) {
+                            setRows: function (rows, editConfig = null, rowClickEvent = null) {
                                 this.rowsEl().innerHTML = '';
                                 const rowCols = Object.keys(rows[0]);
                                 for(var i = 0; i < rows.length; i++) {
@@ -4658,7 +4976,21 @@
                                         const colName = rowCols[ii];
                                         const colEl = document.createElement('td');
                                         colEl.innerText = rows[i][colName];
+
+                                        if (
+                                            editConfig != null
+                                            &&
+                                            editConfig['primary_key_column'] === colName
+                                        ) {
+                                            row.setAttribute('id', 'row-' + rows[i][colName]);
+                                            row.setAttribute('data-row-id', rows[i][colName]);
+                                        }
                                         row.appendChild(colEl);
+                                    }
+                                    if (rowClickEvent != null) {
+                                        row.onclick = function (e) {
+                                            rowClickEvent(e);
+                                        }
                                     }
                                     this.rowsEl().appendChild(row);
                                 }
@@ -5031,7 +5363,21 @@
                                                     Object.keys(resObj.search_results.data[0])
                                                 );
                                                 window.App.Components.PA.Components.ResultsTable.setRows(
-                                                    resObj.search_results.data
+                                                    resObj.search_results.data,
+                                                    resObj.edit_config,
+                                                    function (e) {
+                                                        window.App.Components.PA.Components.Edit.startEditing(
+                                                            'Users',
+                                                            e.target.parentElement.getAttribute('data-row-id'),
+                                                            function () {
+                                                                window.App.Components.PA.Components.Users.Components.UsersList.fetchUsersList(
+                                                                    window.App.Helpers.Pagination.getCurrentPage(
+                                                                        resObj.pagination_identifier
+                                                                    )
+                                                                );
+                                                            }
+                                                        );
+                                                    }
                                                 );
 
                                                 if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
@@ -5041,7 +5387,7 @@
                                                         window.App.Helpers.Pagination.createEl(
                                                             resObj.search_results.current_page,
                                                             resObj.search_results.last_page,
-                                                            'UsersList',
+                                                            resObj.pagination_identifier,
                                                             function(param) {
                                                                 window.App.Components.PA.Components.Users.Components.UsersList.fetchUsersList(param);
                                                             }
@@ -5361,6 +5707,7 @@
                 class="form-box overlay"
                 id="pa-view" style="display: none"
             >
+                <div id="pa-view-loading" class="loading-overlay" style="display: none"></div>
                 <div class="form-box-title">Painel de Administração</div>
                 <div class="close-form-box" id="pa-view-close-btn">X</div>
                 <div class="dashboard-item-container">
@@ -5378,6 +5725,16 @@
                     </div>
                 </div>
                 <div class="dashboard-back-button" id="dashboard-back-button" style="display: none">Voltar</div>
+
+                <div id="dashboard-edit" style="display: none">
+                    <div id="dashboard-edit-title"></div>
+                    <div id="dashboard-edit-fields"></div>
+                    <div id="dashboard-edit-feedback" class="form-box-feedback" style="display: none; margin-bottom: 8px;"></div>
+                    <div>
+                        <div id="dashboard-edit-save" class="button">Guardar</div>
+                        <div id="dashboard-edit-cancel" class="button red">Fechar</div>
+                    </div>
+                </div>
 
                 <div class="dashboard-list-items-container" id="pa-stats-views" style="margin-top: 14px; display: none">
                 </div>

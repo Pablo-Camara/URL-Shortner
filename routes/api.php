@@ -65,4 +65,10 @@ Route::post('/permission-groups', [PermissionGroupController::class, 'list'])
         ->middleware(['auth:sanctum']);;
 
 Route::post('/users-list', [UserController::class, 'list'])
-        ->middleware(['auth:sanctum']);;
+        ->middleware(['auth:sanctum']);
+
+Route::post('/users/prepare-edit-form', [UserController::class, 'prepareEditForm'])
+        ->middleware(['auth:sanctum']);
+
+Route::post('/users/edit', [UserController::class, 'edit'])
+        ->middleware(['auth:sanctum']);
