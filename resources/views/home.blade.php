@@ -280,9 +280,10 @@
 
             .dashboard-item-container .dashboard-item {
                 text-align: center;
-                display: inline-block;
+                display: block;
                 cursor: pointer;
                 margin-right: 14px;
+                margin-bottom: 35px;
             }
 
             .dashboard-item-container .dashboard-item .dashboard-item-img img {
@@ -582,6 +583,11 @@
                     max-width: unset;
                 }
 
+                .dashboard-item-container .dashboard-item {
+                    display: inline-block;
+                    margin-bottom: 4px;
+                }
+
                 #menu-top,
                 #menu-top-acc {
                     display: block;
@@ -691,10 +697,11 @@
                     background-size: contain;
                 }
 
-                #menu-top-acc #menu-acc-items {
+                #menu-acc-items {
                     background: white;
                     width: 200px;
                     position: absolute;
+                    top: 44px;
                     right: 2%;
                     margin-top: 12px;
                     -webkit-border-radius: 12px;
@@ -703,14 +710,24 @@
                     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
                 }
 
-                #menu-top-acc #menu-acc-items .menu-item
+                #menu-acc-items .menu-item:first-child:hover {
+                    cursor: default;
+                    text-decoration: none;
+                }
+
+                #menu-acc-items .menu-item
                 {
                     padding: 10px;
                     border-bottom: 1px solid #EEE;
                     font-size: 14px;
+                    cursor: pointer;
                 }
 
-                #menu-top-acc #menu-acc-items .menu-item:last-child
+                #menu-acc-items .menu-item:hover {
+                    text-decoration: underline;
+                }
+
+                #menu-acc-items .menu-item:last-child
                 {
                     border-bottom: 0;
                 }
@@ -1505,10 +1522,10 @@
                                             const $this = this;
                                             this.el().onclick = function (e) {
                                                 if (
-                                                    typeof window.App.Components.PA !== 'undefined'
+                                                    typeof window.App.Views.PA !== 'undefined'
                                                 ) {
                                                     window.history.pushState(null, 'Painel de Administração', $this.panelLocation);
-                                                    window.App.Components.PA.show();
+                                                    window.App.Views.PA.show();
                                                 } else {
                                                     window.location.href = $this.panelLocation;
                                                 }
@@ -1520,6 +1537,7 @@
                             },
                             initialize: function () {
                                 this.Items.LogoutBtn.initialize();
+                                this.Items.PA.initialize();
                             }
                         },
                         initialize: function () {
@@ -1688,10 +1706,10 @@
                                             const $this = this;
                                             this.el().onclick = function (e) {
                                                 if (
-                                                    typeof window.App.Components.PA !== 'undefined'
+                                                    typeof window.App.Views.PA !== 'undefined'
                                                 ) {
                                                     window.history.pushState(null, 'Painel de Administração', $this.panelLocation);
-                                                    window.App.Components.PA.show();
+                                                    window.App.Views.PA.show();
                                                 } else {
                                                     window.location.href = $this.panelLocation;
                                                 }
@@ -4114,6 +4132,7 @@
                         show: function () {
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
+                            window.App.currentView = 'HomePage';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4133,6 +4152,7 @@
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                             window.history.pushState(null, 'Os meus links', '/os-meus-links');
+                            window.App.currentView = 'MyLinks';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4159,6 +4179,7 @@
                         show: function () {
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
+                            window.App.currentView = 'Login';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4174,6 +4195,7 @@
                         show: function () {
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
+                            window.App.currentView = 'Register';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4189,6 +4211,7 @@
                         show: function () {
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
+                            window.App.currentView = 'RegisterAvailableShortlink';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4204,6 +4227,7 @@
                         show: function () {
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
+                            window.App.currentView = 'EmailConfirmed';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4219,6 +4243,7 @@
                         show: function () {
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
+                            window.App.currentView = 'ChangePassword';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -5011,7 +5036,13 @@
                             },
                             show: function () {
                                 this.initialize();
-                                this.el().style.display = 'inline-block';
+
+                                if (window.App.isMobileSize()) {
+                                    this.el().style.display = 'block';
+                                } else {
+                                    this.el().style.display = 'inline-block';
+                                }
+
                                 this.Components.ViewsList.hide();
                             },
                             displayFull: function () {
@@ -5247,7 +5278,12 @@
                             },
                             show: function () {
                                 this.initialize();
-                                this.el().style.display = 'inline-block';
+
+                                if (window.App.isMobileSize()) {
+                                    this.el().style.display = 'block';
+                                } else {
+                                    this.el().style.display = 'inline-block';
+                                }
                             },
                             displayFull: function () {
                                 this.el().style.display = 'block';
@@ -5336,7 +5372,12 @@
                             },
                             show: function () {
                                 this.initialize();
-                                this.el().style.display = 'inline-block';
+
+                                if (window.App.isMobileSize()) {
+                                    this.el().style.display = 'block';
+                                } else {
+                                    this.el().style.display = 'inline-block';
+                                }
                             },
                             displayFull: function () {
                                 this.el().style.display = 'block';
@@ -5442,8 +5483,10 @@
                         sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                     },
                     show: function () {
+                        window.App.hideNonStickyComponents();
                         window.App.hideComponents(this.components.initiallyHidden);
                         window.App.showComponents(this.components.initiallyVisible);
+                        window.App.currentView = 'PA';
                     },
                     hide: function () {
                         window.App.hideComponents(this.components.initiallyVisible);
@@ -5510,16 +5553,16 @@
                 <img src="{{ asset('/img/acc-settings.png') }}" />
             </div>
             <div class="profile-pic" id="user-profile-pic">?</div>
-            <div id="menu-acc-items" style="display: none">
-                <div id="menu-acc-items-guest" style="display: none">
-                    <div class="menu-item" id="menu-top-acc-login">Entrar</div>
-                    <div class="menu-item" id="menu-top-acc-register">Criar conta</div>
-                </div>
-                <div id="menu-acc-items-user" style="display: none">
-                    <div class="menu-item" id="menu-top-user-name" style="display: none"></div>
-                    <div class="menu-item" id="menu-top-admin-dashboard" style="display: none">Painel de Administração</div>
-                    <div class="menu-item" id="menu-top-acc-logout">Sair</div>
-                </div>
+        </div>
+        <div id="menu-acc-items" style="display: none">
+            <div id="menu-acc-items-guest" style="display: none">
+                <div class="menu-item" id="menu-top-acc-login">Entrar</div>
+                <div class="menu-item" id="menu-top-acc-register">Criar conta</div>
+            </div>
+            <div id="menu-acc-items-user" style="display: none">
+                <div class="menu-item" id="menu-top-user-name" style="display: none"></div>
+                <div class="menu-item" id="menu-top-admin-dashboard" style="display: none">Painel de Administração</div>
+                <div class="menu-item" id="menu-top-acc-logout">Sair</div>
             </div>
         </div>
 
@@ -5918,9 +5961,12 @@
                 ) {
                     const desktopAdminDashboardButton = document.getElementById('menu-top-admin-dashboard');
                     const mobileAdminDashboardButton = document.getElementById('menu-mobile-admin-dashboard');
-                    desktopAdminDashboardButton.style.display = 'block';
+
                     window.App.Components.MenuAccTop.UserItems.Items.PA.panelLocation = window._authManager.userData.adminPanel;
                     window.App.Components.MenuMobile.UserItems.Items.PA.panelLocation = window._authManager.userData.adminPanel;
+
+                    desktopAdminDashboardButton.style.display = 'block';
+                    mobileAdminDashboardButton.style.display = 'block';
                 }
             }
 
