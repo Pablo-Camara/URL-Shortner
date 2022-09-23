@@ -126,6 +126,11 @@
                 border: 1px solid #AAAAAA;
             }
 
+            .form-box .input-container input[type="checkbox"] {
+                width: auto;
+                height: auto;
+            }
+
             .form-box .input-container input.has-error {
                 border: 1px solid red;
             }
@@ -4690,7 +4695,8 @@
                         Edit: {
                             dashboardItem: false,
                             apis: {
-                                Users: "{{ url('/api/users/prepare-edit-form') }}"
+                                Users: "{{ url('/api/users/prepare-edit-form') }}",
+                                PermissionGroups: "{{ url('/api/permission-groups/prepare-edit-form') }}",
                             },
                             el: function () {
                                 return document.getElementById('dashboard-edit');
@@ -4884,11 +4890,26 @@
                                                     const inputVal = namedElements[i].value;
                                                     const paramName = namedElements[i].getAttribute('name');
 
-                                                    urlParams += paramName + '=' + inputVal;
+                                                    var shouldAddParam = true;
 
-                                                    if (i+1 < namedElements.length) {
-                                                        urlParams += '&';
+                                                    if (
+                                                        namedElements[i].nodeName.toLowerCase() === 'input'
+                                                        &&
+                                                        namedElements[i].getAttribute('type') === 'checkbox'
+                                                        &&
+                                                        !namedElements[i].checked
+                                                    ) {
+                                                        shouldAddParam = false;
                                                     }
+
+                                                    if ( shouldAddParam ) {
+                                                        urlParams += paramName + '=' + inputVal;
+
+                                                        if (i+1 < namedElements.length) {
+                                                            urlParams += '&';
+                                                        }
+                                                    }
+
                                                 }
 
                                                 var xhr = new XMLHttpRequest();
@@ -5302,7 +5323,21 @@
                                                     Object.keys(resObj.search_results.data[0])
                                                 );
                                                 window.App.Components.PA.Components.ResultsTable.setRows(
-                                                    resObj.search_results.data
+                                                    resObj.search_results.data,
+                                                    resObj.edit_config,
+                                                    function (e) {
+                                                        window.App.Components.PA.Components.Edit.startEditing(
+                                                            'PermissionGroups',
+                                                            e.target.parentElement.getAttribute('data-row-id'),
+                                                            function () {
+                                                                window.App.Components.PA.Components.PermissionGroups.Components.PermissionGroupsList.fetchPermissionGroups(
+                                                                    window.App.Helpers.Pagination.getCurrentPage(
+                                                                        resObj.pagination_identifier
+                                                                    )
+                                                                );
+                                                            }
+                                                        );
+                                                    }
                                                 );
 
                                                 if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
@@ -5312,7 +5347,7 @@
                                                         window.App.Helpers.Pagination.createEl(
                                                             resObj.search_results.current_page,
                                                             resObj.search_results.last_page,
-                                                            'PermissionGroupsList',
+                                                            resObj.pagination_identifier,
                                                             function(param) {
                                                                 window.App.Components.PA.Components.PermissionGroups.Components.PermissionGroupsList.fetchPermissionGroups(param);
                                                             }
@@ -5373,7 +5408,7 @@
                             },
                             Components: {
                                 UsersList: {
-                                    api: "{{ url('/api/users-list') }}",
+                                    api: "{{ url('/api/users') }}",
                                     fetchUsersList: function (pageNumber = 1) {
                                         window.App.Components.PA.Components.ResultsTable.hide();
                                         window.App.Components.PA.Components.NoResults.hide();

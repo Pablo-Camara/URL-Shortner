@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Responses\AuthResponses;
 use App\Models\PermissionGroup;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -72,10 +73,126 @@ class PermissionGroupController extends Controller
 
         return new Response(
             [
-                'search_results' => $results
+                'search_results' => $results,
+                'pagination_identifier' => 'PermissionGroupsList',
+                'edit_config' => [
+                    'primary_key_column' =>  __('admin-panel.permission-group-id')
+                ]
             ]
         );
 
     }
 
+
+    /**
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function prepareEditForm(Request $request)
+    {
+        if (!$request->user()->isAdmin()) {
+            return AuthResponses::notAuthorized();
+        }
+
+        /**
+         * @var PermissionGroup
+         */
+        $permissionGroup = PermissionGroup::findOrFail($request->input('id'));
+
+        $editShortlinksDestinationUrlAttributes = [
+            'name' => 'edit_shortlinks_destination_url',
+            'type' => 'checkbox'
+        ];
+        if ($permissionGroup->canEditShortlinksDestinationUrl()) {
+            $editShortlinksDestinationUrlAttributes['checked'] = 'checked';
+        }
+
+        $canViewShortlinksTotalViews = [
+            'name' => 'view_shortlinks_total_views',
+            'type' => 'checkbox'
+        ];
+        if ($permissionGroup->canViewShortlinksTotalViews()) {
+            $canViewShortlinksTotalViews['checked'] = 'checked';
+        }
+
+        $viewShortlinksTotalUniqueViews = [
+            'name' => 'view_shortlinks_total_unique_views',
+            'type' => 'checkbox'
+        ];
+        if ($permissionGroup->canViewShortlinksTotalUniqueViews()) {
+            $viewShortlinksTotalUniqueViews['checked'] = 'checked';
+        }
+
+        return [
+            'form_title' => 'Editar grupo de permissões',
+            'save_endpoint' => url('/api/permission-groups/edit'),
+            'form_fields' => [
+                [
+                    'label' => __('admin-panel.permission-group-id'),
+                    'element_type' => 'input',
+                    'element_attributes' => [
+                        'name' => 'id',
+                        'type' => 'text',
+                        'disabled' => 'disabled',
+                        'value' => $permissionGroup->id,
+                    ]
+                ],
+                [
+                    'label' => __('admin-panel.name'),
+                    'element_type' => 'input',
+                    'element_attributes' => [
+                        'name' => 'name',
+                        'type' => 'text',
+                        'value' => $permissionGroup->name,
+                    ],
+                ],
+                [
+                    'label' => __('admin-panel.edit_shortlinks_destination_url'),
+                    'element_type' => 'input',
+                    'element_attributes' => $editShortlinksDestinationUrlAttributes,
+                ],
+                [
+                    'label' => __('admin-panel.view_shortlinks_total_views'),
+                    'element_type' => 'input',
+                    'element_attributes' => $canViewShortlinksTotalViews,
+                ],
+                [
+                    'label' => __('admin-panel.view_shortlinks_total_unique_views'),
+                    'element_type' => 'input',
+                    'element_attributes' => $viewShortlinksTotalUniqueViews,
+                ],
+            ]
+        ];
+    }
+
+
+    /**
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Request $request)
+    {
+        if (!$request->user()->isAdmin()) {
+            return AuthResponses::notAuthorized();
+        }
+
+        $validations = [
+            'id' => 'required|numeric',
+            'name' => 'required',
+        ];
+
+        $request->validate($validations);
+
+        $permissionGroup = PermissionGroup::findOrFail($request->input('id'));
+
+        $permissionGroup->name = $request->input('name');
+        $permissionGroup->edit_shortlinks_destination_url = !empty($request->input('edit_shortlinks_destination_url')) ? 1 : 0;
+        $permissionGroup->view_shortlinks_total_views = !empty($request->input('view_shortlinks_total_views')) ? 1 : 0;
+        $permissionGroup->view_shortlinks_total_unique_views = !empty($request->input('view_shortlinks_total_unique_views')) ? 1 : 0;
+        $permissionGroup->save();
+
+        return new Response([
+            'message' => 'Guardado! ( ' . (Carbon::now()->toDateTimeString()) . ' )'
+        ], 200);
+    }
 }

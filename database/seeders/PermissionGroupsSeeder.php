@@ -16,14 +16,14 @@ class PermissionGroupsSeeder extends Seeder
     {
         $permissionGroups = [
             [
-                'name' => 'free users',
+                'name' => 'utilizador básico',
                 'default' => 1,
                 'edit_shortlinks_destination_url' => 1,
                 'view_shortlinks_total_views' => 1,
                 'view_shortlinks_total_unique_views' => 0,
             ],
             [
-                'name' => 'all powerful users',
+                'name' => 'wil-admin',
                 'default' => 0,
                 'edit_shortlinks_destination_url' => 1,
                 'view_shortlinks_total_views' => 1,
