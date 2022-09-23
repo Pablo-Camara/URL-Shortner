@@ -39,7 +39,7 @@ class UserController extends Controller
             DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
             DB::raw('users.name AS `'.__('admin-panel.name').'`'),
             DB::raw('users.email AS `'.__('admin-panel.email').'`'),
-            DB::raw('CONCAT(permission_groups.name, \'(\', permission_groups.id, \')\') AS `'.__('admin-panel.permission-group').'`'),
+            DB::raw('permission_groups.name AS `'.__('admin-panel.permission-group').'`'),
             DB::raw('CASE WHEN users.email_verified_at IS NOT NULL THEN 1 ELSE 0 END AS `'.__('admin-panel.has-verified-email').'`'),
             DB::raw('CASE WHEN users.password IS NOT NULL THEN 1 ELSE 0 END AS `'.__('admin-panel.has-password').'`'),
             DB::raw('users.created_at AS `'.__('admin-panel.created_at').'`'),
