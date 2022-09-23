@@ -31,6 +31,7 @@
                 background-repeat: no-repeat;
                 min-height: 100vh;
                 background-position-x: 70%;
+                background-attachment: fixed;
             }
 
             .form-box {
