@@ -2286,11 +2286,28 @@
                                         this.hasInitialized = true;
                                     }
                                 }
+                            },
+                            CloseBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('custom-shortlink-close');
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized === false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Components.RegisterAvailableShortlink.hide();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
                             }
                         },
                         initialize: function () {
-                            this.Components.ContinueBtn.initialize();
                             this.Components.RequestedShortlink.initialize();
+                            this.Components.ContinueBtn.initialize();
+                            this.Components.CloseBtn.initialize();
                         }
 
                     },
@@ -5924,6 +5941,7 @@
             <div class="form-box-title">
                 Criar link personalizado
             </div>
+            <div class="close-form-box" id="custom-shortlink-close">X</div>
 
             @if(
                 isset($domain)
