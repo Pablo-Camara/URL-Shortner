@@ -250,7 +250,7 @@
 
             .form-link {
                 width: 100%;
-                margin-top: 5px;
+                margin-top: 8px;
                 font-size: 14px;
                 display: block;
             }
@@ -708,11 +708,6 @@
                     -moz-border-radius: 12px;
                     border-radius: 12px;
                     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
-                }
-
-                #menu-acc-items .menu-item:first-child:hover {
-                    cursor: default;
-                    text-decoration: none;
                 }
 
                 #menu-acc-items .menu-item
@@ -1454,8 +1449,7 @@
                                         if ( this.hasInitialized == false ) {
 
                                             this.el().onclick = function (e) {
-                                                window.App.hideNonStickyComponents();
-                                                window.App.Components.Login.show();
+                                                window.App.Views.Login.show();
                                             };
 
                                             this.hasInitialized = true;
@@ -1471,8 +1465,7 @@
                                         if ( this.hasInitialized == false ) {
 
                                             this.el().onclick = function (e) {
-                                                window.App.hideNonStickyComponents();
-                                                window.App.Components.Register.show();
+                                                window.App.Views.Register.show();
                                             };
 
                                             this.hasInitialized = true;
@@ -1638,8 +1631,7 @@
                                         if ( this.hasInitialized == false ) {
 
                                             this.el().onclick = function (e) {
-                                                window.App.hideNonStickyComponents();
-                                                window.App.Components.Login.show();
+                                                window.App.Views.Login.show();
                                             };
 
                                             this.hasInitialized = true;
@@ -1655,8 +1647,7 @@
                                         if ( this.hasInitialized == false ) {
 
                                             this.el().onclick = function (e) {
-                                                window.App.hideNonStickyComponents();
-                                                window.App.Components.Register.show();
+                                                window.App.Views.Register.show();
                                             };
 
                                             this.hasInitialized = true;
@@ -2057,8 +2048,7 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.hideNonStickyComponents();
-                                            window.App.Components.Login.show();
+                                            window.App.Views.Login.show();
                                             window.App.previousView = window.App.Components.ShortlinkResult.el().id;
                                         };
                                         this.hasInitialized = true;
@@ -2080,10 +2070,7 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function () {
-                                            window.App.hideNonStickyComponents();
-                                            window.App.Components.ShortlinkResult.hide();
-                                            window.App.Components.ShortenUrl.show();
-                                            window.App.Components.MyLinks.show();
+                                            window.App.Views.MyLinks.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -3056,8 +3043,7 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.Components.Register.hide();
-                                            window.App.Components.Login.show();
+                                            window.App.Views.Login.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -3154,8 +3140,7 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         this.el().onclick = function (e) {
-                                            window.App.Components.PasswordRecovery.hide();
-                                            window.App.Components.Login.show();
+                                            window.App.Views.Login.show();
                                         };
                                         this.hasInitialized = true;
                                     }
@@ -3506,8 +3491,7 @@
                                     if (this.hasInitialized == false) {
 
                                         this.el().onclick = function(e) {
-                                            window.App.Components.PasswordHasChanged.hide();
-                                            window.App.Components.Login.show();
+                                            window.App.Views.Login.show();
                                         };
 
                                         this.hasInitialized = true;
@@ -4107,8 +4091,7 @@
                                     if ( this.hasInitialized == false ) {
 
                                         this.el().onclick = function (e) {
-                                            window.App.Components.EmailConfirmed.hide();
-                                            window.App.Components.Login.show();
+                                            window.App.Views.Login.show();
                                         };
 
                                         this.hasInitialized = true;
@@ -4130,6 +4113,7 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                             window.App.currentView = 'HomePage';
@@ -4177,6 +4161,7 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                             window.App.currentView = 'Login';
@@ -4193,6 +4178,7 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                             window.App.currentView = 'Register';
@@ -4209,6 +4195,7 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'RegisterAvailableShortlink', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                             window.App.currentView = 'RegisterAvailableShortlink';
@@ -4225,6 +4212,7 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                             window.App.currentView = 'EmailConfirmed';
@@ -4241,6 +4229,7 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                             window.App.currentView = 'ChangePassword';

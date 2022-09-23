@@ -2,8 +2,7 @@ Olá {{ $firstName }} ,
 
 Utiliza o seguinte link para confirmar o seu email:
 
-{{ $emailConfirmationLink }}
-
+{!! $emailConfirmationLink !!}
 
 Muito obrigado.
 
