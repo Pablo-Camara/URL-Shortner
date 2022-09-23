@@ -31,6 +31,7 @@ class HomeComposer
                 ->with('enableLoginWithGithubBtn', $enableLoginWithGithubBtn)
                 ->with('currentBackground', $currentBackground)
                 ->with('logoTop', $logoTop)
-                ->with('logoTopMobile', $logoTopMobile);
+                ->with('logoTopMobile', $logoTopMobile)
+                ->with('domain', preg_replace("(^https?://)", "", url('/')));
     }
 }

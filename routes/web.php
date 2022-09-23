@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index']);
+Route::get('/criar-link-personalizado', [HomeController::class, 'linkPersonalization']);
 Route::get('/entrar', [HomeController::class, 'login'])->name('login-page');
 Route::get('/criar-conta', [HomeController::class, 'register'])->name('register-page');
 Route::get('/os-meus-links', [HomeController::class, 'myLinks'])->name('my-links-page');

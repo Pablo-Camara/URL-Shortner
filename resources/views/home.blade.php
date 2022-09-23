@@ -1763,6 +1763,9 @@
                             if (window._authManager.isAuthenticated) {
                                 this.Components.GenerateBtn.enable();
                             }
+
+                            this.Components.DestinationEmail.show();
+                            this.Components.CreateCustomLink.show();
                         },
                         hide: function() {
                             this.el().style.display = 'none';
@@ -1849,8 +1852,6 @@
                                     ) {
                                         return false;
                                     }
-
-                                    this.initialize();
                                     this.containerEl().style.display = 'block';
                                 },
                                 hide: function () {
@@ -1877,6 +1878,10 @@
                                                 $this.labelEl().parentNode.classList.remove("mtop-22");
                                             }
                                         });
+
+                                        document.addEventListener('userAuthenticated', (e) => {
+                                            window.App.Components.ShortenUrl.Components.DestinationEmail.show();
+                                        }, false);
 
                                         this.hasInitialized = true;
                                     }
@@ -1993,12 +1998,50 @@
                                     };
                                     this.hasInitialized = true;
                                 }
-                            }
+                            },
+                            CreateCustomLink: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("create-personalized-link");
+                                },
+                                show: function () {
+                                    if (
+                                        !window._authManager.isAuthenticated
+                                        ||
+                                        !window._authManager.isLoggedIn
+                                        ||
+                                        !window._authManager.userHasPermission('create_custom_shortlinks')
+                                    ) {
+                                        return false;
+                                    }
+
+                                    this.el().style.display = 'block';
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized == false) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.RegisterCustomShortlink.show();
+                                        };
+
+                                        const $this = this;
+                                        document.addEventListener('userAuthenticated', (e) => {
+                                            $this.show();
+                                        }, false);
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                         },
                         initialize: function () {
                             this.Components.LongUrl.initialize();
                             this.Components.DestinationEmail.initialize();
                             this.Components.GenerateBtn.initialize();
+                            this.Components.CreateCustomLink.initialize();
                         }
                     },
                     ShortlinkResult: {
@@ -2106,14 +2149,39 @@
                         }
 
                     },
-                    RegisterAvailableShortlink: {
+                    RegisterCustomShortlink: {
                         el: function () {
                             return document.getElementById("form-box-shortlink-requested");
                         },
                         show: function () {
                             this.initialize();
                             this.el().style.display = "block";
-                            this.Components.RequestedShortlinkLongUrl.el().focus();
+
+                            if (this.Components.RequestedShortlink.el().value.length == 0) {
+                                const $this = this;
+
+                                var letters = 'personalizar';
+                                letters = letters.split('');
+
+                                for(var i = 0; i < letters.length; i++) {
+                                    setTimeout(
+                                        function(){
+                                            $this.Components.RequestedShortlink.el().value += letters.shift();
+                                            $this.Components.RequestedShortlink.mirror();
+                                        },
+                                        i*200
+                                    );
+                                }
+
+                                setTimeout(
+                                    function() {
+                                        $this.Components.RequestedShortlink.el().focus();
+                                    },
+                                    letters.length*200
+                                );
+                            } else {
+                                this.Components.RequestedShortlinkLongUrl.el().focus();
+                            }
                         },
                         hide: function () {
                             this.el().style.display = "none";
@@ -2127,8 +2195,16 @@
                                 mirrorEl: function () {
                                     return document.getElementById('custom-url-shortstring');
                                 },
+                                mirror: function () {
+                                    this.mirrorEl().innerText = this.el().value;
+                                },
                                 feedbackEl: function () {
                                     return document.getElementById('custom-url-shortstring-feedback');
+                                },
+                                hideFeedbackEl: function () {
+                                    if(this.feedbackEl() != null) {
+                                        this.feedbackEl().style.display = 'none';
+                                    }
                                 },
                                 getShortstring: function () {
                                     return this.el().value;
@@ -2138,9 +2214,9 @@
 
                                         const $this = this;
                                         this.el().onkeyup = function(e) {
-                                            $this.mirrorEl().innerText = e.target.value;
-                                            $this.feedbackEl().style.display = 'none';
-                                            window.App.Components.RegisterAvailableShortlink.Components.Feedback.hide();
+                                            $this.mirror();
+                                            $this.hideFeedbackEl();
+                                            window.App.Components.RegisterCustomShortlink.Components.Feedback.hide();
                                         };
 
                                         this.hasInitialized = true;
@@ -2197,8 +2273,8 @@
                                                 return false;
                                             }
 
-                                            const shortStr = window.App.Components.RegisterAvailableShortlink.Components.RequestedShortlink.getShortstring();
-                                            const longUrlField = window.App.Components.RegisterAvailableShortlink.Components.RequestedShortlinkLongUrl.el();
+                                            const shortStr = window.App.Components.RegisterCustomShortlink.Components.RequestedShortlink.getShortstring();
+                                            const longUrlField = window.App.Components.RegisterCustomShortlink.Components.RequestedShortlinkLongUrl.el();
 
                                             if (longUrlField.value.length == 0) {
                                                 longUrlField.classList.add('has-error');
@@ -2210,7 +2286,7 @@
                                             // disable generate button to prevent double requests
                                             e.target.classList.add('disabled');
 
-                                            window.App.Components.RegisterAvailableShortlink.Components.Feedback.showInfo('por favor espere..');
+                                            window.App.Components.RegisterCustomShortlink.Components.Feedback.showInfo('por favor espere..');
 
                                             var func = function (token) {
                                                 var xhr = new XMLHttpRequest();
@@ -2222,7 +2298,7 @@
                                                             const jsonResObj = JSON.parse(this.responseText);
 
                                                             if (this.status === 201) {
-                                                                window.App.Components.RegisterAvailableShortlink.hide();
+                                                                window.App.Components.RegisterCustomShortlink.hide();
                                                                 window.App.Components.ShortlinkResult.Components.Shortlink.set(
                                                                     jsonResObj.shortlink
                                                                 );
@@ -2231,15 +2307,15 @@
                                                             }
 
                                                             if(typeof jsonResObj.message !== 'undefined') {
-                                                                window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError(jsonResObj.message);
+                                                                window.App.Components.RegisterCustomShortlink.Components.Feedback.showError(jsonResObj.message);
                                                             } else {
-                                                                window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                                window.App.Components.RegisterCustomShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                             }
 
                                                             e.target.classList.remove('disabled');
                                                         } catch (e) {
                                                             // invalid json something went wrong
-                                                            window.App.Components.RegisterAvailableShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
+                                                            window.App.Components.RegisterCustomShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                         }
                                                     }
                                                 });
@@ -2296,7 +2372,9 @@
                                     if ( this.hasInitialized === false ) {
 
                                         this.el().onclick = function (e) {
-                                            window.App.Components.RegisterAvailableShortlink.hide();
+                                            window.App.Components.RegisterCustomShortlink.hide();
+                                            window.App.Components.ShortenUrl.show();
+                                            window.App.Components.RegisterCustomShortlink.Components.RequestedShortlink.el().value = '';
                                         };
 
                                         this.hasInitialized = true;
@@ -4157,10 +4235,10 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.currentView = 'HomePage';
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
-                            window.App.currentView = 'HomePage';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4175,12 +4253,12 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.currentView = 'MyLinks';
                             this.initialize();
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
                             window.history.pushState(null, 'Os meus links', '/os-meus-links');
-                            window.App.currentView = 'MyLinks';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4205,10 +4283,10 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.currentView = 'Login';
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
-                            window.App.currentView = 'Login';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4222,27 +4300,28 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.currentView = 'Register';
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
-                            window.App.currentView = 'Register';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
                             window.App.hideComponents(this.components.initiallyHidden);
                         }
                     },
-                    RegisterAvailableShortlink: {
+                    RegisterCustomShortlink: {
                         components: {
-                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'RegisterAvailableShortlink'],
+                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'RegisterAvailableShortlink', 'ShortlinkResult']
+                            sticky: ['MenuTop', 'MenuAccTop', 'RegisterCustomShortlink', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.currentView = 'RegisterCustomShortlink';
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
-                            window.App.currentView = 'RegisterAvailableShortlink';
+
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4256,10 +4335,10 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.currentView = 'EmailConfirmed';
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
-                            window.App.currentView = 'EmailConfirmed';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4273,10 +4352,10 @@
                             sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
+                            window.App.currentView = 'ChangePassword';
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
-                            window.App.currentView = 'ChangePassword';
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -5546,10 +5625,10 @@
                         sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                     },
                     show: function () {
+                        window.App.currentView = 'PA';
                         window.App.hideNonStickyComponents();
                         window.App.hideComponents(this.components.initiallyHidden);
                         window.App.showComponents(this.components.initiallyVisible);
-                        window.App.currentView = 'PA';
                     },
                     hide: function () {
                         window.App.hideComponents(this.components.initiallyVisible);
@@ -5914,6 +5993,7 @@
             </div>
 
             <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
+            <a href="javascript:void(0);" id="create-personalized-link" class="form-link" style="display: none">Criar link personalizado</a>
 
             <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
         </div>
@@ -5943,21 +6023,18 @@
             </div>
             <div class="close-form-box" id="custom-shortlink-close">X</div>
 
-            @if(
-                isset($domain)
-                &&
-                isset($shortstring)
-            )
-                <div class="input-container">
-                    <input type="text" id="requested-shortstring" value="{{$shortstring}}"/>
-                    <div>
-                        <small>
-                            {{$domain}}/<span id="custom-url-shortstring">{{$shortstring}}</span>
-                        </small>
+
+            <div class="input-container">
+                <input type="text" id="requested-shortstring" value="{{ isset($shortstring) ? $shortstring : '' }}"/>
+                <div>
+                    <small>
+                        {{$domain}}/<span id="custom-url-shortstring">{{ isset($shortstring) ? $shortstring : '' }}</span>
+                    </small>
+                    @if (isset($shortlink_available) && $shortlink_available === true)
                         <div style="color: green;" id="custom-url-shortstring-feedback">Link disponível!</div>
-                    </div>
+                    @endif
                 </div>
-            @endif
+            </div>
 
             <div>Para onde quer apontar este link?</div>
             <div class="input-container">
@@ -5968,16 +6045,6 @@
 
             <div class="button disabled" id="shortlink-register">Continuar</div>
         </div>
-
-        @if(isset($shortlink) && (isset($shortlink_available) && $shortlink_available === true))
-            <script>
-                window.App.isUserRequestingAvailableShortstring = true;
-            </script>
-        @else
-            <script>
-                window.App.isUserRequestingAvailableShortstring = false;
-            </script>
-        @endif
 
         @if(isset($view))
             <script>
@@ -5991,8 +6058,6 @@
             // add event listener per component, on initialize
             function enableAuthenticationDependentButtons() {
                 window.App.Components.ShortenUrl.Components.GenerateBtn.enable();
-                // DestinationEmail will only show if logged in:
-                window.App.Components.ShortenUrl.Components.DestinationEmail.show();
 
                 window.App.Components.MenuTop.Items.MyLinks.show();
                 window.App.Components.Login.Components.LoginBtn.enable();
@@ -6008,28 +6073,21 @@
                 }
 
                 window.App.Components.Register.Components.RegisterBtn.enable();
-                window.App.Components.RegisterAvailableShortlink.Components.ContinueBtn.enable();
+                window.App.Components.RegisterCustomShortlink.Components.ContinueBtn.enable();
                 window.App.Components.PasswordRecovery.Components.SendPwdRecoveryBtn.enable();
                 window.App.Components.ChangePassword.Components.ChangePasswordBtn.enable();
             }
 
-            if (window.App.isUserRequestingAvailableShortstring) {
-                window.App.Views.RegisterAvailableShortlink.show();
-            } else {
-                if (
-                    typeof window.App.currentView !== 'undefined'
-                    &&
-                    typeof window.App.Views[window.App.currentView] !== 'undefined'
-                    &&
-                    typeof window.App.Views[window.App.currentView].show === 'function'
-                ) {
-                    window.App.Views[window.App.currentView].show();
-                } else {
-                    //console.log('view not found');
-                }
 
+            if (
+                typeof window.App.currentView !== 'undefined'
+                &&
+                typeof window.App.Views[window.App.currentView] !== 'undefined'
+                &&
+                typeof window.App.Views[window.App.currentView].show === 'function'
+            ) {
+                window.App.Views[window.App.currentView].show();
             }
-
 
             function showAdminMenuItem() {
                 if (

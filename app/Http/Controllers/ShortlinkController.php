@@ -99,8 +99,7 @@ class ShortlinkController extends Controller
                     ShortlinkActions::VISITED_AVAILABLE_SHORTLINK
                 );
                 return view('home', [
-                    'view' => 'RegisterAvailableShortlink',
-                    'domain' => url('/'),
+                    'view' => 'RegisterCustomShortlink',
                     'shortstring' => $shortstring->shortstring,
                     'shortlink_available' => true,
                 ]);

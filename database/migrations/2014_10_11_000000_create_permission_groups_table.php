@@ -23,6 +23,7 @@ return new class extends Migration
             $table->boolean('edit_shortlinks_destination_url')->default(1);
             $table->boolean('view_shortlinks_total_views')->default(1);
             $table->boolean('view_shortlinks_total_unique_views')->default(0);
+            $table->boolean('create_custom_shortlinks')->default(0);
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

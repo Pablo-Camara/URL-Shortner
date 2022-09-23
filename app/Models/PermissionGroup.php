@@ -16,6 +16,7 @@ class PermissionGroup extends Model
         'edit_shortlinks_destination_url' => 'boolean',
         'view_shortlinks_total_views' => 'boolean',
         'view_shortlinks_total_unique_views' => 'boolean',
+        'create_custom_shortlinks' => 'boolean',
     ];
 
     public function canEditShortlinksDestinationUrl() {
@@ -30,12 +31,17 @@ class PermissionGroup extends Model
         return $this->view_shortlinks_total_unique_views;
     }
 
+    public function canCreateCustomShortlinks() {
+        return $this->create_custom_shortlinks;
+    }
+
     public function toPermissionsArray()
     {
         return [
             'edit_shortlinks_destination_url' => $this->edit_shortlinks_destination_url,
             'view_shortlinks_total_views' => $this->view_shortlinks_total_views,
             'view_shortlinks_total_unique_views' => $this->view_shortlinks_total_unique_views,
+            'create_custom_shortlinks' => $this->create_custom_shortlinks,
         ];
 
     }

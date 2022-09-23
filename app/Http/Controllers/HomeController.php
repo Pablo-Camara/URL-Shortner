@@ -25,6 +25,7 @@ class HomeController extends Controller
         View::share('userPermissions', json_encode($this->userPermissions));
         View::share('userData', json_encode($this->userData));
     }
+
     /**
      * Display homepage
      */
@@ -32,6 +33,16 @@ class HomeController extends Controller
         UserAction::logAction($this->userId, HomeControllerActions::OPENED_HOME_PAGE_DIRECTLY);
         return view('home', [
             'view' => 'HomePage'
+        ]);
+    }
+
+    /**
+     * Display link personalization page
+     */
+    public function linkPersonalization() {
+        UserAction::logAction($this->userId, HomeControllerActions::OPENED_LINK_PERSONALIZATION_PAGE_DIRECTLY);
+        return view('home', [
+            'view' => 'RegisterCustomShortlink'
         ]);
     }
 
