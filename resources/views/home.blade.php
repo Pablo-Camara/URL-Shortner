@@ -275,6 +275,7 @@
                 background-position: center;
                 background-size: 50px;
                 background-image: url("{{ asset('/img/loading.gif') }}");
+                z-index: 99999;
             }
 
             .dashboard-item-container .dashboard-item {
@@ -4879,8 +4880,10 @@
                                                 var xhr = new XMLHttpRequest();
                                                 xhr.withCredentials = true;
 
+                                                window.App.Components.PA.Components.LoadingOverlay.show();
                                                 xhr.addEventListener("readystatechange", function () {
                                                     if (this.readyState === 4) {
+                                                        window.App.Components.PA.Components.LoadingOverlay.hide();
                                                         const resObj = JSON.parse(this.response);
 
                                                         if (
