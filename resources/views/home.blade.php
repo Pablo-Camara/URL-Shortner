@@ -2120,11 +2120,31 @@
                         },
                         Components: {
                             RequestedShortlink: {
+                                hasInitialized: false,
                                 el: function () {
-                                    return document.getElementById('requested-shortlink');
+                                    return document.getElementById('requested-shortstring');
+                                },
+                                mirrorEl: function () {
+                                    return document.getElementById('custom-url-shortstring');
+                                },
+                                feedbackEl: function () {
+                                    return document.getElementById('custom-url-shortstring-feedback');
                                 },
                                 getShortstring: function () {
-                                    return this.el().dataset.shortstring;
+                                    return this.el().value;
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+
+                                        const $this = this;
+                                        this.el().onkeyup = function(e) {
+                                            $this.mirrorEl().innerText = e.target.value;
+                                            $this.feedbackEl().style.display = 'none';
+                                            window.App.Components.RegisterAvailableShortlink.Components.Feedback.hide();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
                                 }
                             },
                             RequestedShortlinkLongUrl: {
@@ -2270,6 +2290,7 @@
                         },
                         initialize: function () {
                             this.Components.ContinueBtn.initialize();
+                            this.Components.RequestedShortlink.initialize();
                         }
 
                     },
@@ -5901,13 +5922,25 @@
             style="display: none"
         >
             <div class="form-box-title">
-                Link disponível!
+                Criar link personalizado
             </div>
-            @if(isset($shortlink) && isset($shortlink_shortstring))
+
+            @if(
+                isset($domain)
+                &&
+                isset($shortstring)
+            )
                 <div class="input-container">
-                    <input type="text" id="requested-shortlink" data-shortstring="{{$shortlink_shortstring}}" value="{{ $shortlink}}" readonly />
+                    <input type="text" id="requested-shortstring" value="{{$shortstring}}"/>
+                    <div>
+                        <small>
+                            {{$domain}}/<span id="custom-url-shortstring">{{$shortstring}}</span>
+                        </small>
+                        <div style="color: green;" id="custom-url-shortstring-feedback">Link disponível!</div>
+                    </div>
                 </div>
             @endif
+
             <div>Para onde quer apontar este link?</div>
             <div class="input-container">
                 <input type="text" id="requested-shortlink-long-url"/>

@@ -100,9 +100,9 @@ class ShortlinkController extends Controller
                 );
                 return view('home', [
                     'view' => 'RegisterAvailableShortlink',
-                    'shortlink' => url('/' . $shortstring->shortstring),
+                    'domain' => url('/'),
+                    'shortstring' => $shortstring->shortstring,
                     'shortlink_available' => true,
-                    'shortlink_shortstring' => $shortstring->shortstring
                 ]);
             }
 
