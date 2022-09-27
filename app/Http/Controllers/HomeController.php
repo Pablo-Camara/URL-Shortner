@@ -21,7 +21,7 @@ class HomeController extends Controller
 
         View::share('isAdmin', $this->isAdmin());
         View::share('authToken', $this->authToken);
-        View::share('isLoggedIn', $this->guest == 0 ? 'true' : 'false');
+        View::share('isLoggedIn', $this->isLoggedIn() ? 'true' : 'false');
         View::share('userPermissions', json_encode($this->userPermissions));
         View::share('userData', json_encode($this->userData));
     }

@@ -49,7 +49,7 @@ Route::post('/links', [ShortlinkController::class, 'myLinks'])
         ->name('get-my-links');
 
 Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkController::class, 'shorten']);
-Route::middleware('auth:sanctum')->post('/register-available', [ShortlinkController::class, 'registerAvailable']);
+Route::middleware('auth:sanctum')->post('/register-custom-shortlink', [ShortlinkController::class, 'registerCustomShortlink']);
 
 
 Route::post('/shortlinks/edit', [ShortlinkController::class, 'editShortlinkUrl'])

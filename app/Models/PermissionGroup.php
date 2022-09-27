@@ -13,6 +13,7 @@ class PermissionGroup extends Model
      * @var array
      */
     protected $casts = [
+        'send_shortlink_by_email_when_generating' => 'boolean',
         'edit_shortlinks_destination_url' => 'boolean',
         'view_shortlinks_total_views' => 'boolean',
         'view_shortlinks_total_unique_views' => 'boolean',
@@ -35,9 +36,19 @@ class PermissionGroup extends Model
         return $this->create_custom_shortlinks;
     }
 
+    public function canCreateShortlinksWithSpecificLength(int $specificLength) {
+        $permissionName = 'create_shortlinks_with_length_' . $specificLength;
+        return $this->$permissionName;
+    }
+
+    public function canSendShortlinkByEmailWhenGenerating() {
+        return $this->send_shortlink_by_email_when_generating;
+    }
+
     public function toPermissionsArray()
     {
         return [
+            'send_shortlink_by_email_when_generating' => $this->send_shortlink_by_email_when_generating,
             'edit_shortlinks_destination_url' => $this->edit_shortlinks_destination_url,
             'view_shortlinks_total_views' => $this->view_shortlinks_total_views,
             'view_shortlinks_total_unique_views' => $this->view_shortlinks_total_unique_views,

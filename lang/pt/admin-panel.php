@@ -10,13 +10,43 @@ return [
     'yes' => 'sim',
     'no' => 'não',
 
+    'undefined' => 'não definido',
+
     'permission-group-id' => 'Id Grupo',
     'permission-group' => 'Grupo de Permissões',
     'default-permission-group' => 'Grupo Predefinido para Novos Utilizadores',
+    'guests_permission_group' => 'Grupo Predefinido para Utilizadores sem Conta',
 
+    'send_shortlink_by_email_when_generating' => 'Enviar shortlinks por email ao gerar',
     'edit_shortlinks_destination_url' => 'Editar URL Destino',
     'view_shortlinks_total_views' => 'Ver Total de Visualizações',
     'view_shortlinks_total_unique_views' => 'Ver Total de Visualizações Únicas',
+    'create_custom_shortlinks' => 'Criar links personalizados',
+
+    'max_shortlinks_with_5_or_more_of_length' => 'Maximo de shortlinks com 5 ou mais de tamanho',
+    'max_shortlinks_per_day_with_5_or_more_of_length' => 'Maximo de shortlinks por Dia com 5 ou mais de tamanho',
+    'max_shortlinks_per_month_with_5_or_more_of_length' => 'Maximo de shortlinks por Mês com 5 ou mais de tamanho',
+    'max_shortlinks_per_year_with_5_or_more_of_length' => 'Maximo de shortlinks por Ano com 5 ou mais de tamanho',
+
+    'max_shortlinks_with_length_4' => 'Maximo de shortlinks com 4 de tamanho',
+    'max_shortlinks_per_day_with_length_4' => 'Maximo de shortlinks por Dia com 4 de tamanho',
+    'max_shortlinks_per_month_with_length_4' => 'Maximo de shortlinks por Mês com 4 de tamanho',
+    'max_shortlinks_per_year_with_length_4' => 'Maximo de shortlinks por Ano com 4 de tamanho',
+
+    'max_shortlinks_with_length_3' => 'Maximo de shortlinks com 3 de tamanho',
+    'max_shortlinks_per_day_with_length_3' => 'Maximo de shortlinks por Dia com 3 de tamanho',
+    'max_shortlinks_per_month_with_length_3' => 'Maximo de shortlinks por Mês com 3 de tamanho',
+    'max_shortlinks_per_year_with_length_3' => 'Maximo de shortlinks por Ano com 3 de tamanho',
+
+    'max_shortlinks_with_length_2' => 'Maximo de shortlinks com 2 de tamanho',
+    'max_shortlinks_per_day_with_length_2' => 'Maximo de shortlinks por Dia com 2 de tamanho',
+    'max_shortlinks_per_month_with_length_2' => 'Maximo de shortlinks por Mês com 2 de tamanho',
+    'max_shortlinks_per_year_with_length_2' => 'Maximo de shortlinks por Ano com 2 de tamanho',
+
+    'max_shortlinks_with_length_1' => 'Maximo de shortlinks com 1 de tamanho',
+    'max_shortlinks_per_day_with_length_1' => 'Maximo de shortlinks por Dia com 1 de tamanho',
+    'max_shortlinks_per_month_with_length_1' => 'Maximo de shortlinks por Mês com 1 de tamanho',
+    'max_shortlinks_per_year_with_length_1' => 'Maximo de shortlinks por Ano com 1 de tamanho',
 
     'action' => 'Ação',
     'day' => 'Dia',
@@ -121,10 +151,10 @@ return [
 
     'SENT_SHORTLINK_TO_EMAIL' => 'Shortlink Enviado por Email',
 
-    'VISITED_UNEXISTING_AND_UNAVAILABLE_SHORTLINK' => 'Tentativa de Visualizar Shortlink não existente e não disponível',
+    'VISITED_UNSEEDED_SHORTLINK' => 'Tentativa de Visualizar Shortlink personalizado / que não foi pré-disponibilizado',
     'ATTEMPTED_TO_REGISTER_UNAVAILABLE_SHORTSTRING' => 'Tentativa de registo de Shortlink não disponível',
     'ATTEMPTED_TO_REGISTER_UNEXISTING_SHORTSTRING' => 'Tentativa de registo de Shortlink não existente',
-    'REGISTERED_CUSTOM_AVAILABLE_SHORTSTRING' => 'Registo de Shortlink Customizado',
+    'REGISTERED_CUSTOM_SHORTLINK' => 'Registo de Shortlink Customizado',
     'ATTEMPTED_TO_GENERATE_SHORTLINK_FOR_URL_THAT_IS_TOO_LONG' => 'Tentativa de gerar shortlink para URL muito grande',
     'ATTEMPTED_TO_EDIT_SHORTLINK_URL_TO_ONE_THAT_IS_TOO_LONG' => 'Tentativa de editar shortlink para URL muito grande',
     'ATTEMPTED_TO_CREATE_SHORTLINK_FOR_SHORTLINK' => 'Tentativa de shortlink para shortlink',

@@ -886,12 +886,11 @@
                             window._authManager.at = resObj.at;
                             window._authManager.isAuthenticated = true;
                             window._authManager.isLoggedIn = resObj.guest === 0;
+                            window._authManager.userPermissions = resObj.permissions;
 
                             if (resObj.guest === 0) {
-                                window._authManager.userPermissions = resObj.permissions;
                                 window._authManager.userData = resObj.data;
                             }
-
 
                             // trigger userAuthenticated event
                             document.dispatchEvent(
@@ -1271,8 +1270,6 @@
                 },
                 userHasPermission: function (permissionName) {
                     return (
-                        this.isLoggedIn
-                        &&
                         this.userPermissions !== null
                         &&
                         typeof this.userPermissions[permissionName] !== 'undefined'
@@ -1760,10 +1757,6 @@
                             longUrlInput.value = "";
                             longUrlInput.focus();
 
-                            if (window._authManager.isAuthenticated) {
-                                this.Components.GenerateBtn.enable();
-                            }
-
                             this.Components.DestinationEmail.show();
                             this.Components.CreateCustomLink.show();
                         },
@@ -1846,9 +1839,7 @@
                                 },
                                 show: function () {
                                     if (
-                                        !window._authManager.isAuthenticated
-                                        ||
-                                        !window._authManager.isLoggedIn
+                                        !window._authManager.userHasPermission('send_shortlink_by_email_when_generating')
                                     ) {
                                         return false;
                                     }
@@ -1925,6 +1916,7 @@
 
                                             xhr.addEventListener("readystatechange", function () {
                                                 if (this.readyState === 4) {
+                                                    e.target.classList.remove('disabled');
                                                     try {
                                                         const jsonResObj = JSON.parse(this.responseText);
 
@@ -1942,8 +1934,6 @@
                                                         } else {
                                                             window.App.Components.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                         }
-
-                                                        e.target.classList.remove('disabled');
                                                     } catch (e) {
                                                         // invalid json something went wrong
                                                         window.App.Components.ShortenUrl.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
@@ -2294,6 +2284,7 @@
 
                                                 xhr.addEventListener("readystatechange", function () {
                                                     if (this.readyState === 4) {
+                                                        e.target.classList.remove('disabled');
                                                         try {
                                                             const jsonResObj = JSON.parse(this.responseText);
 
@@ -2312,7 +2303,7 @@
                                                                 window.App.Components.RegisterCustomShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
                                                             }
 
-                                                            e.target.classList.remove('disabled');
+
                                                         } catch (e) {
                                                             // invalid json something went wrong
                                                             window.App.Components.RegisterCustomShortlink.Components.Feedback.showError('Ocorreu um erro no nosso servidor..');
@@ -2334,7 +2325,7 @@
 
                                                 xhr.open(
                                                     "POST",
-                                                    '{{ url("/api/register-available") }}' + queryStr
+                                                    '{{ url("/api/register-custom-shortlink") }}' + queryStr
                                                 );
                                                 xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
                                                 xhr.send();
@@ -2372,9 +2363,8 @@
                                     if ( this.hasInitialized === false ) {
 
                                         this.el().onclick = function (e) {
-                                            window.App.Components.RegisterCustomShortlink.hide();
-                                            window.App.Components.ShortenUrl.show();
                                             window.App.Components.RegisterCustomShortlink.Components.RequestedShortlink.el().value = '';
+                                            window.App.Views.HomePage.show();
                                         };
 
                                         this.hasInitialized = true;

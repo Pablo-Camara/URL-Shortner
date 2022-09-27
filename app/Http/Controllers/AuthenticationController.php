@@ -53,7 +53,7 @@ class AuthenticationController extends Controller
 
             UserAction::logAction(
                 $this->userId,
-                $this->guest == 0 ?
+                $this->isLoggedIn() ?
                     AuthActions::AUTHENTICATED_AS_USER : AuthActions::AUTHENTICATED_AS_GUEST
             );
 
@@ -82,7 +82,8 @@ class AuthenticationController extends Controller
         $newAccessToken = $this->setAuthCookie($user);
         $response->setContent([
             'at' => $newAccessToken->plainTextToken,
-            'guest' => 1
+            'guest' => 1,
+            'permissions' =>  $user->permissionGroup()->first()->toPermissionsArray()
         ]);
 
         UserAction::logAction($user->id, AuthActions::AUTHENTICATED_AS_GUEST);
@@ -451,7 +452,7 @@ class AuthenticationController extends Controller
 
     public function githubRedirect(){
         $enableLoginBtn = config('services.github.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -464,7 +465,7 @@ class AuthenticationController extends Controller
      */
     public function githubCallback() {
         $enableLoginBtn = config('services.github.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -543,7 +544,7 @@ class AuthenticationController extends Controller
 
     public function facebookRedirect(){
         $enableLoginBtn = config('services.facebook.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -557,7 +558,7 @@ class AuthenticationController extends Controller
     public function facebookCallback() {
 
         $enableLoginBtn = config('services.facebook.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -626,7 +627,7 @@ class AuthenticationController extends Controller
 
     public function googleRedirect(){
         $enableLoginBtn = config('services.google.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -640,7 +641,7 @@ class AuthenticationController extends Controller
     public function googleCallback() {
 
         $enableLoginBtn = config('services.google.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -713,7 +714,7 @@ class AuthenticationController extends Controller
 
     public function linkedInRedirect(){
         $enableLoginBtn = config('services.linkedin.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -727,7 +728,7 @@ class AuthenticationController extends Controller
     public function linkedInCallback() {
 
         $enableLoginBtn = config('services.linkedin.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -795,7 +796,7 @@ class AuthenticationController extends Controller
 
     public function twitterRedirect(){
         $enableLoginBtn = config('services.twitter.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 
@@ -809,7 +810,7 @@ class AuthenticationController extends Controller
     public function twitterCallback() {
 
         $enableLoginBtn = config('services.twitter.enable_login_btn');
-        if (!$enableLoginBtn || is_null($this->userId) || $this->guest == 0) {
+        if (!$enableLoginBtn || !$this->isAuthenticated()) {
             return redirect()->route('login-page');
         }
 

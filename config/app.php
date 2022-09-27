@@ -60,40 +60,6 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
-    /**
-     * --------------------------------------------------------------------------
-     * Using Pre-seeded Shortstring
-     * --------------------------------------------------------------------------
-     * If this option is enabled, the system will only make available
-     * shortstrings/links that are already present in the shortstrings table
-     * with the is_available=1 flag. This requires the database to have pre-seeded data
-     * for the shortstrings table. ( Can be seeded using the ShortstringSeeder )
-     * this is great when we want to pre-define the amount of available links
-     * and not let the app grow as needed - but limit it to a certain amount.
-     *
-     * If this option is disabled ( false ), the system will use the base_convert
-     * method to generate a new shortstring/link when requested
-     * the shortstring generated will depend on the autoincrement of the shortlinks table.
-     * This is great when you don't want pre-seeded data and when you want your
-     * app shortstrings/links to grow as needed ( as the shortlinks increase ).
-     */
-    'use_preseeded_shortstrings' => env('USE_PRESEEDED_SHORTSTRINGS', false),
-
-    /**
-     * The option below defines if the app should fallback to
-     * generating shortstrings with the base_convert method
-     * in case use_preseeded_shortstrings=true and the available shortstrings
-     * are all taken.
-     */
-    'use_bc_if_preseeded_shortstrings_end' => env('USE_BC_IF_PRESEEDED_SHORTSTRINGS_END', true),
-
-
-    /**
-     * When using base_convert to generate the shortstrings
-     * we can define on this variable the minimum length for the shortstring
-     * ( where to start generating - shortstrings with 3 of length, or 2, or 4.. etc)
-     */
-    'minimum_shortstrings_length' => env('MINIMUM_SHORTSTRINGS_LENGTH', 1),
 
     /*
     |--------------------------------------------------------------------------

@@ -106,6 +106,7 @@ class User extends Authenticatable
         try {
             $user = new User();
             $user->guest = 1;
+            $user->permission_group_id = PermissionGroup::where('guests_permission_group', '=', 1)->first()->id;
             $user->save();
             return $user;
         } catch (\Throwable $th) {

@@ -57,9 +57,9 @@ trait InteractsWithAuthCookie
                 if ($personalAccessToken->tokenable instanceof User) {
                     $this->userId = $personalAccessToken->tokenable->id;
                     $this->guest = $authResponseData['guest'];
+                    $this->userPermissions = $authResponseData['permissions'];
                     if ($this->guest === 0) {
                         $this->isAdmin = $authResponseData['permissions']['is_admin'];
-                        $this->userPermissions = $authResponseData['permissions'];
                         $this->userData = $authResponseData['data'];
                     }
                 }
@@ -136,10 +136,10 @@ trait InteractsWithAuthCookie
             $authResponse = [
                 'at' => $this->authToken,
                 'guest' => $this->guest,
+                'permissions' => $this->userPermissions
             ];
 
             if ($this->isLoggedIn()) {
-                $authResponse['permissions'] = $this->userPermissions;
                 $authResponse['data'] = $this->userData;
             }
 
@@ -163,21 +163,12 @@ trait InteractsWithAuthCookie
 
         $authResponse = [
             'at' => $plainTextToken,
-            'guest' => $user->guest
+            'guest' => $user->guest,
+            'permissions' => $user->permissionGroup->toPermissionsArray()
         ];
 
         if (false === $user->isGuest()) {
-            $authResponse['permissions'] = [
-                'is_admin' => $user->isAdmin()
-            ];
-
-            $userPermissions = $user->permissionGroup()->first();
-            if ($userPermissions) {
-                $authResponse['permissions'] = array_merge(
-                    $authResponse['permissions'],
-                    $userPermissions->toPermissionsArray()
-                );
-            }
+            $authResponse['permissions']['is_admin'] = $user->isAdmin();
 
             $authResponse['data'] = [
                 'avatar' => $user->avatar,

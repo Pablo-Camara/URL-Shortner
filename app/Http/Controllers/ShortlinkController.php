@@ -11,6 +11,7 @@ use App\Models\ShortlinkUrl;
 use App\Models\Shortstring;
 use App\Models\UserAction;
 use App\Models\PermissionGroup;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,7 @@ class ShortlinkController extends Controller
 
         View::share('isAdmin', $this->isAdmin());
         View::share('authToken', $this->authToken);
-        View::share('isLoggedIn', $this->guest == 0 ? 'true' : 'false');
+        View::share('isLoggedIn', $this->isLoggedIn() ? 'true' : 'false');
         View::share('userPermissions', json_encode($this->userPermissions));
         View::share('userData', json_encode($this->userData));
     }
@@ -42,9 +43,9 @@ class ShortlinkController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function visit($shortstring, Request $request) {
+    public function visit($shortstringText, Request $request) {
 
-        $shortstring = Shortstring::where('shortstring', '=', $shortstring)->with('shortlink')->first();
+        $shortstring = Shortstring::where('shortstring', '=', $shortstringText)->with('shortlink')->first();
 
         if ($shortstring) {
             $shortlink = $shortstring['shortlink'];
@@ -88,15 +89,13 @@ class ShortlinkController extends Controller
 
             }
 
-            // view to register custom urls
-            // TODO: change this, no longer will depend only on "is_available" / preseeded shortstring
-            // but also on user permission, if user has permission he will be able to create
-            // a new cusotm shortstring
-            if ($shortstring->is_available) {
+            if (
+                $shortstring->is_available
+            ) {
 
                 UserAction::logAction(
                     $this->userId,
-                    ShortlinkActions::VISITED_AVAILABLE_SHORTLINK
+                    ShortlinkActions::VISITED_AVAILABLE_PRESEEDED_SHORTLINK
                 );
                 return view('home', [
                     'view' => 'RegisterCustomShortlink',
@@ -107,10 +106,11 @@ class ShortlinkController extends Controller
 
         }
 
-
-        UserAction::logAction($this->userId, ShortlinkActions::VISITED_UNEXISTING_AND_UNAVAILABLE_SHORTLINK);
-        // shortstring not available
-        return redirect('/');
+        UserAction::logAction($this->userId, ShortlinkActions::VISITED_UNSEEDED_SHORTLINK);
+        return view('home', [
+            'view' => 'RegisterCustomShortlink',
+            'shortstring' => $shortstringText
+        ]);
     }
 
     /**
@@ -128,49 +128,46 @@ class ShortlinkController extends Controller
             'created_at'
         ];
 
-        if ($this->isLoggedIn()) {
-            $activeVisitsActionId = Action::where('name', '=', ShortlinkActions::VISITED_ACTIVE_SHORTLINK)->first();
+        $activeVisitsActionId = Action::where('name', '=', ShortlinkActions::VISITED_ACTIVE_SHORTLINK)->first();
+
+        if (
+            $activeVisitsActionId
+        ) {
+            /**
+             * @var PermissionGroup
+             */
+            $userPermissions = $request->user()->permissionGroup;
 
             if (
-                $activeVisitsActionId
+                $userPermissions->canViewShortlinksTotalViews()
             ) {
-                /**
-                 * @var PermissionGroup
-                 */
-                $userPermissions = $request->user()->permissionGroup;
+                array_push(
+                    $selectFields,
+                    DB::raw(
+                        '(
+                            SELECT COUNT(*) FROM user_actions
+                            WHERE
+                                user_actions.shortlink_id = shortlinks.id
+                                AND
+                                user_actions.action_id = '.$activeVisitsActionId->id.'
+                        ) AS total_views')
+                );
+            }
 
-                if (
-                    $userPermissions->canViewShortlinksTotalViews()
-                ) {
-                    array_push(
-                        $selectFields,
-                        DB::raw(
-                            '(
-                                SELECT COUNT(*) FROM user_actions
-                                WHERE
-                                    user_actions.shortlink_id = shortlinks.id
-                                    AND
-                                    user_actions.action_id = '.$activeVisitsActionId->id.'
-                            ) AS total_views')
-                    );
-                }
-
-                if (
-                    $userPermissions->canViewShortlinksTotalUniqueViews()
-                ) {
-                    array_push(
-                        $selectFields,
-                        DB::raw(
-                            '(
-                                SELECT COUNT(DISTINCT ip) FROM user_actions
-                                WHERE
-                                    user_actions.shortlink_id = shortlinks.id
-                                    AND
-                                    user_actions.action_id = '.$activeVisitsActionId->id.'
-                            ) AS total_unique_views')
-                    );
-                }
-
+            if (
+                $userPermissions->canViewShortlinksTotalUniqueViews()
+            ) {
+                array_push(
+                    $selectFields,
+                    DB::raw(
+                        '(
+                            SELECT COUNT(DISTINCT ip) FROM user_actions
+                            WHERE
+                                user_actions.shortlink_id = shortlinks.id
+                                AND
+                                user_actions.action_id = '.$activeVisitsActionId->id.'
+                        ) AS total_unique_views')
+                );
             }
 
         }
@@ -213,13 +210,20 @@ class ShortlinkController extends Controller
     }
 
     /**
-     * Register/point available shortstring to a long url
+     * Register custom shortlink
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function registerAvailable(Request $request)
+    public function registerCustomShortlink(Request $request)
     {
+
+        $user = $request->user();
+        /**
+         * @var PermissionGroup
+         */
+        $permissionGroup = $user->permissionGroup;
+
         // url validation, read below ( about max length )
         // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
 
@@ -229,6 +233,7 @@ class ShortlinkController extends Controller
             $validations = [
                 // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
                 'long_url' => 'required|url|max:' . $maxUrlLength,
+                'shortstring' => 'required|min:1',
             ];
 
             $enableCaptchaSitekey = config('captcha.enable');
@@ -247,11 +252,9 @@ class ShortlinkController extends Controller
                 $request->input('long_url', '')
                 &&
                 strlen($request->input('long_url')) > $maxUrlLength
-                &&
-                !is_null($this->userId)
             ) {
                 UserAction::logAction(
-                    $this->userId,
+                    $user->id,
                     ShortlinkActions::ATTEMPTED_TO_GENERATE_SHORTLINK_FOR_URL_THAT_IS_TOO_LONG
                 );
             }
@@ -262,42 +265,69 @@ class ShortlinkController extends Controller
 
         if ($request->getHost() === parse_url($request->input('long_url'))['host']) {
             UserAction::logAction(
-                $this->userId,
+                $user->id,
                 ShortlinkActions::ATTEMPTED_TO_CREATE_SHORTLINK_FOR_SHORTLINK
             );
 
             throw ValidationException::withMessages(['long_url' => 'Não é possível criar um link curto para este url.']);
         }
 
-        $shortstring = $request->input('shortstring');
+        // first we check if the user can create custom shortlinks
+        if (false == $permissionGroup->canCreateCustomShortlinks()) {
+            throw ValidationException::withMessages(['permissions' => 'Não tens permissões para criar links personalizados.']);
+        }
 
-        $shortstring = Shortstring::where('shortstring', '=', $shortstring)->first();
+        $shortstringText = $request->input('shortstring');
 
-        if (!$shortstring) {
-            if (!is_null($this->userId)) {
-                UserAction::logAction($this->userId, ShortlinkActions::ATTEMPTED_TO_REGISTER_UNEXISTING_SHORTSTRING);
-            }
+        $shortstring = Shortstring::where('shortstring', '=', $shortstringText)->first();
+
+        if ($shortstring && !$shortstring->is_available) {
+            UserAction::logAction($user->id, ShortlinkActions::ATTEMPTED_TO_REGISTER_UNAVAILABLE_SHORTSTRING);
+
             return new Response([
                 //TODO: translate
                 'message' => 'Este link não está disponível!'
             ], Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
-        if (!$shortstring->is_available) {
-
-            if (!is_null($this->userId)) {
-                UserAction::logAction($this->userId, ShortlinkActions::ATTEMPTED_TO_REGISTER_UNAVAILABLE_SHORTSTRING);
+        if (
+            strlen($shortstringText) <= 4
+        ) {
+            if (
+                false == $permissionGroup->canCreateShortlinksWithSpecificLength(
+                    strlen($shortstringText)
+                )
+            ) {
+                throw ValidationException::withMessages(['permissions' => 'Não tens permissões para criar links com este tamanho ('.strlen($shortstringText) .').']);
             }
 
-            return new Response([
-                //TODO: translate
-                'message' => 'Este link já não está disponível!'
-            ], Response::HTTP_SERVICE_UNAVAILABLE);
+            $this->validateHasNotReachedLimitsForShortstringsWith4orLessOfLength(
+                $user,
+                $permissionGroup,
+                strlen($shortstringText)
+            );
         }
 
+        if (
+            strlen($shortstringText) >= 5
+        ) {
+            $this->validateHasNotReachedLimitsForShortstringsWith5orMoreOfLength(
+                $user,
+                $permissionGroup
+            );
+        }
+
+        if (!$shortstring) {
+            $shortstring = new Shortstring();
+            $shortstring->is_custom = 1;
+            $shortstring->is_available = 0;
+            $shortstring->length = strlen($shortstringText);
+            $shortstring->shortstring = $shortstringText;
+            $shortstring->save();
+        }
 
         $newShortlink = new Shortlink();
-        $newShortlink->user_id = $request->user()->id;
+        $newShortlink->user_id = $user->id;
         $newShortlink->shortstring_id = $shortstring->id;
         $newShortlink->status_id = Shortlink::STATUS_ACTIVE;
 
@@ -311,14 +341,17 @@ class ShortlinkController extends Controller
             $shortlinkUrl->is_redirect_url = true;
             $shortlinkUrl->save();
 
-            $shortstring->is_available = 0;
-            $shortstring->save();
-
-            if (!is_null($this->userId)) {
-                UserAction::logAction($this->userId, ShortlinkActions::REGISTERED_CUSTOM_AVAILABLE_SHORTSTRING);
-            }
+            UserAction::logAction($user->id, ShortlinkActions::REGISTERED_CUSTOM_SHORTLINK);
         } catch (\Throwable $th) {
             DB::rollBack();
+
+            try {
+                $shortstring->is_available = 1;
+                $shortstring->save();
+            } catch (\Throwable $th) {
+                //TODO: try to log this
+            }
+
             throw $th;
         }
         DB::commit();
@@ -339,6 +372,13 @@ class ShortlinkController extends Controller
      */
     public function shorten(Request $request)
     {
+
+        $user = $request->user();
+        /**
+         * @var PermissionGroup
+         */
+        $permissionGroup = $user->permissionGroup;
+
         // url validation, read below ( about max length )
         // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
 
@@ -369,11 +409,9 @@ class ShortlinkController extends Controller
                 $request->input('long_url', '')
                 &&
                 strlen($request->input('long_url')) > $maxUrlLength
-                &&
-                !is_null($this->userId)
             ) {
                 UserAction::logAction(
-                    $this->userId,
+                    $user->id,
                     ShortlinkActions::ATTEMPTED_TO_GENERATE_SHORTLINK_FOR_URL_THAT_IS_TOO_LONG
                 );
             }
@@ -384,43 +422,19 @@ class ShortlinkController extends Controller
 
         if ($request->getHost() === parse_url($request->input('long_url'))['host']) {
             UserAction::logAction(
-                $this->userId,
+                $user->id,
                 ShortlinkActions::ATTEMPTED_TO_CREATE_SHORTLINK_FOR_SHORTLINK
             );
 
             throw ValidationException::withMessages(['long_url' => 'Não é possível criar um link curto para este url.']);
         }
 
+        $this->validateHasNotReachedLimitsForShortstringsWith5orMoreOfLength(
+            $user,
+            $permissionGroup
+        );
 
-        $usePreseededShortstrings = config('app.use_preseeded_shortstrings');
-        $useBcIfPreseededShortstringsEnd = config('app.use_bc_if_preseeded_shortstrings_end');
-
-        $useBcToGenerateShortstring = false;
-
-        if ($usePreseededShortstrings) {
-            $nextAvailableShortstring = Shortstring::where('is_available', 1)->first();
-
-            if (
-                !$nextAvailableShortstring
-                &&
-                $useBcIfPreseededShortstringsEnd
-            ) {
-                if (!is_null($this->userId)) {
-                    UserAction::logAction($this->userId, ShortlinkActions::DID_NOT_FIND_AVAILABLE_PRESEEDED_SHORTSTRING);
-                }
-                $useBcToGenerateShortstring = true;
-            }
-        } else {
-            $useBcToGenerateShortstring = true;
-        }
-
-        if ($useBcToGenerateShortstring) {
-            if (!is_null($this->userId)) {
-                UserAction::logAction($this->userId, ShortlinkActions::WILL_TRY_GENERATING_SHORTSTRING_WITH_BC);
-            }
-
-            $nextAvailableShortstring = $this->tryGeneratingShortstringWithBaseConvert();
-        }
+        $nextAvailableShortstring = $this->tryGeneratingShortstringWithBaseConvert(5);
 
         if (!$nextAvailableShortstring) {
             // this should never happen
@@ -428,9 +442,9 @@ class ShortlinkController extends Controller
             // we should be notified.
 
             //TODO: Send email notification.
-            if (!is_null($this->userId)) {
-                UserAction::logAction($this->userId, ShortlinkActions::FOUND_NO_AVAILABLE_SHORTSTRING);
-            }
+
+            UserAction::logAction($user->id, ShortlinkActions::FOUND_NO_AVAILABLE_SHORTSTRING);
+
 
             return new Response(
                 [
@@ -441,13 +455,13 @@ class ShortlinkController extends Controller
         }
 
         $newShortlink = new Shortlink();
-        $newShortlink->user_id = $request->user()->id;
+        $newShortlink->user_id = $user->id;
         $newShortlink->shortstring_id = $nextAvailableShortstring->id;
 
         if (
             !is_null($request->input('destination_email'))
             &&
-            !is_null($this->userId) && $this->guest === 0
+            $permissionGroup->canSendShortlinkByEmailWhenGenerating()
         ) {
             $newShortlink->destination_email = $request->input('destination_email');
         }
@@ -467,23 +481,14 @@ class ShortlinkController extends Controller
             $nextAvailableShortstring->is_available = 0;
             $nextAvailableShortstring->save();
 
-            if ($useBcToGenerateShortstring) {
-                UserAction::logAction(
-                    $newShortlink->user_id,
-                    ShortlinkActions::GENERATED_SHORTLINK_WITH_BC,
-                    [
-                        'shortlink_id' => $newShortlink->id
-                    ]
-                );
-            } else {
-                UserAction::logAction(
-                    $newShortlink->user_id,
-                    ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
-                    [
-                        'shortlink_id' => $newShortlink->id
-                    ]
-                );
-            }
+
+            UserAction::logAction(
+                $newShortlink->user_id,
+                ShortlinkActions::GENERATED_SHORTLINK_WITH_BC,
+                [
+                    'shortlink_id' => $newShortlink->id
+                ]
+            );
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -494,13 +499,13 @@ class ShortlinkController extends Controller
         if (
             !is_null($newShortlink->destination_email)
             &&
-            !is_null($this->userId) && $this->guest === 0
+            $permissionGroup->canSendShortlinkByEmailWhenGenerating()
         ) {
             Mail::to(
                 $newShortlink->destination_email
             )->queue(new ShortlinkReady($newShortlink));
 
-            UserAction::logAction($this->userId, ShortlinkActions::SENT_SHORTLINK_TO_EMAIL);
+            UserAction::logAction($user->id, ShortlinkActions::SENT_SHORTLINK_TO_EMAIL);
         }
 
         return new Response(
@@ -675,24 +680,22 @@ class ShortlinkController extends Controller
      * based on a number (autoincrement value to avoid dupes)
      *
      * @param int $currentAutoincrementValue
-     * @return void
+     * @return string
      */
-    private function generateShortstringWithBaseConvert(int $currentAutoincrementValue) {
+    private function generateShortstringWithBaseConvert(int $currentAutoincrementValue, $minimumShortstringLength) {
         $alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
         $totalAlphabetChars = strlen($alphabet);
-        $minimumShortstringLength = config('app.minimum_shortstrings_length');
 
-        if (
-            !is_numeric($minimumShortstringLength)
-            ||
-            $minimumShortstringLength < 1
-        ) {
-            // precautions..
-           $minimumShortstringLength = 1;
+
+        $totalRecordCombinationsFrom1to4 = (36**1)+(36**2)+(36**3)+(36**4);
+
+        // not to miss combinations due to having preseeded combinations
+        // with length 1 to 4, they must be seeded.
+        if ($currentAutoincrementValue >= $totalRecordCombinationsFrom1to4) {
+            $currentAutoincrementValue = $currentAutoincrementValue - $totalRecordCombinationsFrom1to4;
         }
-
         $shortstring = base_convert(
-            ($currentAutoincrementValue - 1 /* minus 1, to not skip first convertion */) + ($totalAlphabetChars**($minimumShortstringLength-1)),
+            ($currentAutoincrementValue - 1 /* minus 1, to not skip first convertion ( 0 ) */) + ($totalAlphabetChars**($minimumShortstringLength-1)),
             10,
             $totalAlphabetChars
         );
@@ -707,7 +710,7 @@ class ShortlinkController extends Controller
      *
      * @return Shortstring|null
      */
-    private function tryGeneratingShortstringWithBaseConvert() {
+    private function tryGeneratingShortstringWithBaseConvert($minimumShortstringLength) {
         $shortstringCreated = false;
         $totalAttempts = 0;
         $nextAvailableShortstring = null;
@@ -717,14 +720,16 @@ class ShortlinkController extends Controller
                     "SHOW TABLE STATUS LIKE 'shortstrings'"
                 );
                 $currAutoincrementVal = $shortstringsTableStatus[0]->Auto_increment;
-                $shortstringToAdd = $this->generateShortstringWithBaseConvert($currAutoincrementVal);
+                $shortstringToAdd = $this->generateShortstringWithBaseConvert($currAutoincrementVal, $minimumShortstringLength);
 
                 $nextAvailableShortstring = new Shortstring();
                 $nextAvailableShortstring->shortstring = $shortstringToAdd;
 
                 // we make it available
-                // until down below we use it
+                // until we use it
                 // and make it unavailable
+                $nextAvailableShortstring->is_custom = 0;
+                $nextAvailableShortstring->length = strlen($shortstringToAdd);
                 $nextAvailableShortstring->is_available = 1;
                 $nextAvailableShortstring->save();
                 $shortstringCreated = true;
@@ -745,5 +750,163 @@ class ShortlinkController extends Controller
         }
 
         return $nextAvailableShortstring;
+    }
+
+
+    private function validateHasNotReachedLimitsForShortstringsWith5orMoreOfLength(
+        $user,
+        $permissionGroup
+    ) {
+        $minimumShortstringLength = 5;
+        /** Total Limit with 5 of more of length */
+        $totalShortlinksWith5orMoreOfLength = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+                                                ->where('user_id', '=', $user->id)
+                                                ->where('shortstrings.length', '>=', $minimumShortstringLength)
+                                                ->count();
+
+        $permissionName = 'max_shortlinks_with_'.$minimumShortstringLength.'_or_more_of_length';
+        if (
+            !is_null($permissionGroup->$permissionName)
+            &&
+            $totalShortlinksWith5orMoreOfLength >= $permissionGroup->$permissionName
+        ) {
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos (não personalizados) que podes gerar.']);
+        }
+        /** --------------- */
+
+
+        /** Total Limit with 5 of more of length - YEARLY LIMIT */
+        $totalShortlinksThisYearWith5orMoreOfLength = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+                                                ->where('user_id', '=', $user->id)
+                                                ->where('shortstrings.length', '>=', $minimumShortstringLength)
+                                                ->where('shortlinks.created_at_day', '>=', Carbon::now()->firstOfYear())
+                                                ->where('shortlinks.created_at_day', '<=', Carbon::now()->lastOfYear())
+                                                ->count();
+
+        $permissionName = 'max_shortlinks_per_year_with_'.$minimumShortstringLength.'_or_more_of_length';
+        if (
+            !is_null($permissionGroup->$permissionName)
+            &&
+            $totalShortlinksThisYearWith5orMoreOfLength >= $permissionGroup->$permissionName
+        ) {
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos (não personalizados) que podes gerar por ano.']);
+        }
+        /** --------------- */
+
+
+         /** Total Limit with 5 of more of length - MONTHLY LIMIT */
+         $totalShortlinksThisMonthWith5orMoreOfLength = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+         ->where('user_id', '=', $user->id)
+         ->where('shortstrings.length', '>=', $minimumShortstringLength)
+         ->where('shortlinks.created_at_day', '>=', Carbon::now()->firstOfMonth())
+         ->where('shortlinks.created_at_day', '<=', Carbon::now()->lastOfMonth())
+         ->count();
+
+        $permissionName = 'max_shortlinks_per_month_with_'.$minimumShortstringLength.'_or_more_of_length';
+        if (
+        !is_null($permissionGroup->$permissionName)
+        &&
+        $totalShortlinksThisMonthWith5orMoreOfLength >= $permissionGroup->$permissionName
+        ) {
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos (não personalizados) que podes gerar por mês.']);
+        }
+        /** --------------- */
+
+
+        /** Total Limit with 5 of more of length - DAILY LIMIT */
+        $totalShortlinksTodayWith5orMoreOfLength = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+                                                ->where('user_id', '=', $user->id)
+                                                ->where('shortstrings.length', '>=', $minimumShortstringLength)
+                                                ->where('shortlinks.created_at_day', '=', Carbon::now()->toDateString())
+                                                ->count();
+
+        $permissionName = 'max_shortlinks_per_day_with_'.$minimumShortstringLength.'_or_more_of_length';
+        if (
+            !is_null($permissionGroup->$permissionName)
+            &&
+            $totalShortlinksTodayWith5orMoreOfLength >= $permissionGroup->$permissionName
+        ) {
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos (não personalizados) que podes gerar por dia.']);
+        }
+        /** --------------- */
+    }
+
+
+    private function validateHasNotReachedLimitsForShortstringsWith4orLessOfLength(
+        $user,
+        $permissionGroup,
+        $shortstringLength
+    ) {
+        /** Total Limit */
+        $totalShortlinks = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+                                                ->where('user_id', '=', $user->id)
+                                                ->where('shortstrings.length', '=', $shortstringLength)
+                                                ->count();
+
+        $permissionName = 'max_shortlinks_with_length_'.$shortstringLength;
+        if (
+            !is_null($permissionGroup->$permissionName)
+            &&
+            $totalShortlinks >= $permissionGroup->$permissionName
+        ) {
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links que podes gerar com este tamanho (' . $shortstringLength . ')']);
+        }
+        /** --------------- */
+
+
+        /** YEARLY LIMIT */
+        $totalShortlinksThisYear = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+                                                ->where('user_id', '=', $user->id)
+                                                ->where('shortstrings.length', '=', $shortstringLength)
+                                                ->where('shortlinks.created_at_day', '>=', Carbon::now()->firstOfYear())
+                                                ->where('shortlinks.created_at_day', '<=', Carbon::now()->lastOfYear())
+                                                ->count();
+
+        $permissionName = 'max_shortlinks_per_year_with_length_'.$shortstringLength;
+        if (
+            !is_null($permissionGroup->$permissionName)
+            &&
+            $totalShortlinksThisYear >= $permissionGroup->$permissionName
+        ) {
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links que podes gerar por ano com este tamanho ('.$shortstringLength.').']);
+        }
+        /** --------------- */
+
+
+         /** MONTHLY LIMIT */
+         $totalShortlinksThisMonth = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+         ->where('user_id', '=', $user->id)
+         ->where('shortstrings.length', '=', $shortstringLength)
+         ->where('shortlinks.created_at_day', '>=', Carbon::now()->firstOfMonth())
+         ->where('shortlinks.created_at_day', '<=', Carbon::now()->lastOfMonth())
+         ->count();
+
+        $permissionName = 'max_shortlinks_per_month_with_length_'.$shortstringLength;
+        if (
+        !is_null($permissionGroup->$permissionName)
+        &&
+        $totalShortlinksThisMonth >= $permissionGroup->$permissionName
+        ) {
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links que podes gerar por mês com este tamanho ('.$shortstringLength.').']);
+        }
+        /** --------------- */
+
+
+        /** DAILY LIMIT */
+        $totalShortlinksToday = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+                                                ->where('user_id', '=', $user->id)
+                                                ->where('shortstrings.length', '>=', $shortstringLength)
+                                                ->where('shortlinks.created_at_day', '=', Carbon::now()->toDateString())
+                                                ->count();
+
+        $permissionName = 'max_shortlinks_per_day_with_length_'.$shortstringLength;
+        if (
+            !is_null($permissionGroup->$permissionName)
+            &&
+            $totalShortlinksToday >= $permissionGroup->$permissionName
+        ) {
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links que podes gerar por dia com este tamanho ('.$shortstringLength.').']);
+        }
+        /** --------------- */
     }
 }
