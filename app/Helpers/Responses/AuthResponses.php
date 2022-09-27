@@ -13,18 +13,7 @@ class AuthResponses {
             // TODO: translate
             // in theory should never be shown in the frontend.
             'message' => 'Não tens permissões para isto.'
-        ], Response::HTTP_UNAUTHORIZED);
-    }
-
-
-    public static function notAuthenticated() {
-        return response()->json([
-            //TODO: translate msg str
-            'error_id' => 'not_authenticated',
-            // TODO: translate
-            // in theory should never be shown in the frontend.
-            'message' => 'Ocorreu um erro. Por favor actualize a página e tente novamente.'
-        ], Response::HTTP_UNAUTHORIZED);
+        ], Response::HTTP_FORBIDDEN);
     }
 
 
@@ -34,7 +23,7 @@ class AuthResponses {
             'error_id' => 'incorrect_credentials',
             // TODO: translate
             'message' => 'Credenciais inválidas'
-        ], Response::HTTP_UNAUTHORIZED);
+        ], Response::HTTP_FORBIDDEN);
     }
 
     public static function registerFailed() {
@@ -53,7 +42,7 @@ class AuthResponses {
             'error_id' => 'unverified_account',
             // TODO: translate
             'message' => 'Ainda não verificou o seu email. Verifique a sua caixa de entrada e/ou caixa de spam no seu provedor de email.'
-        ], Response::HTTP_UNAUTHORIZED);
+        ], Response::HTTP_FORBIDDEN);
     }
 
     public static function failedToCreateGuestAccount() {
