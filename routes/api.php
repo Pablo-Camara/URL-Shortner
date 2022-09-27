@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PermissionGroupController;
 use App\Http\Controllers\ShortlinkController;
 use App\Http\Controllers\StatisticsController;
@@ -47,6 +48,10 @@ Route::post('/change-password', [AuthenticationController::class, 'changePasswor
 Route::post('/links', [ShortlinkController::class, 'myLinks'])
         ->middleware(['auth:sanctum'])
         ->name('get-my-links');
+
+Route::post('/contact', [ContactController::class, 'sendMessage'])
+        ->middleware(['auth:sanctum'])
+        ->name('contact');
 
 Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkController::class, 'shorten']);
 Route::middleware('auth:sanctum')->post('/register-custom-shortlink', [ShortlinkController::class, 'registerCustomShortlink']);

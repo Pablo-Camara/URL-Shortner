@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Helpers\Actions\AuthActions;
+use App\Helpers\Actions\ContactControllerActions;
 use App\Helpers\Actions\HomeControllerActions;
 use App\Helpers\Actions\MenuActions;
 use App\Helpers\Actions\ShortlinkActions;
@@ -23,13 +24,14 @@ class ActionsSeeder extends Seeder
         $shortlinkActions = (new ReflectionClass(ShortlinkActions::class))->getConstants();
         $menuActions = (new ReflectionClass(MenuActions::class))->getConstants();
         $homeControllerActions = (new ReflectionClass(HomeControllerActions::class))->getConstants();
+        $contactControllerActions = (new ReflectionClass(ContactControllerActions::class))->getConstants();
 
 
         $actions = array_map(
             function ($action) {
                 return ['name' => $action];
             },
-            array_merge($authActions, $shortlinkActions, $menuActions, $homeControllerActions)
+            array_merge($authActions, $shortlinkActions, $menuActions, $homeControllerActions, $contactControllerActions)
         );
 
         foreach($actions as $action) {

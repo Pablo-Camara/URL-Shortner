@@ -138,7 +138,9 @@
                 height: auto;
             }
 
-            .form-box .input-container input.has-error {
+            .form-box .input-container input.has-error,
+            .form-box .input-container textarea.has-error
+            {
                 border: 1px solid red;
             }
 
@@ -4417,6 +4419,159 @@
                                     }
                                 }
                             },
+                            Feedback: {
+                                el: function () {
+                                    return document.getElementById('form-box-contact-us-feedback');
+                                },
+                                hide: function () {
+                                    const el = this.el();
+                                    el.style.display = 'none';
+                                    el.innerText = '';
+                                },
+                                showInfo: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('error');
+                                    el.classList.remove('success');
+                                    el.classList.add('info');
+                                    el.style.display = 'block';
+                                },
+                                showError: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('info');
+                                    el.classList.remove('success');
+                                    el.classList.add('error');
+                                    el.style.display = 'block';
+                                },
+                                showSuccess: function(message) {
+                                    const el = this.el();
+                                    el.innerText = message;
+                                    el.classList.remove('info');
+                                    el.classList.remove('error');
+                                    el.classList.add('success');
+                                    el.style.display = 'block';
+                                },
+                            },
+                            SendBtn: {
+                                hasInitialized: false,
+                                api: "{{ url('/api/contact') }}",
+                                el: function () {
+                                    return document.getElementById('contact-us-btn');
+                                },
+                                enable: function () {
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            if (window._authManager.isAuthenticated !== true) {
+                                                // authentication is a must
+                                                // if not authenticated something must be wrong
+                                                return;
+                                            }
+                                            $this.disable();
+                                            window.App.Components.ContactUs.Components.Feedback.showInfo('por favor espere..');
+
+                                            const nameInput = window.App.Components.ContactUs.Components.Name.el();
+                                            const emailInput = window.App.Components.ContactUs.Components.Email.el();
+                                            const phoneInput = window.App.Components.ContactUs.Components.Phone.el();
+                                            const subjectInput = window.App.Components.ContactUs.Components.Subject.el();
+                                            const messageInput = window.App.Components.ContactUs.Components.Message.el();
+
+                                            const requiredFields = [
+                                                nameInput,
+                                                emailInput,
+                                                phoneInput,
+                                                subjectInput,
+                                                messageInput
+                                            ];
+
+                                            for(var i = 0; i < requiredFields.length; i++) {
+                                                const field = requiredFields[i];
+
+                                                if (field.value.length == 0) {
+                                                    field.classList.add('has-error');
+                                                    return false;
+                                                } else {
+                                                    field.classList.remove('has-error');
+                                                }
+                                            }
+
+                                            var func = function(token) {
+                                                var xhr = new XMLHttpRequest();
+                                                xhr.withCredentials = true;
+
+                                                xhr.addEventListener("readystatechange", function () {
+                                                    if (this.readyState === 4) {
+                                                        const resObj = JSON.parse(this.response); //TODO: Catch exception
+
+                                                        if (this.status === 201) {
+                                                            window.App.Components.ContactUs.Components.Feedback.showSuccess('A sua mensagem foi enviada com sucesso!');
+                                                            $this.enable();
+                                                            return;
+                                                        }
+
+                                                        if (
+                                                            typeof resObj.message !== 'undefined'
+                                                        ) {
+                                                            window.App.Components.ContactUs.Components.Feedback.showError(resObj.message);
+                                                        }
+                                                    }
+                                                });
+
+                                                const name = encodeURIComponent(nameInput.value);
+                                                const email = encodeURIComponent(emailInput.value);
+                                                const phone = encodeURIComponent(phoneInput.value);
+                                                const subject = encodeURIComponent(subjectInput.value);
+                                                const message = encodeURIComponent(messageInput.value);
+
+
+                                                var credentialsQueryStr =
+                                                    "?name=" + name + "&email=" + email + "&phone=" + phone + "&subject=" + subject + "&message=" + message;
+
+                                                if (
+                                                    typeof token !== 'undefined'
+                                                    &&
+                                                    token != null
+                                                    &&
+                                                    token.length > 0
+                                                ) {
+                                                    credentialsQueryStr += '&g-recaptcha-response=' + token;
+                                                }
+
+                                                xhr.open(
+                                                    "POST",
+                                                    $this.api + credentialsQueryStr
+                                                );
+                                                xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                                xhr.send();
+                                            };
+
+
+                                            if (
+                                                typeof window._enableCaptcha !== 'undefined'
+                                                &&
+                                                window._enableCaptcha === true
+                                            ) {
+                                                grecaptcha.ready(function() {
+                                                grecaptcha.execute('{{ $captchaSitekey }}', {action: 'submit'}).then(function(token) {
+                                                    func(token);
+                                                    });
+                                                });
+                                            } else {
+                                                func(null);
+                                            }
+
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
                         },
                         initialize: function () {
                             this.Components.CloseBtn.initialize();
@@ -4425,6 +4580,7 @@
                             this.Components.Phone.initialize();
                             this.Components.Subject.initialize();
                             this.Components.Message.initialize();
+                            this.Components.SendBtn.initialize();
                         }
 
                     },
@@ -6173,28 +6329,28 @@
                     <div class="input-label" id="contact-name-label">
                         Nome
                     </div>
-                    <input type="text" id="contact-name" />
+                    <input type="text" id="contact-name" maxlength="255"/>
                 </div>
 
                 <div class="input-container">
                     <div class="input-label" id="contact-email-label">
                         Email
                     </div>
-                    <input type="email" id="contact-email" />
+                    <input type="email" id="contact-email" maxlength="255"/>
                 </div>
 
                 <div class="input-container">
                     <div class="input-label" id="contact-phone-label">
                         Telefone
                     </div>
-                    <input type="text" id="contact-phone" />
+                    <input type="text" id="contact-phone" maxlength="255"/>
                 </div>
 
                 <div class="input-container">
                     <div class="input-label" id="contact-subject-label">
                         Assunto
                     </div>
-                    <input type="text" id="contact-subject" />
+                    <input type="text" id="contact-subject" maxlength="255"/>
                 </div>
 
                 <div class="input-container">
@@ -6203,6 +6359,8 @@
                     </div>
                     <textarea id="contact-message"></textarea>
                 </div>
+
+                <div id="form-box-contact-us-feedback" class="form-box-feedback" style="display: none"></div>
 
                 <div class="button" id="contact-us-btn">Enviar</div>
 

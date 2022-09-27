@@ -60,6 +60,8 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
+    'contact_email' => env('CONTACT_EMAIL', 'pablo.camara.pt@gmail.com'),
+
 
     /*
     |--------------------------------------------------------------------------
