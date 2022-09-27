@@ -233,7 +233,7 @@ class ShortlinkController extends Controller
             $validations = [
                 // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
                 'long_url' => 'required|url|max:' . $maxUrlLength,
-                'shortstring' => 'required|min:1',
+                'shortstring' => 'required|min:1|regex:/^[A-Za-z0-9-]*$/',
             ];
 
             $enableCaptchaSitekey = config('captcha.enable');
@@ -243,7 +243,7 @@ class ShortlinkController extends Controller
             Validator::make(
                 $request->all(),
                 $validations,
-                [],
+                ['shortstring.regex' => 'Só é possível criar um link personalizado com letras, números e hífens.'],
                 ['long_url' => 'URL']
             )->validate();
 
