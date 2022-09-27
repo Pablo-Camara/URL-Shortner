@@ -1529,6 +1529,7 @@
                                     initialize: function () {
                                         if (this.hasInitialized === false) {
                                             this.el().onclick = function (e) {
+                                                e.target.innerText = 'A terminar sessão..';
                                                 window._authManager.logout();
                                             };
                                             this.hasInitialized = true;
@@ -1732,6 +1733,7 @@
                                     initialize: function () {
                                         if (this.hasInitialized === false) {
                                             this.el().onclick = function (e) {
+                                                e.target.innerText = 'A terminar sessão..';
                                                 window._authManager.logout();
                                             };
                                             this.hasInitialized = true;
@@ -6113,7 +6115,7 @@
             <div id="menu-mobile-acc-items-user" style="display: none">
                 <div class="menu-item" id="menu-mobile-user-name" style="display: none"></div>
                 <div class="menu-item" id="menu-mobile-admin-dashboard" style="display: none">Painel de Administração</div>
-                <div class="menu-item" id="menu-mobile-acc-logout">Sair</div>
+                <div class="menu-item" id="menu-mobile-acc-logout">Terminar sessão</div>
             </div>
         </div>
 
@@ -6136,7 +6138,7 @@
             <div id="menu-acc-items-user" style="display: none">
                 <div class="menu-item" id="menu-top-user-name" style="display: none"></div>
                 <div class="menu-item" id="menu-top-admin-dashboard" style="display: none">Painel de Administração</div>
-                <div class="menu-item" id="menu-top-acc-logout">Sair</div>
+                <div class="menu-item" id="menu-top-acc-logout">Terminar sessão</div>
             </div>
         </div>
 
