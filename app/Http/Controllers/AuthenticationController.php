@@ -121,10 +121,6 @@ class AuthenticationController extends Controller
      */
     public function loginAttempt(Request $request, Response $response)
     {
-        if (false == $this->isAuthenticated()) {
-            return AuthResponses::notAuthenticated();
-        }
-
         if ($this->isLoggedIn()) {
             UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_LOGIN_WHILE_LOGGED_IN);
             return $response->setContent($this->getAuthenticatedAuthResponseData());
@@ -187,9 +183,6 @@ class AuthenticationController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function registerAttempt(Request $request, Response $response) {
-        if (false == $this->isAuthenticated()) {
-            return AuthResponses::notAuthenticated();
-        }
 
         if ($this->isLoggedIn()) {
             UserAction::logAction($this->userId, AuthActions::ATTEMPTED_TO_REGISTER_WHILE_LOGGED_IN);
@@ -241,6 +234,7 @@ class AuthenticationController extends Controller
      */
     public function resendVerificationEmail(Request $request, Response $response)
     {
+        $requestUser = $request->user();
 
         $validations = [
             'email' => 'required|email',
@@ -260,7 +254,7 @@ class AuthenticationController extends Controller
             // to find out which emails are registered
             // so we just return 200 and fool the users that are attempting
             // to spam this endpoint
-            UserAction::logAction($this->userId, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL_FOR_UNEXISTING_EMAIL);
+            UserAction::logAction($requestUser->id, AuthActions::REQUESTED_RESENDING_CONFIRMATION_EMAIL_FOR_UNEXISTING_EMAIL);
 
             return new Response('', 200);
         }
@@ -342,6 +336,8 @@ class AuthenticationController extends Controller
      */
     public function recoverPassword(Request $request, Response $response)
     {
+        $requestUser = $request->user();
+
         $validations = [
             'email' => 'required|email',
         ];
@@ -361,7 +357,7 @@ class AuthenticationController extends Controller
             // to find out which emails are registered
             // so we just return 200 and fool the users that are attempting
             // to spam this endpoint
-            UserAction::logAction($this->userId, AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL_FOR_UNEXISTING_EMAIL);
+            UserAction::logAction($requestUser->id, AuthActions::REQUESTED_PASSWORD_RECOVERY_EMAIL_FOR_UNEXISTING_EMAIL);
             return new Response('', 200);
         }
 
