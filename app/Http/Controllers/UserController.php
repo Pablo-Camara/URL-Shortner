@@ -48,6 +48,22 @@ class UserController extends Controller
             'permission_groups', 'permission_groups.id', '=', 'users.permission_group_id'
         )->where('guest', '=', 0);
 
+        $freeTextSearchValue = trim($request->input('free-search', ''));
+
+        if (!empty($freeTextSearchValue)) {
+            $results = $results->where(function($query) use ($freeTextSearchValue) {
+                $query->where(
+                    'users.email', 'LIKE', '%'.$freeTextSearchValue.'%'
+                )->orWhere(
+                    'users.name', 'LIKE', '%'.$freeTextSearchValue.'%'
+                )->orWhere(
+                    'permission_groups.name' , 'LIKE', '%'.$freeTextSearchValue.'%'
+                )->orWhere(
+                    'users.id', '=', $freeTextSearchValue
+                );
+            });
+        }
+
 
         $results = $results->paginate(100)->toArray();
 

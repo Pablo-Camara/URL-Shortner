@@ -313,6 +313,7 @@
                 display: block;
                 margin: auto;
                 margin-top: 10px;
+                margin-bottom: 10px;
                 cursor: pointer;
             }
 
@@ -5128,6 +5129,17 @@
                             },
                             hide: function () {
                                 this.el().style.display = 'none';
+
+                                const componentNames = Object.keys(this.Components);
+                                for(var i = 0; i < componentNames.length; i++) {
+                                    const componentName = componentNames[i];
+
+                                    if (
+                                        typeof this.Components[componentName].hide === 'function'
+                                    ) {
+                                        this.Components[componentName].hide();
+                                    }
+                                }
                             },
                             show: function () {
                                 this.el().style.display = 'block';
@@ -5245,32 +5257,101 @@
                                         this.el().style.display = 'inline-block';
                                     }
                                 },
+                                FreeSearch: {
+                                    hasInitialized: false,
+                                    refreshFunction: null,
+                                    containerEl: function () {
+                                        return document.getElementById('free-text-search-container');
+                                    },
+                                    el: function () {
+                                        return document.getElementById('free-text-search');
+                                    },
+                                    getValue: function () {
+                                        return this.el().value;
+                                    },
+                                    labelEl: function () {
+                                        return document.getElementById('free-text-search-label');
+                                    },
+                                    setRefreshFunction: function (refreshFunc) {
+                                        this.refreshFunction = refreshFunc;
+                                    },
+                                    show: function () {
+                                        this.initialize();
+                                        this.containerEl().style.display = 'block';
+                                    },
+                                    hide: function () {
+                                        this.containerEl().style.display = 'none';
+                                        this.refreshFunction = null;
+                                        this.reset();
+                                    },
+                                    reset: function () {
+                                        this.el().value = '';
+                                        this.labelEl().parentNode.classList.remove("active");
+                                        this.labelEl().parentNode.classList.remove("mtop-22");
+                                    },
+                                    initialize: function () {
+                                        if (this.hasInitialized === false) {
+                                            const $this = this;
+                                            this.labelEl().onclick = function (e) {
+                                                e.target.parentNode.classList.add("active");
+                                                $this.el().focus();
+                                            };
+
+                                            this.el().onchange = function(e) {
+                                                if (
+                                                    typeof $this.refreshFunction === 'function'
+                                                ) {
+                                                    $this.refreshFunction();
+                                                }
+                                            };
+
+                                            this.el().onfocus = function (e) {
+                                                e.target.parentNode.classList.add("active");
+                                                e.target.parentNode.classList.add("mtop-22");
+                                                e.target.value = e.target.value.trim();
+                                            };
+
+                                            this.el().addEventListener("focusout", function (e) {
+                                                e.target.value = e.target.value.trim();
+                                                if (e.target.value.length == 0) {
+                                                    $this.reset();
+                                                }
+                                            });
+
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
                                 RefreshResultsBtn: {
                                     hasInitialized: false,
+                                    refreshResultsFunction: null,
                                     el: function () {
                                         return document.getElementById('refresh-dashboard-results');
                                     },
                                     hide: function () {
                                         this.el().style.display = 'none';
                                     },
-                                    show: function () {
+                                    show: function (refreshResultsFunc) {
                                         this.initialize();
+                                        this.refreshResultsFunction = refreshResultsFunc;
                                         this.el().style.display = 'inline-block';
                                     },
                                     initialize: function () {
                                         if (this.hasInitialized === false) {
 
+                                            const $this = this;
                                             this.el().onclick = function(e) {
-                                                window.App.Components.
-                                                    PA.Components.
-                                                    Stats.Components.
-                                                    ViewsList.fetchViewResults();
+                                                if (
+                                                    typeof $this.refreshResultsFunction === 'function'
+                                                ) {
+                                                    $this.refreshResultsFunction();
+                                                }
                                             };
 
                                             this.hasInitialized = true;
                                         }
                                     }
-                                }
+                                },
                             }
                         },
                         Loading: {
@@ -5751,7 +5832,14 @@
                                                     window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
                                                     window.App.Components.PA.Components.Filters.Components.GroupBy.show(resObj.availableGroupBys, resObj.groupBy);
                                                     window.App.Components.PA.Components.Filters.Components.OrderBy.show(resObj.availableOrderBys, resObj.orderBy);
-                                                    window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
+                                                    window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show(
+                                                        function () {
+                                                            window.App.Components.
+                                                                PA.Components.
+                                                                Stats.Components.
+                                                                ViewsList.fetchViewResults();
+                                                        }
+                                                    );
 
 
                                                     if (resObj.search_results.data.length === 0) {
@@ -6085,7 +6173,7 @@
                                                         }
                                                     );
 
-                                                    if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
+                                                    if (resObj.search_results.total > resObj.search_results.per_page) {
                                                         const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
                                                         paginationEl.innerHTML = '';
                                                         paginationEl.appendChild(
@@ -6109,6 +6197,10 @@
 
                                         var urlStr = this.api + '?page=' + pageNumber;
 
+                                        var freeSearchValue = window.App.Components.PA.Components.Filters.Components.FreeSearch.getValue();
+
+                                        urlStr += '&free-search=' + encodeURIComponent(freeSearchValue);
+
                                         xhr.open(
                                             "POST",
                                             urlStr
@@ -6125,6 +6217,18 @@
                                         window.App.Components.PA.hideAllDashboardItems(['Users']);
                                         $this.displayFull();
                                         window.App.Components.PA.Components.BackButton.show();
+
+                                        window.App.Components.PA.Components.Filters.show();
+                                        window.App.Components.PA.Components.Filters.Components.FreeSearch.show();
+                                        window.App.Components.PA.Components.Filters.Components.FreeSearch.setRefreshFunction(
+                                            function () {
+                                                window.App.Components.
+                                                    PA.Components.
+                                                    Users.Components.
+                                                    UsersList.fetchUsersList();
+                                            }
+                                        );
+
                                         $this.Components.UsersList.fetchUsersList();
                                     };
 
@@ -6518,6 +6622,13 @@
                     <div class="input-container" style="display: none;" id="dashboard-filter-order">
                         Ordenação:<br>
                         <select id="dashboard-filter-order-input"></select>
+                    </div>
+
+                    <div class="input-container" id="free-text-search-container" style="display: none; margin-right: 0;">
+                        <div class="input-label" id="free-text-search-label">
+                            Pesquisar..
+                        </div>
+                        <input type="text" id="free-text-search"/>
                     </div>
 
                     <div class="button btn-color-hover-only" id="refresh-dashboard-results" style="display: none">Atualizar resultados</div>
