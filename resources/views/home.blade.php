@@ -115,7 +115,8 @@
             }
 
             .form-box .input-container input,
-            .form-box .input-container select
+            .form-box .input-container select,
+            .form-box .input-container textarea
             {
                 width: 100%;
                 height: 40px;
@@ -125,6 +126,11 @@
                 font-size: 12px;
 
                 border: 1px solid #AAAAAA;
+            }
+
+            .form-box .input-container textarea
+            {
+                height: 80px;
             }
 
             .form-box .input-container input[type="checkbox"] {
@@ -1429,7 +1435,27 @@
                                         this.hasInitialized = true;
                                     }
                                 }
-                            }
+                            },
+                            ContactUs: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('menu-mobile-item-contact-us');
+                                },
+                                show: function () {
+                                    this.el().style.display = 'inline-block';
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Components.MenuMobile.hide();//TODO: test if this line is needed
+                                            window.App.Views.ContactUs.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                         },
                         GuestItems: {
                             el: function () {
@@ -1539,6 +1565,7 @@
                         initialize: function () {
                             this.Items.CloseMenu.initialize();
                             this.Items.MyLinks.initialize();
+                            this.Items.ContactUs.initialize();
                         }
                     },
                     MenuTop: {
@@ -1575,10 +1602,30 @@
                                         this.hasInitialized = true;
                                     }
                                 }
-                            }
+                            },
+                            ContactUs: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('menu-item-contact-us');
+                                },
+                                show: function () {
+                                    this.el().style.display = 'inline-block';
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.ContactUs.show();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                         },
                         initialize: function () {
                             this.Items.MyLinks.initialize();
+                            this.Items.ContactUs.initialize();
                         }
                     },
                     MenuAccTop: {
@@ -4166,6 +4213,221 @@
                         }
 
                     },
+                    ContactUs: {
+                        hasInitialized: false,
+                        el: function () {
+                            return document.getElementById('contact-us-view');
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        Components: {
+                            CloseBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('contact-us-view-close-btn');
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized == false ) {
+
+                                        this.el().onclick = function (e) {
+                                            window.App.Components.ContactUs.hide();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Name: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("contact-name");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("contact-name-label");
+                                },
+                                initialize: function () {
+
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Email: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("contact-email");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("contact-email-label");
+                                },
+                                initialize: function () {
+
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Phone: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("contact-phone");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("contact-phone-label");
+                                },
+                                initialize: function () {
+
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Subject: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("contact-subject");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("contact-subject-label");
+                                },
+                                initialize: function () {
+
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            Message: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("contact-message");
+                                },
+                                labelEl: function () {
+                                    return document.getElementById("contact-message-label");
+                                },
+                                initialize: function () {
+
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+                                        this.labelEl().onclick = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            $this.el().focus();
+                                        };
+
+                                        this.el().onfocus = function (e) {
+                                            e.target.parentNode.classList.add("active");
+                                            e.target.parentNode.classList.add("mtop-22");
+                                            e.target.value = e.target.value.trim();
+                                        };
+
+                                        this.el().addEventListener("focusout", function (e) {
+                                            e.target.value = e.target.value.trim();
+                                            if (e.target.value.length == 0) {
+                                                $this.labelEl().parentNode.classList.remove("active");
+                                                $this.labelEl().parentNode.classList.remove("mtop-22");
+                                            }
+                                        });
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                        },
+                        initialize: function () {
+                            this.Components.CloseBtn.initialize();
+                            this.Components.Name.initialize();
+                            this.Components.Email.initialize();
+                            this.Components.Phone.initialize();
+                            this.Components.Subject.initialize();
+                            this.Components.Message.initialize();
+                        }
+
+                    },
                     EmailConfirmed: {
                         el: function () {
                             return document.getElementById('email-confirmed');
@@ -4264,6 +4526,24 @@
 
                                 this.hasInitialized = true;
                             }
+                        }
+                    },
+                    ContactUs: {
+                        components: {
+                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ContactUs'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.currentView = 'ContactUs';
+                            window.App.hideNonStickyComponents();
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                            window.history.pushState(null, 'Contacte', '/contacte');
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
                         }
                     },
                     Login: {
@@ -5662,7 +5942,7 @@
             <div class="close-btn" id="close-menu-mobile">Fechar menu</div>
             <div class="menu-group-title">Menu Principal</div>
             <div class="menu-item" id="menu-mobile-item-my-links">Os meus links</div>
-            <div class="menu-item">Contacte</div>
+            <div class="menu-item" id="menu-mobile-item-contact-us">Contacte</div>
             <div class="menu-group-title">Conta</div>
             <div id="menu-mobile-acc-items-guest" style="display: none">
                 <div class="menu-item" id="menu-mobile-acc-login">Entrar</div>
@@ -5677,7 +5957,7 @@
 
         <div id="menu-top" style="display: none">
             <div class="menu-item" id="menu-item-my-links" style="display: none">Os meus links</div>
-            <div class="menu-item">Contacte</div>
+            <div class="menu-item" id="menu-item-contact-us">Contacte</div>
         </div>
 
         <div id="menu-top-acc" style="display: none">
@@ -5878,6 +6158,55 @@
             <div id="form-box-acc-links-loading">A carregar links..</div>
             <div id="form-box-acc-links-not-found" style="display: none">Ainda não gerou nenhum link..</div>
             <div id="form-box-acc-links" class="list-container" style="display: none"></div>
+        </div>
+
+
+        <div
+            class="form-box overlay"
+            id="contact-us-view" style="display: none"
+        >
+            <div class="form-box-title">Contacte</div>
+            <div class="close-form-box" id="contact-us-view-close-btn">X</div>
+            <div id="contact-form-fields">
+
+                <div class="input-container">
+                    <div class="input-label" id="contact-name-label">
+                        Nome
+                    </div>
+                    <input type="text" id="contact-name" />
+                </div>
+
+                <div class="input-container">
+                    <div class="input-label" id="contact-email-label">
+                        Email
+                    </div>
+                    <input type="email" id="contact-email" />
+                </div>
+
+                <div class="input-container">
+                    <div class="input-label" id="contact-phone-label">
+                        Telefone
+                    </div>
+                    <input type="text" id="contact-phone" />
+                </div>
+
+                <div class="input-container">
+                    <div class="input-label" id="contact-subject-label">
+                        Assunto
+                    </div>
+                    <input type="text" id="contact-subject" />
+                </div>
+
+                <div class="input-container">
+                    <div class="input-label" id="contact-message-label">
+                        Mensagem
+                    </div>
+                    <textarea id="contact-message"></textarea>
+                </div>
+
+                <div class="button" id="contact-us-btn">Enviar</div>
+
+            </div>
         </div>
 
         @if ($isAdmin)

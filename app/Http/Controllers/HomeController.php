@@ -77,6 +77,16 @@ class HomeController extends Controller
     }
 
     /**
+     * Display contact page directly
+     */
+    public function contactUs() {
+        UserAction::logAction($this->userId, HomeControllerActions::OPENED_CONTACT_PAGE_DIRECTLY);
+        return view('home', [
+            'view' => 'ContactUs'
+        ]);
+    }
+
+    /**
      * Email confirmation route
      *
      * @param  \Illuminate\Http\Request  $request
