@@ -4225,6 +4225,7 @@
                         },
                         show: function () {
                             this.initialize();
+                            this.Components.Feedback.hide();
                             this.el().style.display = 'block';
                         },
                         Components: {
@@ -4513,6 +4514,11 @@
                                                         if (this.status === 201) {
                                                             window.App.Components.ContactUs.Components.Feedback.showSuccess('A sua mensagem foi enviada com sucesso!');
                                                             $this.enable();
+
+                                                            for(var i = 0; i < requiredFields.length; i++) {
+                                                                const field = requiredFields[i];
+                                                                field.value = '';
+                                                            }
                                                             return;
                                                         }
 
