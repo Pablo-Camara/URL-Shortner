@@ -956,6 +956,10 @@
 
                     xhr.addEventListener("readystatechange", function () {
                         if (this.readyState === 4) {
+                            if (this.status === 401) {
+                                window.location.reload();
+                            }
+
                             const resObj = JSON.parse(this.response); //TODO: Catch exception
 
                             if (this.status === 200) {
@@ -1042,6 +1046,10 @@
 
                     xhr.addEventListener("readystatechange", function () {
                         if (this.readyState === 4) {
+                            if (this.status === 401) {
+                                window.location.reload();
+                            }
+
                             const resObj = JSON.parse(this.response); //TODO: Catch exception
 
                             if (this.status === 201) {
@@ -1141,6 +1149,15 @@
 
                     var xhr = new XMLHttpRequest();
                     xhr.withCredentials = true;
+
+                    xhr.addEventListener("readystatechange", function () {
+                        if (this.readyState === 4) {
+                            if (this.status === 401) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+
                     email = encodeURIComponent(email);
 
                     var credentialsQueryStr = "?email=" + email;
@@ -1172,6 +1189,15 @@
 
                     var xhr = new XMLHttpRequest();
                     xhr.withCredentials = true;
+
+                    xhr.addEventListener("readystatechange", function () {
+                        if (this.readyState === 4) {
+                            if (this.status === 401) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+
                     email = encodeURIComponent(email);
 
                     var credentialsQueryStr = "?email=" + email;
@@ -1228,6 +1254,9 @@
 
                     xhr.addEventListener("readystatechange", function () {
                         if (this.readyState === 4) {
+                            if (this.status === 401) {
+                                window.location.reload();
+                            }
 
                             if (this.status === 200) {
 
@@ -1967,6 +1996,10 @@
 
                                             xhr.addEventListener("readystatechange", function () {
                                                 if (this.readyState === 4) {
+                                                    if (this.status === 401) {
+                                                        window.location.reload();
+                                                    }
+
                                                     e.target.classList.remove('disabled');
                                                     try {
                                                         const jsonResObj = JSON.parse(this.responseText);
@@ -2335,6 +2368,10 @@
 
                                                 xhr.addEventListener("readystatechange", function () {
                                                     if (this.readyState === 4) {
+                                                        if (this.status === 401) {
+                                                            window.location.reload();
+                                                        }
+
                                                         e.target.classList.remove('disabled');
                                                         try {
                                                             const jsonResObj = JSON.parse(this.responseText);
@@ -3802,6 +3839,10 @@
                                                     xhr.addEventListener("readystatechange", function () {
                                                         if (this.readyState === 4) {
 
+                                                            if (this.status === 401) {
+                                                                window.location.reload();
+                                                            }
+
                                                             if (this.status === 200) {
                                                                 const totalListItems = $this.el().getElementsByClassName('list-item').length;
                                                                 var currPage = window.App.Helpers.Pagination.getCurrentPage('MyLinksComponent');
@@ -3968,6 +4009,10 @@
 
                                                     xhr.addEventListener("readystatechange", function () {
                                                         if (this.readyState === 4) {
+                                                            if (this.status === 401) {
+                                                                window.location.reload();
+                                                            }
+
                                                             var saveColor = saveEditLongUrlLink.style.color;
 
                                                             if (this.status === 201) {
@@ -4158,6 +4203,10 @@
 
                                             xhr.addEventListener("readystatechange", function () {
                                                 if (this.readyState === 4) {
+                                                    if (this.status === 401) {
+                                                        window.location.reload();
+                                                    }
+
                                                     const resObj = JSON.parse(this.response); //TODO: Catch exception
 
                                                     if (this.status === 200) {
@@ -4511,6 +4560,9 @@
 
                                                 xhr.addEventListener("readystatechange", function () {
                                                     if (this.readyState === 4) {
+                                                        if (this.status === 401) {
+                                                            window.location.reload();
+                                                        }
                                                         const resObj = JSON.parse(this.response); //TODO: Catch exception
 
                                                         if (this.status === 201) {
@@ -5278,23 +5330,31 @@
 
                                 window.App.Components.PA.Components.LoadingOverlay.show();
                                 xhr.addEventListener("readystatechange", function () {
-                                    if (this.status === 200 && this.readyState === 4) {
-                                        window.App.Components.PA.Components.LoadingOverlay.hide();
-                                        const resObj = JSON.parse(this.response);
+                                    if (this.readyState === 4) {
 
-                                        $this.Components.Title.set(resObj.form_title);
-                                        $this.Components.SaveBtn.setSaveEndpoint(resObj.save_endpoint);
-                                        $this.Components.SaveBtn.setRefreshListFunction(refreshFunc);
-
-                                        $this.Components.Fields.reset();
-                                        for(var i = 0; i < resObj.form_fields.length; i++) {
-                                            $this.Components.Fields.add(
-                                                resObj.form_fields[i]
-                                            );
+                                        if (this.status === 401) {
+                                            window.location.reload();
                                         }
 
-                                        $this.show();
-                                        location.href = "#dashboard-edit";
+                                        if (this.status === 200) {
+                                            window.App.Components.PA.Components.LoadingOverlay.hide();
+                                            const resObj = JSON.parse(this.response);
+
+                                            $this.Components.Title.set(resObj.form_title);
+                                            $this.Components.SaveBtn.setSaveEndpoint(resObj.save_endpoint);
+                                            $this.Components.SaveBtn.setRefreshListFunction(refreshFunc);
+
+                                            $this.Components.Fields.reset();
+                                            for(var i = 0; i < resObj.form_fields.length; i++) {
+                                                $this.Components.Fields.add(
+                                                    resObj.form_fields[i]
+                                                );
+                                            }
+
+                                            $this.show();
+                                            location.href = "#dashboard-edit";
+                                        }
+
                                     }
                                 });
 
@@ -5470,6 +5530,10 @@
                                                 window.App.Components.PA.Components.LoadingOverlay.show();
                                                 xhr.addEventListener("readystatechange", function () {
                                                     if (this.readyState === 4) {
+                                                        if (this.status === 401) {
+                                                            window.location.reload();
+                                                        }
+
                                                         window.App.Components.PA.Components.LoadingOverlay.hide();
                                                         const resObj = JSON.parse(this.response);
 
@@ -5673,46 +5737,53 @@
                                         xhr.withCredentials = true;
 
                                         xhr.addEventListener("readystatechange", function () {
-                                            if (this.status === 200 && this.readyState === 4) {
-                                                const resObj = JSON.parse(this.response);
-                                                window.App.Components.PA.Components.Loading.hide();
-                                                window.App.Components.PA.Components.Filters.show();
-                                                window.App.Components.PA.Components.Filters.Components.DateSince.show(resObj.since);
-                                                window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
-                                                window.App.Components.PA.Components.Filters.Components.GroupBy.show(resObj.availableGroupBys, resObj.groupBy);
-                                                window.App.Components.PA.Components.Filters.Components.OrderBy.show(resObj.availableOrderBys, resObj.orderBy);
-                                                window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
-
-
-                                                if (resObj.search_results.data.length === 0) {
-                                                    window.App.Components.PA.Components.NoResults.show();
-                                                    return;
+                                            if (this.readyState === 4) {
+                                                if (this.status === 401) {
+                                                    window.location.reload();
                                                 }
-                                                window.App.Components.PA.Components.NoResults.hide();
-                                                window.App.Components.PA.Components.ResultsTable.setColumns(
-                                                    Object.keys(resObj.search_results.data[0])
-                                                );
-                                                window.App.Components.PA.Components.ResultsTable.setRows(
-                                                    resObj.search_results.data
-                                                );
 
-                                                if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
-                                                    const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
-                                                    paginationEl.innerHTML = '';
-                                                    paginationEl.appendChild(
-                                                        window.App.Helpers.Pagination.createEl(
-                                                            resObj.search_results.current_page,
-                                                            resObj.search_results.last_page,
-                                                            'DashboardResultList',
-                                                            function(param) {
-                                                                window.App.Components.PA.Components.Stats.Components.ViewsList.fetchViewResults(param);
-                                                            }
-                                                        )
+                                                if (this.status === 200) {
+                                                    const resObj = JSON.parse(this.response);
+                                                    window.App.Components.PA.Components.Loading.hide();
+                                                    window.App.Components.PA.Components.Filters.show();
+                                                    window.App.Components.PA.Components.Filters.Components.DateSince.show(resObj.since);
+                                                    window.App.Components.PA.Components.Filters.Components.DateUntil.show(resObj.until);
+                                                    window.App.Components.PA.Components.Filters.Components.GroupBy.show(resObj.availableGroupBys, resObj.groupBy);
+                                                    window.App.Components.PA.Components.Filters.Components.OrderBy.show(resObj.availableOrderBys, resObj.orderBy);
+                                                    window.App.Components.PA.Components.Filters.Components.RefreshResultsBtn.show();
+
+
+                                                    if (resObj.search_results.data.length === 0) {
+                                                        window.App.Components.PA.Components.NoResults.show();
+                                                        return;
+                                                    }
+                                                    window.App.Components.PA.Components.NoResults.hide();
+                                                    window.App.Components.PA.Components.ResultsTable.setColumns(
+                                                        Object.keys(resObj.search_results.data[0])
                                                     );
+                                                    window.App.Components.PA.Components.ResultsTable.setRows(
+                                                        resObj.search_results.data
+                                                    );
+
+                                                    if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
+                                                        const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
+                                                        paginationEl.innerHTML = '';
+                                                        paginationEl.appendChild(
+                                                            window.App.Helpers.Pagination.createEl(
+                                                                resObj.search_results.current_page,
+                                                                resObj.search_results.last_page,
+                                                                'DashboardResultList',
+                                                                function(param) {
+                                                                    window.App.Components.PA.Components.Stats.Components.ViewsList.fetchViewResults(param);
+                                                                }
+                                                            )
+                                                        );
+                                                    }
+
+
+                                                    window.App.Components.PA.Components.ResultsTable.show();
                                                 }
 
-
-                                                window.App.Components.PA.Components.ResultsTable.show();
                                             }
                                         });
 
@@ -5862,53 +5933,61 @@
                                         xhr.withCredentials = true;
 
                                         xhr.addEventListener("readystatechange", function () {
-                                            if (this.status === 200 && this.readyState === 4) {
-                                                const resObj = JSON.parse(this.response);
-                                                window.App.Components.PA.Components.Loading.hide();
-
-                                                if (resObj.search_results.data.length === 0) {
-                                                    window.App.Components.PA.Components.NoResults.show();
-                                                    return;
+                                            if (this.readyState === 4) {
+                                                if (this.status === 401) {
+                                                    window.location.reload();
                                                 }
-                                                window.App.Components.PA.Components.NoResults.hide();
-                                                window.App.Components.PA.Components.ResultsTable.setColumns(
-                                                    Object.keys(resObj.search_results.data[0])
-                                                );
-                                                window.App.Components.PA.Components.ResultsTable.setRows(
-                                                    resObj.search_results.data,
-                                                    resObj.edit_config,
-                                                    function (e) {
-                                                        window.App.Components.PA.Components.Edit.startEditing(
-                                                            'PermissionGroups',
-                                                            e.target.parentElement.getAttribute('data-row-id'),
-                                                            function () {
-                                                                window.App.Components.PA.Components.PermissionGroups.Components.PermissionGroupsList.fetchPermissionGroups(
-                                                                    window.App.Helpers.Pagination.getCurrentPage(
-                                                                        resObj.pagination_identifier
-                                                                    )
-                                                                );
-                                                            }
+
+                                                if (this.status === 200) {
+                                                    const resObj = JSON.parse(this.response);
+                                                    window.App.Components.PA.Components.Loading.hide();
+
+                                                    if (resObj.search_results.data.length === 0) {
+                                                        window.App.Components.PA.Components.NoResults.show();
+                                                        return;
+                                                    }
+                                                    window.App.Components.PA.Components.NoResults.hide();
+                                                    window.App.Components.PA.Components.ResultsTable.setColumns(
+                                                        Object.keys(resObj.search_results.data[0])
+                                                    );
+                                                    window.App.Components.PA.Components.ResultsTable.setRows(
+                                                        resObj.search_results.data,
+                                                        resObj.edit_config,
+                                                        function (e) {
+                                                            window.App.Components.PA.Components.Edit.startEditing(
+                                                                'PermissionGroups',
+                                                                e.target.parentElement.getAttribute('data-row-id'),
+                                                                function () {
+                                                                    window.App.Components.PA.Components.PermissionGroups.Components.PermissionGroupsList.fetchPermissionGroups(
+                                                                        window.App.Helpers.Pagination.getCurrentPage(
+                                                                            resObj.pagination_identifier
+                                                                        )
+                                                                    );
+                                                                }
+                                                            );
+                                                        }
+                                                    );
+
+                                                    if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
+                                                        const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
+                                                        paginationEl.innerHTML = '';
+                                                        paginationEl.appendChild(
+                                                            window.App.Helpers.Pagination.createEl(
+                                                                resObj.search_results.current_page,
+                                                                resObj.search_results.last_page,
+                                                                resObj.pagination_identifier,
+                                                                function(param) {
+                                                                    window.App.Components.PA.Components.PermissionGroups.Components.PermissionGroupsList.fetchPermissionGroups(param);
+                                                                }
+                                                            )
                                                         );
                                                     }
-                                                );
 
-                                                if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
-                                                    const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
-                                                    paginationEl.innerHTML = '';
-                                                    paginationEl.appendChild(
-                                                        window.App.Helpers.Pagination.createEl(
-                                                            resObj.search_results.current_page,
-                                                            resObj.search_results.last_page,
-                                                            resObj.pagination_identifier,
-                                                            function(param) {
-                                                                window.App.Components.PA.Components.PermissionGroups.Components.PermissionGroupsList.fetchPermissionGroups(param);
-                                                            }
-                                                        )
-                                                    );
+
+                                                    window.App.Components.PA.Components.ResultsTable.show();
                                                 }
 
 
-                                                window.App.Components.PA.Components.ResultsTable.show();
                                             }
                                         });
 
@@ -5970,53 +6049,60 @@
                                         xhr.withCredentials = true;
 
                                         xhr.addEventListener("readystatechange", function () {
-                                            if (this.status === 200 && this.readyState === 4) {
-                                                const resObj = JSON.parse(this.response);
-                                                window.App.Components.PA.Components.Loading.hide();
-
-                                                if (resObj.search_results.data.length === 0) {
-                                                    window.App.Components.PA.Components.NoResults.show();
-                                                    return;
+                                            if (this.readyState === 4) {
+                                                if (this.status === 401) {
+                                                    window.location.reload();
                                                 }
-                                                window.App.Components.PA.Components.NoResults.hide();
-                                                window.App.Components.PA.Components.ResultsTable.setColumns(
-                                                    Object.keys(resObj.search_results.data[0])
-                                                );
-                                                window.App.Components.PA.Components.ResultsTable.setRows(
-                                                    resObj.search_results.data,
-                                                    resObj.edit_config,
-                                                    function (e) {
-                                                        window.App.Components.PA.Components.Edit.startEditing(
-                                                            'Users',
-                                                            e.target.parentElement.getAttribute('data-row-id'),
-                                                            function () {
-                                                                window.App.Components.PA.Components.Users.Components.UsersList.fetchUsersList(
-                                                                    window.App.Helpers.Pagination.getCurrentPage(
-                                                                        resObj.pagination_identifier
-                                                                    )
-                                                                );
-                                                            }
+
+                                                if (this.status === 200) {
+                                                    const resObj = JSON.parse(this.response);
+                                                    window.App.Components.PA.Components.Loading.hide();
+
+                                                    if (resObj.search_results.data.length === 0) {
+                                                        window.App.Components.PA.Components.NoResults.show();
+                                                        return;
+                                                    }
+                                                    window.App.Components.PA.Components.NoResults.hide();
+                                                    window.App.Components.PA.Components.ResultsTable.setColumns(
+                                                        Object.keys(resObj.search_results.data[0])
+                                                    );
+                                                    window.App.Components.PA.Components.ResultsTable.setRows(
+                                                        resObj.search_results.data,
+                                                        resObj.edit_config,
+                                                        function (e) {
+                                                            window.App.Components.PA.Components.Edit.startEditing(
+                                                                'Users',
+                                                                e.target.parentElement.getAttribute('data-row-id'),
+                                                                function () {
+                                                                    window.App.Components.PA.Components.Users.Components.UsersList.fetchUsersList(
+                                                                        window.App.Helpers.Pagination.getCurrentPage(
+                                                                            resObj.pagination_identifier
+                                                                        )
+                                                                    );
+                                                                }
+                                                            );
+                                                        }
+                                                    );
+
+                                                    if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
+                                                        const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
+                                                        paginationEl.innerHTML = '';
+                                                        paginationEl.appendChild(
+                                                            window.App.Helpers.Pagination.createEl(
+                                                                resObj.search_results.current_page,
+                                                                resObj.search_results.last_page,
+                                                                resObj.pagination_identifier,
+                                                                function(param) {
+                                                                    window.App.Components.PA.Components.Users.Components.UsersList.fetchUsersList(param);
+                                                                }
+                                                            )
                                                         );
                                                     }
-                                                );
 
-                                                if (resObj.search_results.last_page > 1 && resObj.search_results.data.length > 1) {
-                                                    const paginationEl = window.App.Components.PA.Components.ResultsTable.paginationEl();
-                                                    paginationEl.innerHTML = '';
-                                                    paginationEl.appendChild(
-                                                        window.App.Helpers.Pagination.createEl(
-                                                            resObj.search_results.current_page,
-                                                            resObj.search_results.last_page,
-                                                            resObj.pagination_identifier,
-                                                            function(param) {
-                                                                window.App.Components.PA.Components.Users.Components.UsersList.fetchUsersList(param);
-                                                            }
-                                                        )
-                                                    );
+
+                                                    window.App.Components.PA.Components.ResultsTable.show();
                                                 }
 
-
-                                                window.App.Components.PA.Components.ResultsTable.show();
                                             }
                                         });
 
