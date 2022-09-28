@@ -795,6 +795,28 @@
                 margin-bottom: 10px;
             }
 
+            .cookie-notice-bar {
+                background: rgba(255,255,255,0.9);
+                z-index: 999999;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 10px;
+                font-size: 12px;
+                color: #333;
+                text-align: center;
+                cursor: pointer;
+            }
+
+            .close-cookie-notice {
+                background: linear-gradient( 120deg, rgb(102, 147, 179) 0%, rgb(102, 157, 183) 25%, rgb(100, 186, 196) 100% );
+                display: inline-block;
+                padding: 4px 10px;
+                color: white;
+                margin-left: 10px;
+            }
+
         </style>
 
         @if(isset($enableCaptcha) && $enableCaptcha === true)
@@ -7118,6 +7140,45 @@
             ) {
                 window.App.Views[window.App.currentView].show();
             }
+        </script>
+
+        <div class="cookie-notice-bar" id="cookie-notice-bar" style="display: none">
+            Nós usamos cookies para lhe proporcionar uma melhor experiência online.
+            <div class="close-cookie-notice">Ok</div>
+        </div>
+
+        <script>
+            function setCookie(name,value,days) {
+                var expires = "";
+                if (days) {
+                    var date = new Date();
+                    date.setTime(date.getTime() + (days*24*60*60*1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+            }
+
+            function getCookie(name) {
+                var nameEQ = name + "=";
+                var ca = document.cookie.split(';');
+                for(var i=0;i < ca.length;i++) {
+                    var c = ca[i];
+                    while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+                }
+                return null;
+            }
+
+            const cookieNoticeBar = document.getElementById('cookie-notice-bar');
+
+            if (!getCookie('user-has-been-informed-about-cookies')) {
+                cookieNoticeBar.style.display = 'block';
+            }
+
+            cookieNoticeBar.onclick = function (e) {
+                cookieNoticeBar.style.display = 'none';
+                setCookie('user-has-been-informed-about-cookies', true);
+            };
         </script>
     </body>
 </html>
