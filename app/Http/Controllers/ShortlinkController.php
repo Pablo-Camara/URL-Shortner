@@ -324,6 +324,10 @@ class ShortlinkController extends Controller
             $shortstring->length = strlen($shortstringText);
             $shortstring->shortstring = $shortstringText;
             $shortstring->save();
+        } else {
+            $shortstring->is_available = 0;
+            $shortstring->is_custom = 1;
+            $shortstring->save();
         }
 
         $newShortlink = new Shortlink();
@@ -929,7 +933,7 @@ class ShortlinkController extends Controller
         /** DAILY LIMIT */
         $totalShortlinksToday = Shortlink::leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
                                                 ->where('user_id', '=', $user->id)
-                                                ->where('shortstrings.length', '>=', $shortstringLength)
+                                                ->where('shortstrings.length', '=', $shortstringLength)
                                                 ->where('shortlinks.created_at_day', '=', Carbon::now()->toDateString())
                                                 ->count();
 
