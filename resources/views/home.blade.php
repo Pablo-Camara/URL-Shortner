@@ -88,6 +88,20 @@
                 margin-bottom: 10px;
             }
 
+            .personalized-shortstring-length {
+                display: block;
+                padding: 0 0 8px 8px;
+            }
+
+            .personalized-shortstring-length.has-error {
+                border: 1px solid red;
+            }
+
+            .form-box .radio-input-container {
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+
             .form-box .input-generic-1 {
                 color: #0077c8;
                 width: 100%;
@@ -1839,7 +1853,9 @@
                             longUrlInput.focus();
 
                             this.Components.DestinationEmail.show();
+
                             this.Components.CreateCustomLink.show();
+                            this.Components.ChooseCustomSize.show();
                         },
                         hide: function() {
                             this.el().style.display = 'none';
@@ -1991,6 +2007,22 @@
                                             longUrlInput.classList.remove('has-error');
                                         }
 
+                                        var useCustomSize = false;
+                                        var customSize = null;
+                                        if (
+                                            window.App.Components.ShortenUrl.Components.ChooseCustomSize.optionsVisible
+                                        ) {
+
+                                            if (window.App.Components.ShortenUrl.Components.ChooseCustomSize.getSelectOptionValue() == null) {
+                                                window.App.Components.ShortenUrl.Components.ChooseCustomSize.flagHasError();
+                                                return false;
+                                            }
+
+                                            window.App.Components.ShortenUrl.Components.ChooseCustomSize.unflagHasError();
+                                            useCustomSize = true;
+                                            customSize = window.App.Components.ShortenUrl.Components.ChooseCustomSize.getSelectOptionValue();
+                                        }
+
                                         var func = function (token) {
                                             var xhr = new XMLHttpRequest();
                                             xhr.withCredentials = true;
@@ -2041,6 +2073,9 @@
                                                 paramsStr += '&g-recaptcha-response=' + token;
                                             }
 
+                                            if (useCustomSize) {
+                                                paramsStr += '&custom-size=' + customSize;
+                                            }
 
                                             xhr.open(
                                                 "POST",
@@ -2081,10 +2116,6 @@
                                 },
                                 show: function () {
                                     if (
-                                        !window._authManager.isAuthenticated
-                                        ||
-                                        !window._authManager.isLoggedIn
-                                        ||
                                         !window._authManager.userHasPermission('create_custom_shortlinks')
                                     ) {
                                         return false;
@@ -2111,12 +2142,109 @@
                                     }
                                 }
                             },
+                            ChooseCustomSize: {
+                                hasInitialized: false,
+                                optionsVisible: false,
+                                el: function () {
+                                    return document.getElementById('generate-shorter-shortlinks');
+                                },
+                                optionsEl: function () {
+                                    return document.getElementById('choose-shortstring-length');
+                                },
+                                cancelChoiceEl: function () {
+                                    return document.getElementById('cancel-and-generate-normally');
+                                },
+                                show: function () {
+                                    if (
+                                        !window._authManager.userHasPermission('create_shortlinks_with_length_1')
+                                        &&
+                                        !window._authManager.userHasPermission('create_shortlinks_with_length_2')
+                                        &&
+                                        !window._authManager.userHasPermission('create_shortlinks_with_length_3')
+                                        &&
+                                        !window._authManager.userHasPermission('create_shortlinks_with_length_4')
+                                    ) {
+                                        return false;
+                                    }
+
+                                    this.el().style.display = 'block';
+                                    this.hideOptions();
+                                    this.unselectAllOptions();
+                                    this.unflagHasError();
+                                },
+                                getSelectOptionValue: function () {
+                                    for(var i = 1; i <= 4; i++) {
+                                        const optionEl = document.getElementById('generate_with_length_' + i);
+                                        if (optionEl.checked) {
+                                            return optionEl.value;
+                                        }
+                                    }
+                                    return null;
+                                },
+                                unselectAllOptions: function () {
+                                    for(var i = 1; i <= 4; i++) {
+                                        const optionEl = document.getElementById('generate_with_length_' + i);
+                                        optionEl.checked = false;
+                                    }
+                                    return null;
+                                },
+                                flagHasError: function () {
+                                    this.optionsEl().classList.add('has-error');
+                                },
+                                unflagHasError: function () {
+                                    this.optionsEl().classList.remove('has-error');
+                                },
+                                showOptions: function () {
+                                    this.optionsEl().style.display = 'block';
+                                    this.optionsVisible = true;
+
+                                    for(var i = 1; i <= 4; i++) {
+                                        const optionEl = document.getElementById('generate_with_length_' + i + '_container');
+                                        const permissionNeeded = 'create_shortlinks_with_length_' + i;
+
+                                        if (
+                                            window._authManager.userHasPermission(permissionNeeded)
+                                        ) {
+                                            optionEl.style.display = 'block';
+                                        } else {
+                                            optionEl.style.display = 'none';
+                                        }
+
+                                    }
+                                },
+                                hideOptions: function () {
+                                    this.optionsEl().style.display = 'none';
+                                    this.optionsVisible = false;
+                                },
+                                reset: function () {
+                                    this.el().style.display = 'block';
+                                    this.hideOptions();
+                                    this.unselectAllOptions();
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized === false ) {
+
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            $this.el().style.display = 'none';
+                                            $this.showOptions();
+                                        };
+
+                                        this.cancelChoiceEl().onclick = function (e) {
+                                            $this.reset();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
                         },
                         initialize: function () {
                             this.Components.LongUrl.initialize();
                             this.Components.DestinationEmail.initialize();
                             this.Components.GenerateBtn.initialize();
                             this.Components.CreateCustomLink.initialize();
+                            this.Components.ChooseCustomSize.initialize();
                         }
                     },
                     ShortlinkResult: {
@@ -2244,7 +2372,7 @@
                                             $this.Components.RequestedShortlink.el().value += letters.shift();
                                             $this.Components.RequestedShortlink.mirror();
                                         },
-                                        i*200
+                                        i*100
                                     );
                                 }
 
@@ -2252,7 +2380,7 @@
                                     function() {
                                         $this.Components.RequestedShortlink.el().focus();
                                     },
-                                    letters.length*200
+                                    letters.length*100
                                 );
                             } else {
                                 this.Components.RequestedShortlinkLongUrl.el().focus();
@@ -6676,9 +6804,33 @@
             </div>
 
             <div class="button disabled" id="generate-shortlink">Gerar Link Curto!</div>
-            <a href="javascript:void(0);" id="create-personalized-link" class="form-link" style="display: none">Criar link personalizado</a>
-
             <div id="form-box-feedback" class="form-box-feedback" style="display: none"></div>
+            <a href="javascript:void(0);" id="create-personalized-link" class="form-link" style="display: none">Criar link personalizado</a>
+            <a href="javascript:void(0);" id="generate-shorter-shortlinks" style="display: none" class="form-link">Escolher tamanho personalizado</a>
+            <div class="personalized-shortstring-length" id="choose-shortstring-length" style="display: none">
+
+                <div class="radio-input-container" id="generate_with_length_4_container">
+                    <input type="radio" id="generate_with_length_4" name="shortstring_length" value="4">
+                    <label for="generate_with_length_4">Máximo 4 caractere</label>
+                </div>
+
+                <div class="radio-input-container" id="generate_with_length_3_container">
+                    <input type="radio" id="generate_with_length_3" name="shortstring_length" value="3">
+                    <label for="generate_with_length_3">Máximo 3 caractere</label>
+                </div>
+
+                <div class="radio-input-container" id="generate_with_length_2_container">
+                    <input type="radio" id="generate_with_length_2" name="shortstring_length" value="2">
+                    <label for="generate_with_length_2">Máximo 2 caractere</label>
+                </div>
+
+                <div class="radio-input-container" id="generate_with_length_1_container">
+                    <input type="radio" id="generate_with_length_1" name="shortstring_length" value="1">
+                    <label for="generate_with_length_1">Máximo 1 caractere</label>
+                </div>
+
+                <a href="javascript:void(0);" class="form-link" id="cancel-and-generate-normally">Cancelar / gerar link normalmente</a>
+            </div>
         </div>
 
         <div
@@ -6759,17 +6911,6 @@
                 window.App.Components.RegisterCustomShortlink.Components.ContinueBtn.enable();
                 window.App.Components.PasswordRecovery.Components.SendPwdRecoveryBtn.enable();
                 window.App.Components.ChangePassword.Components.ChangePasswordBtn.enable();
-            }
-
-
-            if (
-                typeof window.App.currentView !== 'undefined'
-                &&
-                typeof window.App.Views[window.App.currentView] !== 'undefined'
-                &&
-                typeof window.App.Views[window.App.currentView].show === 'function'
-            ) {
-                window.App.Views[window.App.currentView].show();
             }
 
             function showAdminMenuItem() {
@@ -6928,13 +7069,6 @@
 
                 window.App.Components.ChangePassword.Components.ChangePasswordBtn.enable();
             }, false);
-
-
-            if (window._authManager.isAuthenticated) {
-                enableAuthenticationDependentButtons();
-            }
-
-            window.App.Components.MenuToggleMobile.initialize();
         </script>
 
         @if (
@@ -6963,5 +7097,25 @@
                 window._authManager.authenticate();
             </script>
         @endif
+
+
+        <script>
+            if (window._authManager.isAuthenticated) {
+                enableAuthenticationDependentButtons();
+            }
+
+            window.App.Components.MenuToggleMobile.initialize();
+
+
+            if (
+                typeof window.App.currentView !== 'undefined'
+                &&
+                typeof window.App.Views[window.App.currentView] !== 'undefined'
+                &&
+                typeof window.App.Views[window.App.currentView].show === 'function'
+            ) {
+                window.App.Views[window.App.currentView].show();
+            }
+        </script>
     </body>
 </html>

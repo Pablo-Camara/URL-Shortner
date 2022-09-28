@@ -18,6 +18,10 @@ class PermissionGroup extends Model
         'view_shortlinks_total_views' => 'boolean',
         'view_shortlinks_total_unique_views' => 'boolean',
         'create_custom_shortlinks' => 'boolean',
+        'create_shortlinks_with_length_1' => 'boolean',
+        'create_shortlinks_with_length_2' => 'boolean',
+        'create_shortlinks_with_length_3' => 'boolean',
+        'create_shortlinks_with_length_4' => 'boolean',
     ];
 
     public function canEditShortlinksDestinationUrl() {
@@ -53,6 +57,10 @@ class PermissionGroup extends Model
             'view_shortlinks_total_views' => $this->view_shortlinks_total_views,
             'view_shortlinks_total_unique_views' => $this->view_shortlinks_total_unique_views,
             'create_custom_shortlinks' => $this->create_custom_shortlinks,
+            'create_shortlinks_with_length_1' => $this->create_shortlinks_with_length_1,
+            'create_shortlinks_with_length_2' => $this->create_shortlinks_with_length_2,
+            'create_shortlinks_with_length_3' => $this->create_shortlinks_with_length_3,
+            'create_shortlinks_with_length_4' => $this->create_shortlinks_with_length_4,
         ];
 
     }

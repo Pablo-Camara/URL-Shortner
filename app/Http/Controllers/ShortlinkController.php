@@ -384,12 +384,14 @@ class ShortlinkController extends Controller
 
         $maxUrlLength = 2048;
 
+        $customSize = $request->input('custom-size', null);
         try {
 
             $validations = [
                 // long when validation fails - to know which users are trying to generate a shortlink from a really really long url
                 'long_url' => 'required|url|max:' . $maxUrlLength,
                 'destination_email' => 'email:rfc,dns',
+                'custom-size' => 'integer|between:1,4'
             ];
 
             $enableCaptchaSitekey = config('captcha.enable');
@@ -400,7 +402,10 @@ class ShortlinkController extends Controller
             Validator::make(
                 $request->all(),
                 $validations,
-                [],
+                [
+                    'custom-size.between' => 'Tamanho inválido.',
+                    'custom-size.integer' => 'Tamanho inválido.',
+                ],
                 ['long_url' => 'URL']
             )->validate();
 
@@ -429,12 +434,41 @@ class ShortlinkController extends Controller
             throw ValidationException::withMessages(['long_url' => 'Não é possível criar um link curto para este url.']);
         }
 
+        $useBaseConvert = true;
+        if (!empty($customSize)) {
+            $useBaseConvert = false;
+        }
+
         $this->validateHasNotReachedLimitsForShortstringsWith5orMoreOfLength(
             $user,
             $permissionGroup
         );
 
-        $nextAvailableShortstring = $this->tryGeneratingShortstringWithBaseConvert(5);
+        if ($useBaseConvert) {
+            $nextAvailableShortstring = $this->tryGeneratingShortstringWithBaseConvert(5);
+        } else {
+
+            if (
+                false == $permissionGroup->canCreateShortlinksWithSpecificLength(
+                    $customSize
+                )
+            ) {
+                throw ValidationException::withMessages(['permissions' => 'Não tens permissões para criar links com este tamanho ('.$customSize .').']);
+            }
+
+            $this->validateHasNotReachedLimitsForShortstringsWith4orLessOfLength(
+                $user,
+                $permissionGroup,
+                $customSize
+            );
+
+            $nextAvailableShortstring = Shortstring::where(
+                'is_available', '=', 1
+            )->where(
+                'length', '=', $customSize
+            )->first();
+        }
+
 
         if (!$nextAvailableShortstring) {
             // this should never happen
@@ -448,7 +482,7 @@ class ShortlinkController extends Controller
 
             return new Response(
                 [
-                    'message' => 'Estamos sem links disponíveis! Volte a tentar dentro de alguns minutos!'
+                    'message' => 'Não encontramos um link disponível com estas configurações.'
                 ],
                 Response::HTTP_SERVICE_UNAVAILABLE
             );
@@ -484,7 +518,7 @@ class ShortlinkController extends Controller
 
             UserAction::logAction(
                 $newShortlink->user_id,
-                ShortlinkActions::GENERATED_SHORTLINK_WITH_BC,
+                $useBaseConvert ? ShortlinkActions::GENERATED_SHORTLINK_WITH_BC : ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
                 [
                     'shortlink_id' => $newShortlink->id
                 ]
