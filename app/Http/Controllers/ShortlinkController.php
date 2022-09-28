@@ -466,11 +466,19 @@ class ShortlinkController extends Controller
                 $customSize
             );
 
+            $useRandom = config('app.use_random_for_premium_urls');
+
             $nextAvailableShortstring = Shortstring::where(
                 'is_available', '=', 1
             )->where(
                 'length', '=', $customSize
-            )->first();
+            );
+
+            if ($useRandom) {
+                $nextAvailableShortstring->inRandomOrder();
+            }
+
+            $nextAvailableShortstring = $nextAvailableShortstring->first();
         }
 
 

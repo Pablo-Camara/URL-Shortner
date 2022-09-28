@@ -62,6 +62,8 @@ return [
 
     'contact_email' => env('CONTACT_EMAIL', 'pablo.camara.pt@gmail.com'),
 
+    'use_random_for_premium_urls' => env('USE_RANDOM_FOR_PREMIUM_URLS', false),
+
 
     /*
     |--------------------------------------------------------------------------
