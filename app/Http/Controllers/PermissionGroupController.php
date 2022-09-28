@@ -50,21 +50,25 @@ class PermissionGroupController extends Controller
             __('admin-panel.max_shortlinks_per_month_with_5_or_more_of_length') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_year_with_5_or_more_of_length') => $transformNullToUndefined,
 
+            __('admin-panel.create_shortlinks_with_length_4') => $transformBinaryToText,
             __('admin-panel.max_shortlinks_with_length_4') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_day_with_length_4') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_month_with_length_4') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_year_with_length_4') => $transformNullToUndefined,
 
+            __('admin-panel.create_shortlinks_with_length_3') => $transformBinaryToText,
             __('admin-panel.max_shortlinks_with_length_3') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_day_with_length_3') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_month_with_length_3') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_year_with_length_3') => $transformNullToUndefined,
 
+            __('admin-panel.create_shortlinks_with_length_2') => $transformBinaryToText,
             __('admin-panel.max_shortlinks_with_length_2') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_day_with_length_2') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_month_with_length_2') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_year_with_length_2') => $transformNullToUndefined,
 
+            __('admin-panel.create_shortlinks_with_length_1') => $transformBinaryToText,
             __('admin-panel.max_shortlinks_with_length_1') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_day_with_length_1') => $transformNullToUndefined,
             __('admin-panel.max_shortlinks_per_month_with_length_1') => $transformNullToUndefined,
@@ -89,21 +93,25 @@ class PermissionGroupController extends Controller
             DB::raw('permission_groups.max_shortlinks_per_month_with_5_or_more_of_length AS `'.__('admin-panel.max_shortlinks_per_month_with_5_or_more_of_length').'`'),
             DB::raw('permission_groups.max_shortlinks_per_year_with_5_or_more_of_length AS `'.__('admin-panel.max_shortlinks_per_year_with_5_or_more_of_length').'`'),
 
+            DB::raw('permission_groups.create_shortlinks_with_length_4 AS `'.__('admin-panel.create_shortlinks_with_length_4').'`'),
             DB::raw('permission_groups.max_shortlinks_with_length_4 AS `'.__('admin-panel.max_shortlinks_with_length_4').'`'),
             DB::raw('permission_groups.max_shortlinks_per_day_with_length_4 AS `'.__('admin-panel.max_shortlinks_per_day_with_length_4').'`'),
             DB::raw('permission_groups.max_shortlinks_per_month_with_length_4 AS `'.__('admin-panel.max_shortlinks_per_month_with_length_4').'`'),
             DB::raw('permission_groups.max_shortlinks_per_year_with_length_4 AS `'.__('admin-panel.max_shortlinks_per_year_with_length_4').'`'),
 
+            DB::raw('permission_groups.create_shortlinks_with_length_3 AS `'.__('admin-panel.create_shortlinks_with_length_3').'`'),
             DB::raw('permission_groups.max_shortlinks_with_length_3 AS `'.__('admin-panel.max_shortlinks_with_length_3').'`'),
             DB::raw('permission_groups.max_shortlinks_per_day_with_length_3 AS `'.__('admin-panel.max_shortlinks_per_day_with_length_3').'`'),
             DB::raw('permission_groups.max_shortlinks_per_month_with_length_3 AS `'.__('admin-panel.max_shortlinks_per_month_with_length_3').'`'),
             DB::raw('permission_groups.max_shortlinks_per_year_with_length_3 AS `'.__('admin-panel.max_shortlinks_per_year_with_length_3').'`'),
 
+            DB::raw('permission_groups.create_shortlinks_with_length_2 AS `'.__('admin-panel.create_shortlinks_with_length_2').'`'),
             DB::raw('permission_groups.max_shortlinks_with_length_2 AS `'.__('admin-panel.max_shortlinks_with_length_2').'`'),
             DB::raw('permission_groups.max_shortlinks_per_day_with_length_2 AS `'.__('admin-panel.max_shortlinks_per_day_with_length_2').'`'),
             DB::raw('permission_groups.max_shortlinks_per_month_with_length_2 AS `'.__('admin-panel.max_shortlinks_per_month_with_length_2').'`'),
             DB::raw('permission_groups.max_shortlinks_per_year_with_length_2 AS `'.__('admin-panel.max_shortlinks_per_year_with_length_2').'`'),
 
+            DB::raw('permission_groups.create_shortlinks_with_length_1 AS `'.__('admin-panel.create_shortlinks_with_length_1').'`'),
             DB::raw('permission_groups.max_shortlinks_with_length_1 AS `'.__('admin-panel.max_shortlinks_with_length_1').'`'),
             DB::raw('permission_groups.max_shortlinks_per_day_with_length_1 AS `'.__('admin-panel.max_shortlinks_per_day_with_length_1').'`'),
             DB::raw('permission_groups.max_shortlinks_per_month_with_length_1 AS `'.__('admin-panel.max_shortlinks_per_month_with_length_1').'`'),
@@ -215,6 +223,39 @@ class PermissionGroupController extends Controller
             $createCustomShortlinks['checked'] = 'checked';
         }
 
+
+        $createShortlinksWithLength1 = [
+            'name' => 'create_shortlinks_with_length_1',
+            'type' => 'checkbox'
+        ];
+        if ($permissionGroup->canCreateShortlinksWithSpecificLength(1)) {
+            $createShortlinksWithLength1['checked'] = 'checked';
+        }
+
+        $createShortlinksWithLength2 = [
+            'name' => 'create_shortlinks_with_length_2',
+            'type' => 'checkbox'
+        ];
+        if ($permissionGroup->canCreateShortlinksWithSpecificLength(2)) {
+            $createShortlinksWithLength2['checked'] = 'checked';
+        }
+
+        $createShortlinksWithLength3 = [
+            'name' => 'create_shortlinks_with_length_3',
+            'type' => 'checkbox'
+        ];
+        if ($permissionGroup->canCreateShortlinksWithSpecificLength(3)) {
+            $createShortlinksWithLength3['checked'] = 'checked';
+        }
+
+        $createShortlinksWithLength4 = [
+            'name' => 'create_shortlinks_with_length_4',
+            'type' => 'checkbox'
+        ];
+        if ($permissionGroup->canCreateShortlinksWithSpecificLength(4)) {
+            $createShortlinksWithLength4['checked'] = 'checked';
+        }
+
         $formFields = [
             [
                 'label' => __('admin-panel.name'),
@@ -287,6 +328,11 @@ class PermissionGroupController extends Controller
                 ],
             ],
             [
+                'label' => __('admin-panel.create_shortlinks_with_length_4'),
+                'element_type' => 'input',
+                'element_attributes' => $createShortlinksWithLength4,
+            ],
+            [
                 'label' => __('admin-panel.max_shortlinks_with_length_4'),
                 'element_type' => 'input',
                 'element_attributes' => [
@@ -321,6 +367,11 @@ class PermissionGroupController extends Controller
                     'type' => 'number',
                     'value' => $permissionGroup->max_shortlinks_per_year_with_length_4,
                 ],
+            ],
+            [
+                'label' => __('admin-panel.create_shortlinks_with_length_3'),
+                'element_type' => 'input',
+                'element_attributes' => $createShortlinksWithLength3,
             ],
             [
                 'label' => __('admin-panel.max_shortlinks_with_length_3'),
@@ -359,6 +410,11 @@ class PermissionGroupController extends Controller
                 ],
             ],
             [
+                'label' => __('admin-panel.create_shortlinks_with_length_2'),
+                'element_type' => 'input',
+                'element_attributes' => $createShortlinksWithLength2,
+            ],
+            [
                 'label' => __('admin-panel.max_shortlinks_with_length_2'),
                 'element_type' => 'input',
                 'element_attributes' => [
@@ -393,6 +449,11 @@ class PermissionGroupController extends Controller
                     'type' => 'number',
                     'value' => $permissionGroup->max_shortlinks_per_year_with_length_2,
                 ],
+            ],
+            [
+                'label' => __('admin-panel.create_shortlinks_with_length_1'),
+                'element_type' => 'input',
+                'element_attributes' => $createShortlinksWithLength1,
             ],
             [
                 'label' => __('admin-panel.max_shortlinks_with_length_1'),
@@ -524,6 +585,10 @@ class PermissionGroupController extends Controller
         }
 
         for($i = 1; $i <= 4; $i++) {
+            $createPermission = 'create_shortlinks_with_length_' . $i;
+
+            $permissionGroup->$createPermission = !empty($request->input($createPermission)) ? 1 : 0;
+
             $totalVar = 'max_shortlinks_with_length_' . $i;
             if (is_numeric($request->input($totalVar))) {
                 $permissionGroup->$totalVar = $request->input($totalVar);

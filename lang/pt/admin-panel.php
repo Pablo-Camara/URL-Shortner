@@ -28,21 +28,25 @@ return [
     'max_shortlinks_per_month_with_5_or_more_of_length' => 'Maximo de shortlinks por Mês com 5 ou mais de tamanho',
     'max_shortlinks_per_year_with_5_or_more_of_length' => 'Maximo de shortlinks por Ano com 5 ou mais de tamanho',
 
+    'create_shortlinks_with_length_4' => 'Criar shortlinks com 4 de tamanho',
     'max_shortlinks_with_length_4' => 'Maximo de shortlinks com 4 de tamanho',
     'max_shortlinks_per_day_with_length_4' => 'Maximo de shortlinks por Dia com 4 de tamanho',
     'max_shortlinks_per_month_with_length_4' => 'Maximo de shortlinks por Mês com 4 de tamanho',
     'max_shortlinks_per_year_with_length_4' => 'Maximo de shortlinks por Ano com 4 de tamanho',
 
+    'create_shortlinks_with_length_3' => 'Criar shortlinks com 3 de tamanho',
     'max_shortlinks_with_length_3' => 'Maximo de shortlinks com 3 de tamanho',
     'max_shortlinks_per_day_with_length_3' => 'Maximo de shortlinks por Dia com 3 de tamanho',
     'max_shortlinks_per_month_with_length_3' => 'Maximo de shortlinks por Mês com 3 de tamanho',
     'max_shortlinks_per_year_with_length_3' => 'Maximo de shortlinks por Ano com 3 de tamanho',
 
+    'create_shortlinks_with_length_2' => 'Criar shortlinks com 2 de tamanho',
     'max_shortlinks_with_length_2' => 'Maximo de shortlinks com 2 de tamanho',
     'max_shortlinks_per_day_with_length_2' => 'Maximo de shortlinks por Dia com 2 de tamanho',
     'max_shortlinks_per_month_with_length_2' => 'Maximo de shortlinks por Mês com 2 de tamanho',
     'max_shortlinks_per_year_with_length_2' => 'Maximo de shortlinks por Ano com 2 de tamanho',
 
+    'create_shortlinks_with_length_1' => 'Criar shortlinks com 1 de tamanho',
     'max_shortlinks_with_length_1' => 'Maximo de shortlinks com 1 de tamanho',
     'max_shortlinks_per_day_with_length_1' => 'Maximo de shortlinks por Dia com 1 de tamanho',
     'max_shortlinks_per_month_with_length_1' => 'Maximo de shortlinks por Mês com 1 de tamanho',

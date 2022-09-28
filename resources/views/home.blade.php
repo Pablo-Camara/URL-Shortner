@@ -6925,17 +6925,17 @@
 
                 <div class="radio-input-container" id="generate_with_length_4_container">
                     <input type="radio" id="generate_with_length_4" name="shortstring_length" value="4">
-                    <label for="generate_with_length_4">Máximo 4 caractere</label>
+                    <label for="generate_with_length_4">Máximo 4 caracteres</label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_3_container">
                     <input type="radio" id="generate_with_length_3" name="shortstring_length" value="3">
-                    <label for="generate_with_length_3">Máximo 3 caractere</label>
+                    <label for="generate_with_length_3">Máximo 3 caracteres</label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_2_container">
                     <input type="radio" id="generate_with_length_2" name="shortstring_length" value="2">
-                    <label for="generate_with_length_2">Máximo 2 caractere</label>
+                    <label for="generate_with_length_2">Máximo 2 caracteres</label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_1_container">
