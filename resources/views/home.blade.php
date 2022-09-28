@@ -176,6 +176,14 @@
                 border-radius: 5px;
             }
 
+            .form-box .button.inline {
+                display: inline-block;
+            }
+
+            .option-buttons-container {
+                padding: 10px 0;
+            }
+
             .form-box .button.red {
                 background: linear-gradient(
                     120deg,
@@ -5159,6 +5167,7 @@
 
                         this.Components.BackButton.hide();
                         this.Components.Filters.hide();
+                        this.Components.OptionButtons.hide();
                         this.Components.Loading.hide();
                         this.Components.NoResults.hide();
                         this.Components.ResultsTable.hide();
@@ -5506,6 +5515,61 @@
                                 },
                             }
                         },
+                        OptionButtons: {
+                            dashboardItem: false,
+                            el: function () {
+                                return document.getElementById('option-buttons');
+                            },
+                            hide: function () {
+                                this.el().style.display = 'none';
+
+                                const componentNames = Object.keys(this.Components);
+                                for(var i = 0; i < componentNames.length; i++) {
+                                    const componentName = componentNames[i];
+
+                                    if (
+                                        typeof this.Components[componentName].hide === 'function'
+                                    ) {
+                                        this.Components[componentName].hide();
+                                    }
+                                }
+                            },
+                            show: function () {
+                                this.el().style.display = 'block';
+                            },
+                            Components: {
+                                CreateNewBtn: {
+                                    hasInitialized: false,
+                                    createNewFunction: null,
+                                    el: function () {
+                                        return document.getElementById('create-new');
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    show: function (createNewFunc) {
+                                        this.initialize();
+                                        this.createNewFunction = createNewFunc;
+                                        this.el().style.display = 'inline-block';
+                                    },
+                                    initialize: function () {
+                                        if (this.hasInitialized === false) {
+
+                                            const $this = this;
+                                            this.el().onclick = function(e) {
+                                                if (
+                                                    typeof $this.createNewFunction === 'function'
+                                                ) {
+                                                    $this.createNewFunction();
+                                                }
+                                            };
+
+                                            this.hasInitialized = true;
+                                        }
+                                    }
+                                },
+                            }
+                        },
                         Loading: {
                             dashboardItem: false,
                             el: function () {
@@ -5592,7 +5656,12 @@
                                     }
                                 });
 
-                                var urlStr = this.apis[apiEntityName] + '?id=' + entityId;
+                                var urlStr = this.apis[apiEntityName];
+
+                                if (entityId != null) {
+                                    urlStr += '?id=' + entityId;
+                                }
+
                                 xhr.open(
                                     "POST",
                                     urlStr
@@ -5782,7 +5851,7 @@
                                                             if (
                                                                 typeof $this.refreshListFunction === 'function'
                                                             ) {
-                                                                $this.refreshListFunction();
+                                                                $this.refreshListFunction(resObj);
                                                             }
                                                             return;
                                                         }
@@ -5949,6 +6018,7 @@
 
                                         window.App.Components.PA.hideAllDashboardItems(['Stats']);
                                         window.App.Components.PA.Components.Filters.hide();
+                                        window.App.Components.PA.Components.OptionButtons.hide();
                                         window.App.Components.PA.Components.BackButton.show();
                                         window.App.Components.PA.Components.Stats.displayFull();
                                         window.App.Components.PA.Components.Loading.hide();
@@ -6250,6 +6320,22 @@
                                         window.App.Components.PA.hideAllDashboardItems(['PermissionGroups']);
                                         $this.displayFull();
                                         window.App.Components.PA.Components.BackButton.show();
+                                        window.App.Components.PA.Components.OptionButtons.show();
+                                        window.App.Components.PA.Components.OptionButtons.Components.CreateNewBtn.show(
+                                            function () {
+                                                window.App.Components.PA.Components.Edit.startEditing(
+                                                    'PermissionGroups',
+                                                    null,
+                                                    function (resObj) {
+                                                        window.App.Components.PA.Components.PermissionGroups.Components.PermissionGroupsList.fetchPermissionGroups(
+                                                            window.App.Helpers.Pagination.getCurrentPage(
+                                                                resObj.pagination_identifier
+                                                            )
+                                                        );
+                                                    }
+                                                );
+                                            }
+                                        );
                                         $this.Components.PermissionGroupsList.fetchPermissionGroups();
                                     };
 
@@ -6750,6 +6836,10 @@
                         <div id="dashboard-edit-save" class="button">Guardar</div>
                         <div id="dashboard-edit-cancel" class="button red">Fechar</div>
                     </div>
+                </div>
+
+                <div class="option-buttons-container" id="option-buttons" style="display: none">
+                    <div id="create-new" class="button inline" style="display: none">Criar novo</div>
                 </div>
 
                 <div class="dashboard-list-items-container" id="pa-stats-views" style="margin-top: 14px; display: none">

@@ -8,9 +8,14 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class PermissionGroupController extends Controller
 {
+
+    private $paginationIdentifier = 'PermissionGroupsList';
+
     /**
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -136,7 +141,7 @@ class PermissionGroupController extends Controller
         return new Response(
             [
                 'search_results' => $results,
-                'pagination_identifier' => 'PermissionGroupsList',
+                'pagination_identifier' => $this->paginationIdentifier,
                 'edit_config' => [
                     'primary_key_column' =>  __('admin-panel.permission-group-id')
                 ]
@@ -159,13 +164,22 @@ class PermissionGroupController extends Controller
         /**
          * @var PermissionGroup
          */
-        $permissionGroup = PermissionGroup::findOrFail($request->input('id'));
+        $permissionGroup = PermissionGroup::find($request->input('id'));
+
+        $edit = false;
+        if ($permissionGroup) {
+            $edit = true;
+        } else {
+            // will create instance but not save
+            // will only save in the save/edit endpoint
+            $permissionGroup = new PermissionGroup();
+        }
 
         $sendShortlinksByEmailWhenGenerating = [
             'name' => 'send_shortlink_by_email_when_generating',
             'type' => 'checkbox'
         ];
-        if ($permissionGroup->canSendShortlinkByEmailWhenGenerating()) {
+        if ($permissionGroup->canSendShortlinkByEmailWhenGenerating() || $edit == false) {
             $sendShortlinksByEmailWhenGenerating['checked'] = 'checked';
         }
 
@@ -173,7 +187,7 @@ class PermissionGroupController extends Controller
             'name' => 'edit_shortlinks_destination_url',
             'type' => 'checkbox'
         ];
-        if ($permissionGroup->canEditShortlinksDestinationUrl()) {
+        if ($permissionGroup->canEditShortlinksDestinationUrl() || $edit == false) {
             $editShortlinksDestinationUrlAttributes['checked'] = 'checked';
         }
 
@@ -181,7 +195,7 @@ class PermissionGroupController extends Controller
             'name' => 'view_shortlinks_total_views',
             'type' => 'checkbox'
         ];
-        if ($permissionGroup->canViewShortlinksTotalViews()) {
+        if ($permissionGroup->canViewShortlinksTotalViews() || $edit == false) {
             $canViewShortlinksTotalViews['checked'] = 'checked';
         }
 
@@ -201,10 +215,226 @@ class PermissionGroupController extends Controller
             $createCustomShortlinks['checked'] = 'checked';
         }
 
-        return [
-            'form_title' => 'Editar grupo de permissões',
-            'save_endpoint' => url('/api/permission-groups/edit'),
-            'form_fields' => [
+        $formFields = [
+            [
+                'label' => __('admin-panel.name'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'name',
+                    'type' => 'text',
+                    'value' => $edit ? $permissionGroup->name : '',
+                ],
+            ],
+            [
+                'label' => __('admin-panel.send_shortlink_by_email_when_generating'),
+                'element_type' => 'input',
+                'element_attributes' => $sendShortlinksByEmailWhenGenerating,
+            ],
+            [
+                'label' => __('admin-panel.edit_shortlinks_destination_url'),
+                'element_type' => 'input',
+                'element_attributes' => $editShortlinksDestinationUrlAttributes,
+            ],
+            [
+                'label' => __('admin-panel.view_shortlinks_total_views'),
+                'element_type' => 'input',
+                'element_attributes' => $canViewShortlinksTotalViews,
+            ],
+            [
+                'label' => __('admin-panel.view_shortlinks_total_unique_views'),
+                'element_type' => 'input',
+                'element_attributes' => $viewShortlinksTotalUniqueViews,
+            ],
+            [
+                'label' => __('admin-panel.create_custom_shortlinks'),
+                'element_type' => 'input',
+                'element_attributes' => $createCustomShortlinks,
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_with_5_or_more_of_length'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_with_5_or_more_of_length',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_with_5_or_more_of_length,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_day_with_5_or_more_of_length'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_day_with_5_or_more_of_length',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_day_with_5_or_more_of_length,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_month_with_5_or_more_of_length'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_month_with_5_or_more_of_length',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_month_with_5_or_more_of_length,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_year_with_5_or_more_of_length'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_year_with_5_or_more_of_length',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_year_with_5_or_more_of_length,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_with_length_4'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_with_length_4',
+                    'type' => 'number',
+                    'value' => $edit ? $permissionGroup->max_shortlinks_with_length_4 : 0,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_day_with_length_4'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_day_with_length_4',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_day_with_length_4,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_month_with_length_4'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_month_with_length_4',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_month_with_length_4,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_year_with_length_4'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_year_with_length_4',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_year_with_length_4,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_with_length_3'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_with_length_3',
+                    'type' => 'number',
+                    'value' => $edit ? $permissionGroup->max_shortlinks_with_length_3 : 0,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_day_with_length_3'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_day_with_length_3',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_day_with_length_3,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_month_with_length_3'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_month_with_length_3',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_month_with_length_3,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_year_with_length_3'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_year_with_length_3',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_year_with_length_3,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_with_length_2'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_with_length_2',
+                    'type' => 'number',
+                    'value' => $edit ? $permissionGroup->max_shortlinks_with_length_2 : 0,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_day_with_length_2'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_day_with_length_2',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_day_with_length_2,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_month_with_length_2'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_month_with_length_2',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_month_with_length_2,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_year_with_length_2'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_year_with_length_2',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_year_with_length_2,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_with_length_1'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_with_length_1',
+                    'type' => 'number',
+                    'value' => $edit ? $permissionGroup->max_shortlinks_with_length_1 : 0,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_day_with_length_1'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_day_with_length_1',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_day_with_length_1,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_month_with_length_1'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_month_with_length_1',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_month_with_length_1,
+                ],
+            ],
+            [
+                'label' => __('admin-panel.max_shortlinks_per_year_with_length_1'),
+                'element_type' => 'input',
+                'element_attributes' => [
+                    'name' => 'max_shortlinks_per_year_with_length_1',
+                    'type' => 'number',
+                    'value' => $permissionGroup->max_shortlinks_per_year_with_length_1,
+                ],
+            ],
+        ];
+
+        if ($edit) {
+            array_unshift(
+                $formFields,
                 [
                     'label' => __('admin-panel.permission-group-id'),
                     'element_type' => 'input',
@@ -215,221 +445,13 @@ class PermissionGroupController extends Controller
                         'value' => $permissionGroup->id,
                     ]
                 ],
-                [
-                    'label' => __('admin-panel.name'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'name',
-                        'type' => 'text',
-                        'value' => $permissionGroup->name,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.send_shortlink_by_email_when_generating'),
-                    'element_type' => 'input',
-                    'element_attributes' => $sendShortlinksByEmailWhenGenerating,
-                ],
-                [
-                    'label' => __('admin-panel.edit_shortlinks_destination_url'),
-                    'element_type' => 'input',
-                    'element_attributes' => $editShortlinksDestinationUrlAttributes,
-                ],
-                [
-                    'label' => __('admin-panel.view_shortlinks_total_views'),
-                    'element_type' => 'input',
-                    'element_attributes' => $canViewShortlinksTotalViews,
-                ],
-                [
-                    'label' => __('admin-panel.view_shortlinks_total_unique_views'),
-                    'element_type' => 'input',
-                    'element_attributes' => $viewShortlinksTotalUniqueViews,
-                ],
-                [
-                    'label' => __('admin-panel.create_custom_shortlinks'),
-                    'element_type' => 'input',
-                    'element_attributes' => $createCustomShortlinks,
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_with_5_or_more_of_length'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_with_5_or_more_of_length',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_with_5_or_more_of_length,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_day_with_5_or_more_of_length'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_day_with_5_or_more_of_length',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_day_with_5_or_more_of_length,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_month_with_5_or_more_of_length'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_month_with_5_or_more_of_length',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_month_with_5_or_more_of_length,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_year_with_5_or_more_of_length'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_year_with_5_or_more_of_length',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_year_with_5_or_more_of_length,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_with_length_4'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_with_length_4',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_with_length_4,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_day_with_length_4'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_day_with_length_4',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_day_with_length_4,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_month_with_length_4'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_month_with_length_4',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_month_with_length_4,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_year_with_length_4'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_year_with_length_4',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_year_with_length_4,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_with_length_3'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_with_length_3',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_with_length_3,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_day_with_length_3'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_day_with_length_3',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_day_with_length_3,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_month_with_length_3'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_month_with_length_3',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_month_with_length_3,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_year_with_length_3'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_year_with_length_3',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_year_with_length_3,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_with_length_2'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_with_length_2',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_with_length_2,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_day_with_length_2'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_day_with_length_2',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_day_with_length_2,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_month_with_length_2'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_month_with_length_2',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_month_with_length_2,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_year_with_length_2'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_year_with_length_2',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_year_with_length_2,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_with_length_1'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_with_length_1',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_with_length_1,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_day_with_length_1'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_day_with_length_1',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_day_with_length_1,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_month_with_length_1'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_month_with_length_1',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_month_with_length_1,
-                    ],
-                ],
-                [
-                    'label' => __('admin-panel.max_shortlinks_per_year_with_length_1'),
-                    'element_type' => 'input',
-                    'element_attributes' => [
-                        'name' => 'max_shortlinks_per_year_with_length_1',
-                        'type' => 'number',
-                        'value' => $permissionGroup->max_shortlinks_per_year_with_length_1,
-                    ],
-                ],
-            ]
+            );
+        }
+
+        return [
+            'form_title' => ($edit ? 'Editar' : 'Criar') . ' grupo de permissões',
+            'save_endpoint' => url('/api/permission-groups/edit'),
+            'form_fields' => $formFields
         ];
     }
 
@@ -444,15 +466,33 @@ class PermissionGroupController extends Controller
         }
 
         $validations = [
-            'id' => 'required|numeric',
+            'id' => 'numeric',
             'name' => 'required',
         ];
 
-        $request->validate($validations);
+        Validator::make(
+            $request->all(),
+            $validations,
+            ['name.required' => 'É necessário dar um nome ao grupo de permissões.'],
+            []
+        )->validate();
 
-        $permissionGroup = PermissionGroup::findOrFail($request->input('id'));
+        $permissionGroupName = trim($request->input('name'));
 
-        $permissionGroup->name = $request->input('name');
+        if (!empty($request->input('id', null))) {
+            $permissionGroup = PermissionGroup::findOrFail($request->input('id'));
+        } else {
+            $permissionGroup = new PermissionGroup();
+            $permissionGroupWithEqualName = PermissionGroup::where('name', '=', $permissionGroupName)->first();
+
+            if ($permissionGroupWithEqualName) {
+                throw ValidationException::withMessages([
+                    'name' => 'Já existe um grupo de permissões com este mesmo nome.'
+                ]);
+            }
+        }
+
+        $permissionGroup->name = $permissionGroupName;
         $permissionGroup->send_shortlink_by_email_when_generating = !empty($request->input('send_shortlink_by_email_when_generating')) ? 1 : 0;
         $permissionGroup->edit_shortlinks_destination_url = !empty($request->input('edit_shortlinks_destination_url')) ? 1 : 0;
         $permissionGroup->view_shortlinks_total_views = !empty($request->input('view_shortlinks_total_views')) ? 1 : 0;
@@ -516,7 +556,8 @@ class PermissionGroupController extends Controller
         $permissionGroup->save();
 
         return new Response([
-            'message' => 'Guardado! ( ' . (Carbon::now()->toDateTimeString()) . ' )'
+            'message' => 'Guardado! ( ' . (Carbon::now()->toDateTimeString()) . ' )',
+            'pagination_identifier' => $this->paginationIdentifier,
         ], 200);
     }
 }
