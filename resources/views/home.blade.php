@@ -2603,7 +2603,9 @@
                         show: function () {
                             this.initialize();
                             this.el().style.display = 'block';
-                            this.Components.Email.el().focus();
+                            if (!window.App.isMobileSize()) {
+                                this.Components.Email.el().focus();
+                            }
                             this.Components.Feedback.hide();
                             this.Components.ResendVerificationEmail.hide();
                             window.history.pushState(null, 'Entrar na minha conta', '/entrar');
