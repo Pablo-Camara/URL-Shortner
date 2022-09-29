@@ -191,7 +191,7 @@ class AuthenticationController extends Controller
         }
 
         $validations = [
-            'name' => 'required',
+            'name' => "required|regex:/^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/",
             'email' => 'required|email|confirmed|unique:users',
             'password' => 'required|confirmed',
         ];
@@ -201,7 +201,17 @@ class AuthenticationController extends Controller
             $validations['g-recaptcha-response'] = 'required|captcha';
         }
 
-        $request->validate($validations);
+        Validator::make(
+            $request->all(),
+            $validations,
+            [
+                'name.regex' => 'O campo nome contém caracteres inválidos / não permitidos.'
+            ],
+            [
+                'name' => 'nome',
+                'password' => 'palavra-passe',
+            ]
+        )->stopOnFirstFailure(true)->validate();
 
         $user = User::createNewRegisteredUser(
             $request->input('name'),
@@ -432,7 +442,7 @@ class AuthenticationController extends Controller
             [
                 'new_password' => 'nova palavra-passe',
             ]
-        )->validate();
+        )->stopOnFirstFailure(true)->validate();
 
 
         $user = $request->user();
