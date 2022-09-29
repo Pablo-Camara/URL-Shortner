@@ -589,31 +589,72 @@ class PermissionGroupController extends Controller
         $permissionGroup->view_shortlinks_total_unique_views = !empty($request->input('view_shortlinks_total_unique_views')) ? 1 : 0;
         $permissionGroup->create_custom_shortlinks = !empty($request->input('create_custom_shortlinks')) ? 1 : 0;
 
-        if (is_numeric($request->input('max_shortlinks_with_5_or_more_of_length'))) {
-            $permissionGroup->max_shortlinks_with_5_or_more_of_length = $request->input('max_shortlinks_with_5_or_more_of_length');
+        $maxShortlinksWith5orMoreOfLength = $request->input('max_shortlinks_with_5_or_more_of_length');
+        if (is_numeric($maxShortlinksWith5orMoreOfLength)) {
+            $permissionGroup->max_shortlinks_with_5_or_more_of_length = $maxShortlinksWith5orMoreOfLength;
         } else {
             $permissionGroup->max_shortlinks_with_5_or_more_of_length = null;
         }
 
-        if (is_numeric($request->input('max_shortlinks_per_day_with_5_or_more_of_length'))) {
-            $permissionGroup->max_shortlinks_per_day_with_5_or_more_of_length = $request->input('max_shortlinks_per_day_with_5_or_more_of_length');
+        $maxShortlinksWith5orMoreOfLengthPerDay = $request->input('max_shortlinks_per_day_with_5_or_more_of_length');
+        if (is_numeric($maxShortlinksWith5orMoreOfLengthPerDay)) {
+            $permissionGroup->max_shortlinks_per_day_with_5_or_more_of_length = $maxShortlinksWith5orMoreOfLengthPerDay;
         } else {
             $permissionGroup->max_shortlinks_per_day_with_5_or_more_of_length = null;
         }
 
-        if (is_numeric($request->input('max_shortlinks_per_month_with_5_or_more_of_length'))) {
-            $permissionGroup->max_shortlinks_per_month_with_5_or_more_of_length = $request->input('max_shortlinks_per_month_with_5_or_more_of_length');
+        $maxShortlinksWith5orMoreOfLengthPerMonth = $request->input('max_shortlinks_per_month_with_5_or_more_of_length');
+        if (is_numeric($maxShortlinksWith5orMoreOfLengthPerMonth)) {
+            $permissionGroup->max_shortlinks_per_month_with_5_or_more_of_length = $maxShortlinksWith5orMoreOfLengthPerMonth;
         } else {
             $permissionGroup->max_shortlinks_per_month_with_5_or_more_of_length = null;
         }
 
-        if (is_numeric($request->input('max_shortlinks_per_year_with_5_or_more_of_length'))) {
-            $permissionGroup->max_shortlinks_per_year_with_5_or_more_of_length = $request->input('max_shortlinks_per_year_with_5_or_more_of_length');
+        $maxShortlinksWith5orMoreOfLengthPerYear = $request->input('max_shortlinks_per_year_with_5_or_more_of_length');
+        if (is_numeric($maxShortlinksWith5orMoreOfLengthPerYear)) {
+            $permissionGroup->max_shortlinks_per_year_with_5_or_more_of_length = $maxShortlinksWith5orMoreOfLengthPerYear;
         } else {
             $permissionGroup->max_shortlinks_per_year_with_5_or_more_of_length = null;
         }
 
-        for($i = 1; $i <= 4; $i++) {
+        if (
+            is_numeric($maxShortlinksWith5orMoreOfLength)
+            &&
+            (int)$maxShortlinksWith5orMoreOfLength > 0
+        ) {
+            if (
+                is_numeric($maxShortlinksWith5orMoreOfLengthPerDay)
+                &&
+                (int)$maxShortlinksWith5orMoreOfLengthPerDay === 0
+            ) {
+                throw ValidationException::withMessages([
+                    'max_shortlinks_per_day_with_5_or_more_of_length' => 'Definiste um limite total de ' . $maxShortlinksWith5orMoreOfLength . ' shortlinks ( para shortlinks com 5 ou mais de tamanho ), mas depois também definiste um total diário = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                ]);
+            }
+
+            if (
+                is_numeric($maxShortlinksWith5orMoreOfLengthPerMonth)
+                &&
+                (int)$maxShortlinksWith5orMoreOfLengthPerMonth === 0
+            ) {
+                throw ValidationException::withMessages([
+                    'max_shortlinks_per_month_with_5_or_more_of_length' => 'Definiste um limite total de ' . $maxShortlinksWith5orMoreOfLength . ' shortlinks ( para shortlinks com 5 ou mais de tamanho ), mas depois também definiste um total mensal = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                ]);
+            }
+
+
+            if (
+                is_numeric($maxShortlinksWith5orMoreOfLengthPerYear)
+                &&
+                (int)$maxShortlinksWith5orMoreOfLengthPerYear === 0
+            ) {
+                throw ValidationException::withMessages([
+                    'max_shortlinks_per_month_with_5_or_more_of_length' => 'Definiste um limite total de ' . $maxShortlinksWith5orMoreOfLength . ' shortlinks ( para shortlinks com 5 ou mais de tamanho ), mas depois também definiste um total anual = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                ]);
+            }
+        }
+
+        for($i = 4; $i >= 1; $i--) {
             $createPermission = 'create_shortlinks_with_length_' . $i;
 
             $permissionGroup->$createPermission = !empty($request->input($createPermission)) ? 1 : 0;
@@ -644,6 +685,44 @@ class PermissionGroupController extends Controller
                 $permissionGroup->$perYearVar = $request->input($perYearVar);
             } else {
                 $permissionGroup->$perYearVar = null;
+            }
+
+
+            if (
+                is_numeric($request->input($totalVar))
+                &&
+                (int)$request->input($totalVar) > 0
+            ) {
+                if (
+                    is_numeric($request->input($perDayVar))
+                    &&
+                    (int)$request->input($perDayVar) === 0
+                ) {
+                    throw ValidationException::withMessages([
+                        $perDayVar => 'Definiste um limite total de ' . $request->input($totalVar) . ' shortlinks ( para shortlinks com '.$i.' de tamanho ), mas depois também definiste um total diário = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                    ]);
+                }
+
+                if (
+                    is_numeric($request->input($perMonthVar))
+                    &&
+                    (int)$request->input($perMonthVar) === 0
+                ) {
+                    throw ValidationException::withMessages([
+                        $perMonthVar => 'Definiste um limite total de ' . $request->input($totalVar) . ' shortlinks ( para shortlinks com '.$i.' de tamanho ), mas depois também definiste um total mensal = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                    ]);
+                }
+
+
+                if (
+                    is_numeric($request->input($perYearVar))
+                    &&
+                    (int)$request->input($perYearVar) === 0
+                ) {
+                    throw ValidationException::withMessages([
+                        $perYearVar => 'Definiste um limite total de ' . $request->input($totalVar) . ' shortlinks ( para shortlinks com '.$i.' de tamanho ), mas depois também definiste um total anual = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                    ]);
+                }
             }
         }
 

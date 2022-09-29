@@ -5895,9 +5895,39 @@
                                                             return;
                                                         }
 
-                                                        window.App.Components.PA.Components.Edit.Components.Feedback.showError(
-                                                            resObj.message
-                                                        );
+                                                        if (
+                                                            typeof resObj.message !== 'undefined'
+                                                        ) {
+                                                            window.App.Components.PA.Components.Edit.Components.Feedback.showError(
+                                                                resObj.message
+                                                            );
+                                                        }
+
+                                                        const namedElements = fieldsContainerEl.querySelectorAll('[name]');
+                                                        var fieldsWithError = [];
+
+                                                        if (
+                                                            typeof resObj.errors !== 'undefined'
+                                                        ) {
+                                                            fieldsWithError = Object.keys(resObj.errors);
+                                                        }
+
+                                                        for(var i = 0; i < namedElements.length; i++) {
+                                                            const elName = namedElements[i].getAttribute('name');
+                                                            var hasError = false;
+                                                            for(var ii = 0; ii < fieldsWithError.length; ii++) {
+                                                                if (elName === fieldsWithError[ii]) {
+                                                                    namedElements[i].classList.add('has-error');
+                                                                    hasError = true;
+                                                                    break;
+                                                                }
+                                                            }
+                                                            if (hasError) {
+                                                                continue;
+                                                            }
+                                                            namedElements[i].classList.remove('has-error');
+                                                        }
+
                                                     }
                                                 });
 
