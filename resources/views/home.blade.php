@@ -1669,15 +1669,76 @@
                                         }
                                     }
                                 },
+                                UserProfile: {
+                                    el: function () {
+                                        return document.getElementById('menu-mobile-user-name');
+                                    },
+                                    show: function () {
+                                        this.setUserName();
+                                        this.el().style.display = 'block';
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    setUserName: function () {
+                                        if (
+                                            window._authManager.userData != null
+                                        ) {
+                                            if (
+                                                typeof window._authManager.userData.name !== 'undefined'
+                                                &&
+                                                typeof window._authManager.userData.name === 'string'
+                                            ) {
+                                                this.el().innerText = window._authManager.userData.name;
+                                            }
+                                        }
+                                    },
+                                    initialize: function () {
+                                        this.show();
+                                    }
+                                },
                                 PA: {
                                     hasInitialized: false,
                                     panelLocation: null,
                                     el: function () {
                                         return document.getElementById('menu-mobile-admin-dashboard');
                                     },
+                                    show: function () {
+                                        if ( window._authManager.userHasPermission('is_admin') ) {
+                                            this.el().style.display = 'block';
+                                        }
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    setPanelLocation: function () {
+                                        if (
+                                            window._authManager.userHasPermission('is_admin')
+                                            &&
+                                            typeof window._authManager.userData.adminPanel !== 'undefined'
+                                        ) {
+                                            this.panelLocation = window._authManager.userData.adminPanel;
+                                        }
+                                    },
                                     initialize: function () {
                                         if (this.hasInitialized === false) {
                                             const $this = this;
+
+                                            if (window._authManager.isAuthenticated) {
+                                                $this.setPanelLocation();
+                                                $this.show();
+                                            } else {
+                                                document.addEventListener('userAuthenticated', (e) => {
+                                                    $this.setPanelLocation();
+                                                    $this.show();
+                                                }, false);
+                                            }
+
+                                            document.addEventListener('userLoggedIn', (e) => {
+                                                $this.setPanelLocation();
+                                                $this.show();
+                                            }, false);
+
                                             this.el().onclick = function (e) {
                                                 if (
                                                     typeof window.App.Views.PA !== 'undefined'
@@ -1695,6 +1756,7 @@
                             },
                             initialize: function () {
                                 this.Items.LogoutBtn.initialize();
+                                this.Items.UserProfile.initialize();
                                 this.Items.PA.initialize();
                             }
                         },
@@ -1737,19 +1799,6 @@
                                         this.el().onclick = function (e) {
                                             window.App.Views.MyLinks.show();
                                         };
-
-                                        const $this = this;
-                                        if (
-                                            window._authManager.isAuthenticated
-                                        ) {
-                                            $this.show();
-                                        } else {
-                                            $this.hide();
-                                            document.addEventListener('userAuthenticated', (e) => {
-                                                $this.show();
-                                            }, false);
-                                        }
-
 
                                         this.hasInitialized = true;
                                     }
@@ -1889,15 +1938,76 @@
                                         }
                                     }
                                 },
+                                UserProfile: {
+                                    el: function () {
+                                        return document.getElementById('menu-top-user-name');
+                                    },
+                                    show: function () {
+                                        this.setUserName();
+                                        this.el().style.display = 'block';
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    setUserName: function () {
+                                        if (
+                                            window._authManager.userData != null
+                                        ) {
+                                            if (
+                                                typeof window._authManager.userData.name !== 'undefined'
+                                                &&
+                                                typeof window._authManager.userData.name === 'string'
+                                            ) {
+                                                this.el().innerText = window._authManager.userData.name;
+                                            }
+                                        }
+                                    },
+                                    initialize: function () {
+                                        this.show();
+                                    }
+                                },
                                 PA: {
                                     hasInitialized: false,
                                     panelLocation: null,
                                     el: function () {
                                         return document.getElementById('menu-top-admin-dashboard');
                                     },
+                                    show: function () {
+                                        if ( window._authManager.userHasPermission('is_admin') ) {
+                                            this.el().style.display = 'block';
+                                        }
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                    },
+                                    setPanelLocation: function () {
+                                        if (
+                                            window._authManager.userHasPermission('is_admin')
+                                            &&
+                                            typeof window._authManager.userData.adminPanel !== 'undefined'
+                                        ) {
+                                            this.panelLocation = window._authManager.userData.adminPanel;
+                                        }
+                                    },
                                     initialize: function () {
                                         if (this.hasInitialized === false) {
                                             const $this = this;
+
+                                            if (window._authManager.isAuthenticated) {
+                                                $this.setPanelLocation();
+                                                $this.show();
+                                            } else {
+                                                document.addEventListener('userAuthenticated', (e) => {
+                                                    $this.setPanelLocation();
+                                                    $this.show();
+                                                }, false);
+                                            }
+
+                                            document.addEventListener('userLoggedIn', (e) => {
+                                                $this.setPanelLocation();
+                                                $this.show();
+                                            }, false);
+
                                             this.el().onclick = function (e) {
                                                 if (
                                                     typeof window.App.Views.PA !== 'undefined'
@@ -1915,6 +2025,7 @@
                             },
                             initialize: function () {
                                 this.Items.LogoutBtn.initialize();
+                                this.Items.UserProfile.initialize();
                                 this.Items.PA.initialize();
                             }
                         },
@@ -5021,6 +5132,16 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         const $this = this;
+
+                                        if (window._authManager.isAuthenticated) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
                                             if (window._authManager.isAuthenticated !== true) {
                                                 // authentication is a must
@@ -7099,7 +7220,7 @@
         </div>
 
         <div id="menu-top" style="display: none">
-            <div class="menu-item" id="menu-item-my-links" style="display: none">Os meus links</div>
+            <div class="menu-item" id="menu-item-my-links">Os meus links</div>
             <div class="menu-item" id="menu-item-contact-us">Contacte</div>
         </div>
 
@@ -7349,7 +7470,7 @@
 
                 <div id="form-box-contact-us-feedback" class="form-box-feedback" style="display: none"></div>
 
-                <div class="button" id="contact-us-btn">Enviar</div>
+                <div class="button disabled" id="contact-us-btn">Enviar</div>
 
             </div>
         </div>
@@ -7574,74 +7695,10 @@
 
         <script>
 
-            function showAdminMenuItem() {
-                if (
-                    window._authManager.userHasPermission('is_admin')
-                ) {
-                    const desktopAdminDashboardButton = document.getElementById('menu-top-admin-dashboard');
-                    const mobileAdminDashboardButton = document.getElementById('menu-mobile-admin-dashboard');
 
-                    window.App.Components.MenuAccTop.UserItems.Items.PA.panelLocation = window._authManager.userData.adminPanel;
-                    window.App.Components.MenuMobile.UserItems.Items.PA.panelLocation = window._authManager.userData.adminPanel;
-
-                    desktopAdminDashboardButton.style.display = 'block';
-                    mobileAdminDashboardButton.style.display = 'block';
-                }
-            }
-
-            document.addEventListener('userAuthenticated', (e) => {
-
-                if (
-                    window._authManager.userData != null
-                ) {
-
-                    if (
-                        typeof window._authManager.userData.name !== 'undefined'
-                        &&
-                        typeof window._authManager.userData.name === 'string'
-                    ) {
-                        const mobileUsername = document.getElementById('menu-mobile-user-name');
-                        const desktopUsername = document.getElementById('menu-top-user-name');
-
-                        const userName = window._authManager.userData.name;
-
-                        mobileUsername.innerText = userName;
-                        desktopUsername.innerText = userName;
-
-                        mobileUsername.style.display = 'block';
-                        desktopUsername.style.display = 'block';
-
-                    }
-
-                    showAdminMenuItem();
-
-                }
-
-
-            }, false);
 
             document.addEventListener('userLoggedIn', (e) => {
-                if (
-                    window._authManager.userData != null
-                ) {
-                    if (
-                        typeof window._authManager.userData.name !== 'undefined'
-                        &&
-                        typeof window._authManager.userData.name === 'string'
-                    ) {
-                        const mobileUsername = document.getElementById('menu-mobile-user-name');
-                        const desktopUsername = document.getElementById('menu-top-user-name');
 
-                        const userName = window._authManager.userData.name;
-
-                        mobileUsername.innerText = userName;
-                        desktopUsername.innerText = userName;
-
-                        mobileUsername.style.display = 'block';
-                        desktopUsername.style.display = 'block';
-
-                    }
-                }
 
                 window.App.Components.Login.hide();
                 window.App.Components.ShortenUrl.Components.DestinationEmail.show();
@@ -7661,7 +7718,6 @@
                     ].show();
                 }
 
-                showAdminMenuItem();
             }, false);
 
             document.addEventListener('userLoginFailed', (e) => {
