@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Responses\AuthResponses;
 use App\Models\PermissionGroup;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -509,11 +510,39 @@ class PermissionGroupController extends Controller
             );
         }
 
-        return [
+        $configurationsArr = [
             'form_title' => ($edit ? 'Editar' : 'Criar') . ' grupo de permissões',
             'save_endpoint' => url('/api/permission-groups/edit'),
             'form_fields' => $formFields
         ];
+
+        if (
+            $edit
+            &&
+            // removing default permission groups is not allowed.
+            !$permissionGroup->isDefaultForGuestUsers()
+            &&
+            !$permissionGroup->isDefaultForNewRegisteredUsers()
+        ) {
+            $totalUsersWithThisPermissionGroup = User::where(
+                'permission_group_id', '=', $permissionGroup->id
+            )->count();
+
+            // "smart" text :D - plural vs singular
+            $removeButtonConfirmationText = 'Este grupo está associado a <b>'.$totalUsersWithThisPermissionGroup.'</b> ' . ($totalUsersWithThisPermissionGroup === 1 ? 'utilizador que será movido' : 'utilizadores que serão movidos') . ' para o grupo de permissões predefinido para novos utilizadores, tem a certeza que deseja continuar?';
+
+            $configurationsArr = array_merge(
+                $configurationsArr,
+                [
+                    'remove_endpoint' => url('/api/permission-groups/remove'),
+                    'remove_button_text' => 'Quero remover este grupo de permissões',
+                    'remove_button_confirmation_text' => $removeButtonConfirmationText,
+                    'entity_id' => $permissionGroup->id
+                ]
+            );
+        }
+
+        return $configurationsArr;
     }
 
     /**
@@ -625,4 +654,60 @@ class PermissionGroupController extends Controller
             'pagination_identifier' => $this->paginationIdentifier,
         ], 200);
     }
+
+    /**
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function remove(Request $request)
+    {
+        if (!$request->user()->isAdmin()) {
+            return AuthResponses::notAuthorized();
+        }
+
+        $validations = [
+            'id' => 'required|numeric'
+        ];
+
+        Validator::make(
+            $request->all(),
+            $validations,
+            ['id.required' => 'É enviar o ID do grupo do permissões no pedido de remoção.'],
+            []
+        )->validate();
+
+        $permissionGroupToRemove = PermissionGroup::find($request->input('id'));
+
+        if (!$permissionGroupToRemove) {
+            throw ValidationException::withMessages([
+                'id' => 'Grupo de permissões não encontrado.'
+            ]);
+        }
+
+        $defaultPermissionGroupForNewRegisteredUsers = PermissionGroup::where(
+            'default', '=', 1
+        )->first();
+
+        if (!$defaultPermissionGroupForNewRegisteredUsers) {
+            throw ValidationException::withMessages([
+                'id' => 'Grupo de permissões predefinido para novos utilizadores não encontrado. Impossível remover.'
+            ]);
+        }
+
+        User::where(
+            'permission_group_id', '=', $permissionGroupToRemove->id
+        )->update([
+            'permission_group_id' => $defaultPermissionGroupForNewRegisteredUsers->id
+        ]);
+
+        try {
+            $permissionGroupToRemove->delete();
+            return new Response('', 200);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+
+    }
+
 }

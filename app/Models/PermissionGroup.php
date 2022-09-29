@@ -22,7 +22,17 @@ class PermissionGroup extends Model
         'create_shortlinks_with_length_2' => 'boolean',
         'create_shortlinks_with_length_3' => 'boolean',
         'create_shortlinks_with_length_4' => 'boolean',
+        'default' => 'boolean',
+        'guests_permission_group' => 'boolean'
     ];
+
+    public function isDefaultForGuestUsers() {
+        return $this->guests_permission_group;
+    }
+
+    public function isDefaultForNewRegisteredUsers() {
+        return $this->default;
+    }
 
     public function canEditShortlinksDestinationUrl() {
         return $this->edit_shortlinks_destination_url;

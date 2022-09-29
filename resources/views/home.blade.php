@@ -367,6 +367,12 @@
                 margin: 20px 0;
             }
 
+            #dashboard-edit .other-options {
+                font-size: 12px;
+                text-align: right;
+                margin: 10px 0 0;
+            }
+
             #dashboard-edit .button {
                 display: inline-block;
                 margin-right: 10px;
@@ -2388,6 +2394,9 @@
                         },
                         show: function () {
                             this.initialize();
+                            this.Components.Feedback.hide();
+                            this.Components.RequestedShortlink.reset();
+                            this.Components.RequestedShortlinkLongUrl.reset();
                             this.el().style.display = "block";
 
                             if (this.Components.RequestedShortlink.el().value.length == 0) {
@@ -2428,6 +2437,9 @@
                                 mirrorEl: function () {
                                     return document.getElementById('custom-url-shortstring');
                                 },
+                                reset: function () {
+                                    this.el().value = '';
+                                },
                                 mirror: function () {
                                     this.mirrorEl().innerText = this.el().value;
                                 },
@@ -2460,6 +2472,9 @@
                                 el: function () {
                                     return document.getElementById('requested-shortlink-long-url');
                                 },
+                                reset: function () {
+                                    this.el().value = '';
+                                }
                             },
                             Feedback: {
                                 el: function () {
@@ -4688,8 +4703,6 @@
                                                 // if not authenticated something must be wrong
                                                 return;
                                             }
-                                            $this.disable();
-                                            window.App.Components.ContactUs.Components.Feedback.showInfo('por favor espere..');
 
                                             const nameInput = window.App.Components.ContactUs.Components.Name.el();
                                             const emailInput = window.App.Components.ContactUs.Components.Email.el();
@@ -4715,6 +4728,9 @@
                                                     field.classList.remove('has-error');
                                                 }
                                             }
+
+                                            $this.disable();
+                                            window.App.Components.ContactUs.Components.Feedback.showInfo('por favor espere..');
 
                                             var func = function(token) {
                                                 var xhr = new XMLHttpRequest();
@@ -5609,6 +5625,7 @@
                                 this.Components.Fields.reset();
                                 this.Components.SaveBtn.reset();
                                 this.Components.Feedback.hide();
+                                this.Components.OtherOptions.hide();
                             },
                             show: function () {
                                 this.initialize();
@@ -5641,6 +5658,22 @@
                                             $this.Components.Title.set(resObj.form_title);
                                             $this.Components.SaveBtn.setSaveEndpoint(resObj.save_endpoint);
                                             $this.Components.SaveBtn.setRefreshListFunction(refreshFunc);
+
+                                            if (
+                                                typeof resObj.remove_endpoint !== 'undefined'
+                                                &&
+                                                typeof resObj.remove_button_text !== 'undefined'
+                                            ) {
+                                                $this.Components.OtherOptions.Components.RemoveBtn.setRemoveEndpoint(resObj.remove_endpoint);
+                                                $this.Components.OtherOptions.Components.RemoveBtn.setEntityId(resObj.entity_id);
+                                                $this.Components.OtherOptions.Components.RemoveBtn.setRefreshListFunction(refreshFunc);
+                                                $this.Components.OtherOptions.Components.RemoveBtn.setButtonText(resObj.remove_button_text);
+                                                $this.Components.OtherOptions.Components.RemoveBtn.setConfirmationText(resObj.remove_button_confirmation_text);
+                                                $this.Components.OtherOptions.Components.RemoveBtn.show();
+                                                $this.Components.OtherOptions.show();
+                                            } else {
+                                                $this.Components.OtherOptions.Components.RemoveBtn.hide();
+                                            }
 
                                             $this.Components.Fields.reset();
                                             for(var i = 0; i < resObj.form_fields.length; i++) {
@@ -5886,7 +5919,185 @@
                                             this.hasInitialized = true;
                                         }
                                     }
-                                }
+                                },
+                                OtherOptions: {
+                                    el: function () {
+                                        return document.getElementById('dashboard-edit-other-options');
+                                    },
+                                    show: function () {
+                                        this.initialize();
+                                        this.el().style.display = 'block';
+                                    },
+                                    hide: function () {
+                                        this.el().style.display = 'none';
+                                        const componentNames = Object.keys(this.Components);
+                                        for(var i = 0; i < componentNames.length; i++) {
+                                            const componentName = componentNames[i];
+
+                                            if (
+                                                typeof this.Components[componentName].hide === 'function'
+                                            ) {
+                                                this.Components[componentName].hide();
+                                            }
+                                        }
+                                    },
+                                    Components: {
+                                        RemoveBtn: {
+                                            hasInitialized: false,
+                                            removeEndpoint: null,
+                                            refreshListFunction: null,
+                                            el: function () {
+                                                return document.getElementById('dashboard-edit-remove');
+                                            },
+                                            confirmationEl: function () {
+                                                return document.getElementById('dashboard-edit-remove-confirmation');
+                                            },
+                                            confirmationMessageEl: function () {
+                                                return document.getElementById('dashboard-edit-remove-confirmation-message');
+                                            },
+                                            confirmButtonEl: function () {
+                                                return document.getElementById('dashboard-edit-remove-confirm');
+                                            },
+                                            cancelButtonEl: function () {
+                                                return document.getElementById('dashboard-edit-remove-cancel');
+                                            },
+                                            feedbackTextEl: function () {
+                                                return document.getElementById('dashboard-edit-remove-feedback');
+                                            },
+                                            getRemoveEndpoint: function() {
+                                                return this.removeEndpoint;
+                                            },
+                                            setRemoveEndpoint: function(endpoint) {
+                                                this.removeEndpoint = endpoint;
+                                            },
+                                            setRefreshListFunction: function(func) {
+                                                this.refreshListFunction = func;
+                                            },
+                                            show: function () {
+                                                this.el().style.display = 'block';
+                                                this.hideConfirmation();
+                                            },
+                                            hide: function () {
+                                                this.el().style.display = 'none';
+                                                this.reset();
+                                            },
+                                            showConfirmation: function () {
+                                                this.confirmationEl().style.display = 'block';
+                                                this.confirmButtonEl().style.display = 'inline-block';
+                                                this.cancelButtonEl().style.display = 'inline-block';
+                                                this.hideFeedback();
+                                            },
+                                            hideConfirmation: function () {
+                                                this.confirmationEl().style.display = 'none';
+                                                this.confirmButtonEl().style.display = 'none';
+                                                this.cancelButtonEl().style.display = 'none';
+                                                this.hideFeedback();
+                                            },
+                                            setButtonText: function(text) {
+                                                this.el().innerText = text;
+                                            },
+                                            setConfirmationText: function (confirmationText) {
+                                                this.confirmationMessageEl().innerHTML = confirmationText;
+                                            },
+                                            showFeedback: function (feedbackText) {
+                                                const feedbackEl = this.feedbackTextEl();
+                                                feedbackEl.innerText = feedbackText;
+                                                feedbackEl.style.display = 'block';
+                                                feedbackEl.style.color = '#333333';
+                                            },
+                                            showFeedbackError: function (feedbackText) {
+                                                const feedbackEl = this.feedbackTextEl();
+                                                feedbackEl.innerText = feedbackText;
+                                                feedbackEl.style.display = 'block';
+                                                feedbackEl.style.color = 'red';
+                                            },
+                                            hideFeedback: function () {
+                                                this.feedbackTextEl().innerText = '';
+                                                this.feedbackTextEl().style.display = 'none';
+                                            },
+                                            reset: function () {
+                                                this.removeEndpoint = null;
+                                                this.refreshListFunction = null;
+                                                this.setButtonText('');
+                                                this.setConfirmationText('');
+                                                this.setEntityId('');
+                                                this.hideConfirmation();
+                                            },
+                                            getEntityId: function () {
+                                                return this.confirmButtonEl().getAttribute('data-entity-id');
+                                            },
+                                            setEntityId: function (entityId) {
+                                                return this.confirmButtonEl().setAttribute('data-entity-id', entityId);
+                                            },
+                                            initialize: function () {
+                                                if ( this.hasInitialized === false ) {
+                                                    const $this = this;
+                                                    this.el().onclick = function (e) {
+                                                        $this.showConfirmation();
+                                                    };
+
+                                                    this.cancelButtonEl().onclick = function (e) {
+                                                        $this.hideConfirmation();
+                                                    };
+
+                                                    this.confirmButtonEl().onclick = function (e) {
+                                                        const removeEndpoint = $this.getRemoveEndpoint();
+                                                        const entityId = $this.getEntityId();
+
+                                                        $this.confirmButtonEl().style.display = 'none';
+                                                        $this.cancelButtonEl().style.display = 'none';
+                                                        $this.showFeedback('A remover..por favor espere..');
+
+                                                        var xhr = new XMLHttpRequest();
+                                                        xhr.withCredentials = true;
+
+                                                        xhr.addEventListener("readystatechange", function () {
+                                                            if (this.readyState === 4) {
+                                                                if (this.status === 401) {
+                                                                    window.location.reload();
+                                                                }
+
+                                                                if (this.status === 200) {
+                                                                    if (
+                                                                        typeof $this.refreshListFunction === 'function'
+                                                                    ) {
+                                                                        $this.refreshListFunction();
+                                                                    }
+                                                                    window.App.Components.PA.Components.Edit.hide();
+                                                                    return;
+                                                                }
+
+                                                                const resObj = JSON.parse(this.response);
+                                                                if (
+                                                                    typeof resObj.message !== 'undefined'
+                                                                ) {
+                                                                    $this.showFeedbackError(resObj.message);
+                                                                    return;
+                                                                }
+
+                                                                $this.showFeedbackError('Algo correu mal.. não foi possível remover..');
+                                                            }
+                                                        });
+
+                                                        var urlStr = removeEndpoint + '?id=' + entityId;
+
+                                                        xhr.open(
+                                                            "POST",
+                                                            urlStr
+                                                        );
+                                                        xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
+                                                        xhr.send();
+                                                    };
+
+                                                    this.hasInitialized = true;
+                                                }
+                                            }
+                                        },
+                                    },
+                                    initialize: function () {
+                                        this.Components.RemoveBtn.initialize();
+                                    }
+                                },
                             },
                             initialize: function () {
                                 this.Components.SaveBtn.initialize();
@@ -6018,7 +6229,6 @@
 
                                         window.App.Components.PA.hideAllDashboardItems(['Stats']);
                                         window.App.Components.PA.Components.Filters.hide();
-                                        window.App.Components.PA.Components.OptionButtons.hide();
                                         window.App.Components.PA.Components.BackButton.show();
                                         window.App.Components.PA.Components.Stats.displayFull();
                                         window.App.Components.PA.Components.Loading.hide();
@@ -6836,6 +7046,15 @@
                         <div id="dashboard-edit-save" class="button">Guardar</div>
                         <div id="dashboard-edit-cancel" class="button red">Fechar</div>
                     </div>
+                    <div id="dashboard-edit-other-options" class="other-options" style="display: none">
+                        <a href="javascript:void(0);" id="dashboard-edit-remove" style="display: none"></a>
+                        <div id="dashboard-edit-remove-confirmation" style="display: none">
+                            <p id="dashboard-edit-remove-confirmation-message"></p>
+                            <div id="dashboard-edit-remove-confirm" class="button">Sim</div>
+                            <div id="dashboard-edit-remove-cancel" class="button red">Não</div>
+                            <div id="dashboard-edit-remove-feedback" style="display: none"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="option-buttons-container" id="option-buttons" style="display: none">
@@ -6925,22 +7144,22 @@
 
                 <div class="radio-input-container" id="generate_with_length_4_container">
                     <input type="radio" id="generate_with_length_4" name="shortstring_length" value="4">
-                    <label for="generate_with_length_4">Máximo 4 caracteres</label>
+                    <label for="generate_with_length_4">4 caracteres</label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_3_container">
                     <input type="radio" id="generate_with_length_3" name="shortstring_length" value="3">
-                    <label for="generate_with_length_3">Máximo 3 caracteres</label>
+                    <label for="generate_with_length_3">3 caracteres</label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_2_container">
                     <input type="radio" id="generate_with_length_2" name="shortstring_length" value="2">
-                    <label for="generate_with_length_2">Máximo 2 caracteres</label>
+                    <label for="generate_with_length_2">2 caracteres</label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_1_container">
                     <input type="radio" id="generate_with_length_1" name="shortstring_length" value="1">
-                    <label for="generate_with_length_1">Máximo 1 caractere</label>
+                    <label for="generate_with_length_1">1 caractere</label>
                 </div>
 
                 <a href="javascript:void(0);" class="form-link" id="cancel-and-generate-normally">Cancelar / gerar link normalmente</a>

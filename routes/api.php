@@ -75,6 +75,8 @@ Route::post('/permission-groups/prepare-edit-form', [PermissionGroupController::
 Route::post('/permission-groups/edit', [PermissionGroupController::class, 'edit'])
         ->middleware(['auth:sanctum']);
 
+Route::post('/permission-groups/remove', [PermissionGroupController::class, 'remove'])
+        ->middleware(['auth:sanctum']);
 
 Route::post('/users', [UserController::class, 'list'])
         ->middleware(['auth:sanctum']);
