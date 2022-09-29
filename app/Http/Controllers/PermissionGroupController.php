@@ -676,11 +676,30 @@ class PermissionGroupController extends Controller
             []
         )->validate();
 
+        /**
+         * @var PermissionGroup
+         */
         $permissionGroupToRemove = PermissionGroup::find($request->input('id'));
 
         if (!$permissionGroupToRemove) {
             throw ValidationException::withMessages([
                 'id' => 'Grupo de permissões não encontrado.'
+            ]);
+        }
+
+        if (
+            $permissionGroupToRemove->isDefaultForGuestUsers()
+        ) {
+            throw ValidationException::withMessages([
+                'id' => 'Não é possível remover o grupo predefinido para utilizadores não registrados.'
+            ]);
+        }
+
+        if (
+            $permissionGroupToRemove->isDefaultForNewRegisteredUsers()
+        ) {
+            throw ValidationException::withMessages([
+                'id' => 'Não é possível remover o grupo predefinido para novos utilizadores registrados.'
             ]);
         }
 
