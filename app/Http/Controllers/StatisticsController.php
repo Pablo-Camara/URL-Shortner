@@ -84,6 +84,11 @@ class StatisticsController extends Controller
                 'label' => 'Total',
             ],
             [
+                'name' => 'total_unique',
+                'label' => 'Total únicas',
+            ],
+            /* -- start - for user_devices table -- */
+            [
                 'name' => 'total_by_all_devices',
                 'label' => 'Total',
             ],
@@ -92,11 +97,11 @@ class StatisticsController extends Controller
                 'label' => 'Total por Dia',
             ],
             [
-                'name' => 'totals_by_browser',
+                'name' => 'total_by_browser',
                 'label' => 'Total por Navegador',
             ],
             [
-                'name' => 'totals_by_browser_and_day',
+                'name' => 'total_by_browser_and_day',
                 'label' => 'Total por Navegador + Dia',
             ],
             [
@@ -123,49 +128,94 @@ class StatisticsController extends Controller
                 'name' => 'total_by_platform_and_day',
                 'label' => 'Total por Plataforma + Dia',
             ],
+            /* -- end - for user_devices table -- */
             [
-                'name' => 'totals_by_day',
+                'name' => 'total_by_day',
                 'label' => 'Total por Dia',
             ],
             [
-                'name' => 'totals_by_action',
+                'name' => 'total_unique_by_day',
+                'label' => 'Total únicas por Dia',
+            ],
+            [
+                'name' => 'total_by_action',
                 'label' => 'Total por Ação',
             ],
             [
-                'name' => 'totals_by_action_and_day',
+                'name' => 'total_unique_by_action',
+                'label' => 'Total únicas por Ação',
+            ],
+            [
+                'name' => 'total_by_action_and_day',
                 'label' => 'Total por Ação + Dia',
             ],
             [
-                'name' => 'totals_by_shortlink',
+                'name' => 'total_unique_by_action_and_day',
+                'label' => 'Total únicas por Ação + Dia',
+            ],
+            [
+                'name' => 'total_by_shortlink',
                 'label' => 'Total por Shortlink',
             ],
             [
-                'name' => 'totals_by_shortlink_and_day',
+                'name' => 'total_unique_by_shortlink',
+                'label' => 'Total únicas por Shortlink',
+            ],
+            [
+                'name' => 'total_by_shortlink_and_day',
                 'label' => 'Total por Shortlink + Dia',
             ],
             [
-                'name' => 'totals_by_shortlink_and_action',
+                'name' => 'total_unique_by_shortlink_and_day',
+                'label' => 'Total únicas por Shortlink + Dia',
+            ],
+            [
+                'name' => 'total_by_shortlink_and_action',
                 'label' => 'Total por Shortlink + Ação',
             ],
             [
-                'name' => 'totals_by_shortlink_and_action_and_day',
+                'name' => 'total_unique_by_shortlink_and_action',
+                'label' => 'Total únicas por Shortlink + Ação',
+            ],
+            [
+                'name' => 'total_by_shortlink_and_action_and_day',
                 'label' => 'Total por Shortlink + Ação + Dia',
             ],
             [
-                'name' => 'totals_by_user_type',
+                'name' => 'total_unique_by_shortlink_and_action_and_day',
+                'label' => 'Total únicas por Shortlink + Ação + Dia',
+            ],
+            [
+                'name' => 'total_by_user_type',
                 'label' => 'Total por Tipo de Utilizador',
             ],
             [
-                'name' => 'totals_by_user_type_and_day',
+                'name' => 'total_unique_by_user_type',
+                'label' => 'Total únicas por Tipo de Utilizador',
+            ],
+            [
+                'name' => 'total_by_user_type_and_day',
                 'label' => 'Total por Tipo de Utilizador + Dia',
             ],
             [
-                'name' => 'totals_by_user',
+                'name' => 'total_unique_by_user_type_and_day',
+                'label' => 'Total únicas por Tipo de Utilizador + Dia',
+            ],
+            [
+                'name' => 'total_by_user',
                 'label' => 'Total por Utilizador',
             ],
             [
-                'name' => 'totals_by_user_and_day',
+                'name' => 'total_unique_by_user',
+                'label' => 'Total únicas por Utilizador',
+            ],
+            [
+                'name' => 'total_by_user_and_day',
                 'label' => 'Total por Utilizador + Dia',
+            ],
+            [
+                'name' => 'total_unique_by_user_and_day',
+                'label' => 'Total únicas por Utilizador + Dia',
             ],
         ];
 
@@ -175,8 +225,16 @@ class StatisticsController extends Controller
                 'label' => 'Total (descendente)',
             ],
             [
+                'name' => 'total_unique_desc',
+                'label' => 'Total únicas (descendente)',
+            ],
+            [
                 'name' => 'total_asc',
                 'label' => 'Total (ascendente)',
+            ],
+            [
+                'name' => 'total_unique_asc',
+                'label' => 'Total únicas (ascendente)',
             ],
             [
                 'name' => 'day_desc',
@@ -190,73 +248,114 @@ class StatisticsController extends Controller
 
         $viewAvailableGroupBysMap = [
             'totalRegisteredUsers' => [
-                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day'
+                'total', 'total_by_day', 'total_by_action', 'total_by_action_and_day'
             ],
             'totalShortlinksGenerated' => [
-                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day',
-                'totals_by_user_type', 'totals_by_user_type_and_day', 'totals_by_user', 'totals_by_user_and_day'
+                'total', 'total_by_day', 'total_by_action', 'total_by_action_and_day',
+                'total_by_user_type', 'total_by_user_type_and_day', 'total_by_user', 'total_by_user_and_day'
             ],
             'totalTrafficReceivedInShortlinks' => [
-                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day',
-                'totals_by_shortlink', 'totals_by_shortlink_and_day', 'totals_by_user_type', 'totals_by_user_type_and_day',
-                'totals_by_user', 'totals_by_user_and_day'
+                'total', 'total_unique', 'total_by_day', 'total_unique_by_day', 'total_by_action', 'total_unique_by_action',
+                'total_by_action_and_day', 'total_unique_by_action_and_day', 'total_by_shortlink', 'total_unique_by_shortlink',
+                'total_by_shortlink_and_day', 'total_unique_by_shortlink_and_day', 'total_by_user_type', 'total_unique_by_user_type',
+                'total_by_user_type_and_day', 'total_unique_by_user_type_and_day',
+                'total_by_user', 'total_unique_by_user', 'total_by_user_and_day', 'total_unique_by_user_and_day'
             ],
             'totalUserLogins' => [
-                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day'
+                'total', 'total_by_day', 'total_by_action', 'total_by_action_and_day'
             ],
             'appUsageByDevices' => [
-                'total_by_all_devices', 'total_by_all_devices_and_day', 'totals_by_browser',
-                'totals_by_browser_and_day', 'total_by_device_width_and_height',
+                'total_by_all_devices', 'total_by_all_devices_and_day', 'total_by_browser',
+                'total_by_browser_and_day', 'total_by_device_width_and_height',
                 'total_by_device_width_and_height_and_day', 'total_by_device',
                 'total_by_device_and_day', 'total_by_platform', 'total_by_platform_and_day'
             ],
             'appUsageByAction' => [
-                'total', 'totals_by_day', 'totals_by_action', 'totals_by_action_and_day',
-                'totals_by_user_type', 'totals_by_user_type_and_day', 'totals_by_user', 'totals_by_user_and_day',
-                'totals_by_shortlink', 'totals_by_shortlink_and_day', 'totals_by_shortlink_and_action', 'totals_by_shortlink_and_action_and_day'
+                'total', 'total_by_day', 'total_by_action', 'total_by_action_and_day',
+                'total_by_user_type', 'total_by_user_type_and_day', 'total_by_user', 'total_by_user_and_day',
+                'total_by_shortlink', 'total_by_shortlink_and_day', 'total_by_shortlink_and_action', 'total_by_shortlink_and_action_and_day'
             ]
         ];
 
         //depending on the group by, we may have certain order bys
         $groupByOrderBysMap = [
-            'totals_by_day' => [
+            'total_by_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ],
-            'totals_by_action' => [
+            'total_unique_by_day' => [
+                'total_unique_desc', 'total_unique_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_action' => [
                 'total_desc', 'total_asc'
             ],
-            'totals_by_action_and_day' => [
+            'total_unique_by_action' => [
+                'total_unique_desc', 'total_unique_asc'
+            ],
+            'total_by_action_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ],
-            'totals_by_user_type' => [
+            'total_unique_by_action_and_day' => [
+                'total_unique_desc', 'total_unique_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_user_type' => [
                 'total_desc', 'total_asc'
             ],
-            'totals_by_user_type_and_day' => [
+            'total_unique_by_user_type' => [
+                'total_unique_desc', 'total_unique_asc'
+            ],
+            'total_by_user_type_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ],
-            'totals_by_user' => [
+            'total_unique_by_user_type_and_day' => [
+                'total_unique_desc', 'total_unique_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_user' => [
                 'total_desc', 'total_asc'
             ],
-            'totals_by_user_and_day' => [
+            'total_unique_by_user' => [
+                'total_unique_desc', 'total_unique_asc'
+            ],
+            'total_by_user_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ],
-            'totals_by_shortlink' => [
+            'total_unique_by_user_and_day' => [
+                'total_unique_desc', 'total_unique_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_shortlink' => [
                 'total_desc', 'total_asc'
             ],
-            'totals_by_shortlink_and_day' => [
+            'total_unique_by_shortlink' => [
+                'total_unique_desc', 'total_unique_asc'
+            ],
+            'total_by_shortlink_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ],
-            'totals_by_shortlink_and_action' => [
+            'total_unique_by_shortlink_and_day' => [
+                'total_unique_desc', 'total_unique_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_shortlink_and_action' => [
                 'total_desc', 'total_asc'
             ],
-            'totals_by_shortlink_and_action_and_day' => [
+            'total_unique_by_shortlink_and_action' => [
+                'total_unique_desc', 'total_unique_asc'
+            ],
+            'total_by_shortlink_and_action_and_day' => [
                 'total_desc', 'total_asc'
             ],
-            'totals_by_user_type' => [
+            'total_unique_by_shortlink_and_action_and_day' => [
+                'total_unique_desc', 'total_unique_asc'
+            ],
+            'total_by_user_type' => [
                 'total_desc', 'total_asc'
             ],
-            'totals_by_user_type_and_day' => [
+            'total_unique_by_user_type' => [
+                'total_unique_desc', 'total_unique_asc'
+            ],
+            'total_by_user_type_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'total_unique_by_user_type_and_day' => [
+                'total_unique_desc', 'total_unique_asc', 'day_desc', 'day_asc'
             ],
             'total_by_all_devices' => [
                 'total_desc', 'total_asc'
@@ -264,10 +363,10 @@ class StatisticsController extends Controller
             'total_by_all_devices_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ],
-            'totals_by_browser' => [
+            'total_by_browser' => [
                 'total_desc', 'total_asc'
             ],
-            'totals_by_browser_and_day' => [
+            'total_by_browser_and_day' => [
                 'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ],
             'total_by_device_width_and_height' => [
@@ -375,6 +474,12 @@ class StatisticsController extends Controller
                 ];
                 $groupBy = null;
                 break;
+            case 'total_unique':
+                $select = [
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = null;
+                break;
             case 'total_by_all_devices':
                 $select = [
                     DB::raw($table . '.browser AS `'.__('admin-panel.browser').'`'),
@@ -411,7 +516,7 @@ class StatisticsController extends Controller
                     $table . '.platform'
                 ];
                 break;
-            case 'totals_by_browser':
+            case 'total_by_browser':
                 $select = [
                     DB::raw($table . '.browser AS `'.__('admin-panel.browser').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
@@ -420,7 +525,7 @@ class StatisticsController extends Controller
                     $table . '.browser',
                 ];
                 break;
-            case 'totals_by_browser_and_day':
+            case 'total_by_browser_and_day':
                 $select = [
                     DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw($table . '.browser AS `'.__('admin-panel.browser').'`'),
@@ -498,7 +603,7 @@ class StatisticsController extends Controller
                 ];
                 break;
 
-            case 'totals_by_day':
+            case 'total_by_day':
                 $select = [
                     DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
@@ -507,7 +612,16 @@ class StatisticsController extends Controller
                     DB::raw($table . '.created_at_day')
                 ];
                 break;
-            case 'totals_by_action':
+            case 'total_unique_by_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day')
+                ];
+                break;
+            case 'total_by_action':
                 $select = [
                     DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
@@ -516,7 +630,16 @@ class StatisticsController extends Controller
                     'actions.name'
                 ];
                 break;
-            case 'totals_by_action_and_day':
+            case 'total_unique_by_action':
+                $select = [
+                    DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    'actions.name'
+                ];
+                break;
+            case 'total_by_action_and_day':
                 $select = [
                     DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
@@ -527,7 +650,18 @@ class StatisticsController extends Controller
                     'actions.name'
                 ];
                 break;
-            case 'totals_by_shortlink':
+            case 'total_unique_by_action_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    'actions.name'
+                ];
+                break;
+            case 'total_by_shortlink':
                 $select = [
                     DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
@@ -536,7 +670,16 @@ class StatisticsController extends Controller
                     DB::raw('shortstrings.shortstring')
                 ];
                 break;
-            case 'totals_by_shortlink_and_day':
+            case 'total_unique_by_shortlink':
+                $select = [
+                    DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('shortstrings.shortstring')
+                ];
+                break;
+            case 'total_by_shortlink_and_day':
                 $select = [
                     DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
@@ -547,7 +690,18 @@ class StatisticsController extends Controller
                     DB::raw('shortstrings.shortstring')
                 ];
                 break;
-            case 'totals_by_shortlink_and_action':
+            case 'total_unique_by_shortlink_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    DB::raw('shortstrings.shortstring')
+                ];
+                break;
+            case 'total_by_shortlink_and_action':
                 $select = [
                     DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
                     DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
@@ -558,7 +712,18 @@ class StatisticsController extends Controller
                     'actions.name'
                 ];
                 break;
-            case 'totals_by_shortlink_and_action_and_day':
+            case 'total_unique_by_shortlink_and_action':
+                $select = [
+                    DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
+                    DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('shortstrings.shortstring'),
+                    'actions.name'
+                ];
+                break;
+            case 'total_by_shortlink_and_action_and_day':
                 $select = [
                     DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
@@ -571,7 +736,20 @@ class StatisticsController extends Controller
                     'actions.name'
                 ];
                 break;
-            case 'totals_by_user_type':
+            case 'total_unique_by_shortlink_and_action_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('shortstrings.shortstring AS `'.__('admin-panel.shortlink').'`'),
+                    DB::raw('actions.name AS `'.__('admin-panel.action').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    DB::raw('shortstrings.shortstring'),
+                    'actions.name'
+                ];
+                break;
+            case 'total_by_user_type':
                 $select = [
                     DB::raw('CASE WHEN users.guest = 1 THEN \'guest_users\' ELSE \'registered_users\' END AS `'.__('admin-panel.user-type').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
@@ -580,7 +758,16 @@ class StatisticsController extends Controller
                     DB::raw('users.guest')
                 ];
                 break;
-            case 'totals_by_user_type_and_day':
+            case 'total_unique_by_user_type':
+                $select = [
+                    DB::raw('CASE WHEN users.guest = 1 THEN \'guest_users\' ELSE \'registered_users\' END AS `'.__('admin-panel.user-type').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('users.guest')
+                ];
+                break;
+            case 'total_by_user_type_and_day':
                 $select = [
                     DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('CASE WHEN users.guest = 1 THEN \'guest_users\' ELSE \'registered_users\' END AS `'.__('admin-panel.user-type').'`'),
@@ -591,7 +778,18 @@ class StatisticsController extends Controller
                     DB::raw('users.guest')
                 ];
                 break;
-            case 'totals_by_user':
+            case 'total_unique_by_user_type_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('CASE WHEN users.guest = 1 THEN \'guest_users\' ELSE \'registered_users\' END AS `'.__('admin-panel.user-type').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    DB::raw('users.guest')
+                ];
+                break;
+            case 'total_by_user':
                 $select = [
                     DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
@@ -600,11 +798,31 @@ class StatisticsController extends Controller
                     DB::raw('users.id')
                 ];
                 break;
-            case 'totals_by_user_and_day':
+            case 'total_unique_by_user':
+                $select = [
+                    DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('users.id')
+                ];
+                break;
+            case 'total_by_user_and_day':
                 $select = [
                     DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
                     DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
                     DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    DB::raw('users.id')
+                ];
+                break;
+            case 'total_unique_by_user_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
+                    DB::raw('count(DISTINCT ip) AS `'.__('admin-panel.total').'`')
                 ];
                 $groupBy = [
                     DB::raw($table . '.created_at_day'),
@@ -614,6 +832,30 @@ class StatisticsController extends Controller
         }
 
         switch ($selectedOrderBy) {
+            case 'total_desc':
+                $orderBy = [
+                    DB::raw('count(*)'),
+                    'DESC'
+                ];
+                break;
+            case 'total_asc':
+                $orderBy = [
+                    DB::raw('count(*)'),
+                    'ASC'
+                ];
+                break;
+            case 'total_unique_desc':
+                $orderBy = [
+                    DB::raw('count(DISTINCT ip)'),
+                    'DESC'
+                ];
+                break;
+            case 'total_asc':
+                $orderBy = [
+                    DB::raw('count(DISTINCT ip)'),
+                    'ASC'
+                ];
+                break;
             case 'total_desc':
                 $orderBy = [
                     DB::raw('count(*)'),
@@ -665,10 +907,10 @@ class StatisticsController extends Controller
                     in_array(
                         $selectedGroupBy,
                         [
-                            'totals_by_shortlink',
-                            'totals_by_shortlink_and_day',
-                            'totals_by_shortlink_and_action',
-                            'totals_by_shortlink_and_action_and_day'
+                            'total_by_shortlink',
+                            'total_by_shortlink_and_day',
+                            'total_by_shortlink_and_action',
+                            'total_by_shortlink_and_action_and_day'
                         ]
                     )
                 ) {

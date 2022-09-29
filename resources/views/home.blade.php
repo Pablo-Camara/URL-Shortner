@@ -624,7 +624,11 @@
 
                 }
 
-                #pa-view,
+                #pa-view {
+                    width: auto;
+                    max-width: 94%;
+                }
+
                 #my-links-view {
                     width: 50%;
                     max-width: unset;
@@ -1403,6 +1407,8 @@
 
                         if(
                             conditionCallback === null
+                            &&
+                            typeof window.App.Components[componentName].hide === 'function'
                         ) {
                             window.App.Components[componentName].hide();
                         } else {
@@ -1434,6 +1440,29 @@
                     return width < 1024;
                 },
                 Components: {
+                    LogoTop: {
+                        hasInitialized: false,
+                        desktopEl: function () {
+                            return document.getElementById('logo-top');
+                        },
+                        mobileEl: function () {
+                            return document.getElementById('logo-top-mobile');
+                        },
+                        initialize: function () {
+                            if (this.hasInitialized === false) {
+
+                                this.desktopEl().onclick = function(e) {
+                                    window.App.Views.HomePage.show();
+                                };
+
+                                this.mobileEl().onclick = function(e) {
+                                    window.App.Views.HomePage.show();
+                                };
+
+                                this.hasInitialized = true;
+                            }
+                        }
+                    },
                     MenuToggleMobile: {
                         hasInitialized: false,
                         el: function () {
@@ -6729,9 +6758,9 @@
 
                 window.App.Views.PA = {
                     components: {
-                        initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'PA'],
-                        initiallyHidden: ['ShortlinkResult'],
-                        sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'PA'],
+                        initiallyHidden: [],
+                        sticky: ['MenuTop', 'MenuAccTop']
                     },
                     show: function () {
                         window.App.currentView = 'PA';
@@ -6762,11 +6791,9 @@
             <img
                 id="logo-top"
                 src="{{ $logoTop }}"
-                onclick="window.location.href='/';"
             />
             <img id="logo-top-mobile"
                 src="{{ $logoTopMobile }}"
-                onclick="window.location.href='/';"
             >
             <div id="logo-top-mobile-desc">url shortner<br/>em português</div>
         </div>
@@ -7474,6 +7501,7 @@
             }
 
             window.App.Components.MenuToggleMobile.initialize();
+            window.App.Components.LogoTop.initialize();
 
 
             if (
