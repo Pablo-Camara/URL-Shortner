@@ -193,7 +193,7 @@ class AuthenticationController extends Controller
         $validations = [
             'name' => "required|regex:/^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/",
             'email' => 'required|email|confirmed|unique:users',
-            'password' => 'required|confirmed',
+            'password' => 'required|min:8|confirmed',
         ];
 
         $enableCaptchaSitekey = config('captcha.enable');
@@ -205,7 +205,8 @@ class AuthenticationController extends Controller
             $request->all(),
             $validations,
             [
-                'name.regex' => 'O campo nome contém caracteres inválidos / não permitidos.'
+                'name.regex' => 'O campo nome contém caracteres inválidos / não permitidos.',
+                'password.min' => 'É obrigatório criar uma :attribute com no mínimo :min caracteres.'
             ],
             [
                 'name' => 'nome',
