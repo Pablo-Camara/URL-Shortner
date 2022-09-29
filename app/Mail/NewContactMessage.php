@@ -63,7 +63,7 @@ class NewContactMessage extends Mailable
     public function build()
     {
         return $this->text('emails.contact_message')
-            ->subject('Nova mensagem recebida');
+            ->subject('Nova mensagem recebida - Url Shortner');
     }
 
 }

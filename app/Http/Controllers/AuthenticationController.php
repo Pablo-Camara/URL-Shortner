@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\InteractsWithTime;
 use App\Helpers\Responses\AuthResponses;
 use App\Mail\Auth\EmailConfirmation;
+use App\Mail\Auth\PasswordChanged;
 use App\Mail\Auth\PasswordRecovery;
 use App\Models\FacebookAccount;
 use App\Models\GithubAccount;
@@ -441,6 +442,10 @@ class AuthenticationController extends Controller
         UserAction::logAction($user->id, AuthActions::CHANGED_PASSWORD);
 
         $user->currentAccessToken()->delete();
+
+        Mail::to(
+            $user->email
+        )->queue(new PasswordChanged($user));
 
         return new Response('', 200);
     }

@@ -46,6 +46,6 @@ class ShortlinkReady extends Mailable
     public function build()
     {
         return $this->text('emails.shortlink_ready')
-            ->subject('Link curto pronto!');
+            ->subject('Link pronto! - Url Shortner');
     }
 }

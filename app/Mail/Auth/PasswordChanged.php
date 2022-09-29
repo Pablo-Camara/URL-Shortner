@@ -7,7 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class EmailConfirmation extends Mailable
+class PasswordChanged extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -20,13 +20,10 @@ class EmailConfirmation extends Mailable
      * @param \App\Models\User $user
      * @return void
      */
-    public function __construct(User $user, string $emailConfirmationToken)
+    public function __construct(User $user)
     {
         $userFullName = explode(' ', $user->name);
         $this->firstName = ucfirst($userFullName[0]);
-        $this->emailConfirmationLink = route('emailConfirmationLink',[
-            'token' => urlencode($emailConfirmationToken)
-        ]);
     }
 
     /**
@@ -36,7 +33,7 @@ class EmailConfirmation extends Mailable
      */
     public function build()
     {
-        return $this->text('emails.auth.email_confirmation')
-            ->subject('Confirme o seu email - Url Shortner');
+        return $this->text('emails.auth.password_changed')
+            ->subject('Palavra-passe alterada - Url Shortner');
     }
 }

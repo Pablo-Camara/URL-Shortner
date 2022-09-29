@@ -37,6 +37,6 @@ class PasswordRecovery extends Mailable
     public function build()
     {
         return $this->text('emails.auth.password_recovery')
-            ->subject('Recuperar password - Encurtador de Urls');
+            ->subject('Alterar palavra-passe - Url Shortner');
     }
 }
