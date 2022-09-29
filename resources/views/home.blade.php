@@ -1886,7 +1886,9 @@
                             this.el().style.display = 'block';
                             const longUrlInput = this.Components.LongUrl.el();
                             longUrlInput.value = "";
-                            longUrlInput.focus();
+                            if (!window.App.isMobileSize()) {
+                                longUrlInput.focus();
+                            }
 
                             this.Components.DestinationEmail.show();
 
@@ -7171,14 +7173,14 @@
             id="form-box-with-shortlink"
             style="display: none"
         >
-            <div class="form-box-title">O seu link curto está pronto!</div>
+            <div class="form-box-title">O seu link está pronto!</div>
             <div class="input-container">
                 <input type="text" id="shortlink" readonly />
             </div>
 
             <div class="button" id="save-shortlink" style="display: none">Guardar na minha lista de links</div>
             <div class="button" id="go-to-my-links" style="display: none">Ver minha lista de links</div>
-            <a href="javascript:void(0);" id="generate-another-shortlink" class="form-link">Encurtar outro link</a>
+            <a href="javascript:void(0);" id="generate-another-shortlink" class="form-link">Criar outro link</a>
         </div>
 
         <div
