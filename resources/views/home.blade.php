@@ -97,6 +97,10 @@
                 border: 1px solid red;
             }
 
+            #cancel-and-generate-normally {
+                color: #f80c0c;
+            }
+
             .form-box .radio-input-container {
                 margin-top: 10px;
                 margin-bottom: 10px;
