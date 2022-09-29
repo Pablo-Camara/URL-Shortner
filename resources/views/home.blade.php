@@ -2270,6 +2270,10 @@
                                             }, false);
                                         }
 
+                                        document.addEventListener('userLoggedIn', (e) => {
+                                            $this.show();
+                                        }, false);
+
                                         this.hasInitialized = true;
                                     }
                                 }
@@ -2944,6 +2948,7 @@
 
                     },
                     Login: {
+                        hasInitialized: false,
                         el: function () {
                             return document.getElementById("form-box-login");
                         },
@@ -3494,6 +3499,15 @@
                             this.Components.CreateAccLink.initialize();
                             this.Components.ForgotPasswordLink.initialize();
 
+                            if (this.hasInitialized === false) {
+
+                                const $this = this;
+                                document.addEventListener('userLoggedIn', (e) => {
+                                    $this.hide();
+                                }, false);
+
+                                this.hasInitialized = true;
+                            }
                         }
 
                     },
@@ -7694,32 +7708,6 @@
         @endif
 
         <script>
-
-
-
-            document.addEventListener('userLoggedIn', (e) => {
-
-
-                window.App.Components.Login.hide();
-                window.App.Components.ShortenUrl.Components.DestinationEmail.show();
-                if (
-                    typeof window.App.viewToShowAfterLogin !== 'undefined'
-                    &&
-                    typeof window.App.Views[
-                        window.App.viewToShowAfterLogin
-                    ] !== 'undefined'
-                    &&
-                    typeof window.App.Views[
-                        window.App.viewToShowAfterLogin
-                    ].show === 'function'
-                ) {
-                    window.App.Views[
-                        window.App.viewToShowAfterLogin
-                    ].show();
-                }
-
-            }, false);
-
             document.addEventListener('userLoginFailed', (e) => {
 
                 if (e.isError) {
@@ -7788,10 +7776,6 @@
 
 
         <script>
-
-            window.App.Components.MenuToggleMobile.initialize();
-
-
             if (
                 typeof window.App.currentView !== 'undefined'
                 &&
