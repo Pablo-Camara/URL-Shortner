@@ -729,6 +729,16 @@
                     width: 100%;
                 }
 
+                .profile-pic-container {
+                    text-align: center;
+                }
+                img.profile-pic-big {
+                    -webkit-border-radius: 100px;
+                    -moz-border-radius: 100px;
+                    border-radius: 100px;
+                    width: 100px;
+                }
+
                 #menu-top-acc .profile-pic  {
                     display: inline-block;
                     background: gray;
@@ -1442,11 +1452,21 @@
                 Components: {
                     LogoTop: {
                         hasInitialized: false,
+                        containerEl: function () {
+                            return document.getElementById('logo-top-container');
+                        },
                         desktopEl: function () {
                             return document.getElementById('logo-top');
                         },
                         mobileEl: function () {
                             return document.getElementById('logo-top-mobile');
+                        },
+                        show: function () {
+                            this.initialize();
+                            this.containerEl().style.display = 'block';
+                        },
+                        hide: function () {
+                            this.containerEl().style.display = 'none';
                         },
                         initialize: function () {
                             if (this.hasInitialized === false) {
@@ -1708,12 +1728,28 @@
                                 show: function () {
                                     this.el().style.display = 'inline-block';
                                 },
+                                hide: function () {
+                                    this.el().style.display = 'none';
+                                },
                                 initialize: function () {
                                     if ( this.hasInitialized == false ) {
 
                                         this.el().onclick = function (e) {
                                             window.App.Views.MyLinks.show();
                                         };
+
+                                        const $this = this;
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.show();
+                                        } else {
+                                            $this.hide();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.show();
+                                            }, false);
+                                        }
+
 
                                         this.hasInitialized = true;
                                     }
@@ -1882,7 +1918,59 @@
                                 this.Items.PA.initialize();
                             }
                         },
+                        Components: {
+                            UserProfilePicture: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('user-profile-pic');
+                                },
+                                setPicture: function () {
+                                    if (
+                                        window._authManager.userData != null
+                                    ) {
+                                        if (
+                                            typeof window._authManager.userData.avatar !== 'undefined'
+                                            &&
+                                            typeof window._authManager.userData.avatar === 'string'
+                                        ) {
+                                            const el = this.el();
+                                            el.innerText = '';
+                                            el.style.backgroundImage = 'url("'+window._authManager.userData.avatar+'")';
+                                        }
+                                    }
+                                },
+                                hidePicture: function () {
+                                    const el = this.el();
+                                    el.innerText = '?';
+                                    el.style.backgroundImage = 'unset';
+                                },
+                                initialize: function () {
+                                    if ( this.hasInitialized === false ) {
+                                        const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.setPicture();
+                                        } else {
+                                            $this.hidePicture();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.setPicture();
+                                            }, false);
+                                        }
+
+                                        document.addEventListener('userLoggedIn', (e) => {
+                                            $this.setPicture();
+                                        }, false);
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            }
+                        },
                         initialize: function () {
+                            this.Components.UserProfilePicture.initialize();
+
                             if (this.hasInitialized == false) {
                                 const $this = this;
                                 this.el().onclick = function (e) {
@@ -1904,6 +1992,28 @@
                                         $this.UserItems.hide();
                                         $this.GuestItems.show();
                                     }
+                                };
+                                this.hasInitialized = true;
+                            }
+                        }
+                    },
+                    Profile: {
+                        hasInitialized: false,
+                        el: function () {
+                            return document.getElementById('profile-view');
+                        },
+                        show: function (){
+                            this.initialize();
+                            this.el().style.display = 'block';
+                        },
+                        hide: function (){
+                            this.el().style.display = 'none';
+                        },
+                        initialize: function () {
+                            if (this.hasInitialized == false) {
+                                const $this = this;
+                                this.el().onclick = function (e) {
+
                                 };
 
                                 this.hasInitialized = true;
@@ -2038,9 +2148,16 @@
                                             }
                                         });
 
-                                        document.addEventListener('userAuthenticated', (e) => {
-                                            window.App.Components.ShortenUrl.Components.DestinationEmail.show();
-                                        }, false);
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.show();
+                                        } else {
+                                            $this.hide();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.show();
+                                            }, false);
+                                        }
 
                                         this.hasInitialized = true;
                                     }
@@ -2054,11 +2171,26 @@
                                 enable: function () {
                                     this.el().classList.remove('disabled');
                                 },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
                                 initialize: function () {
                                     if (this.hasInitialized !== false) {
                                         return;
                                     }
-                                    // code to initialize once:
+
+                                    const $this = this;
+                                    if (
+                                        window._authManager.isAuthenticated
+                                    ) {
+                                        $this.enable();
+                                    } else {
+                                        $this.disable();
+                                        document.addEventListener('userAuthenticated', (e) => {
+                                            $this.enable();
+                                        }, false);
+                                    }
+
                                     this.el().onclick = function (e) {
                                         if (
                                             !window._authManager.isAuthenticated
@@ -2177,6 +2309,7 @@
 
 
                                     };
+
                                     this.hasInitialized = true;
                                 }
                             },
@@ -2205,9 +2338,16 @@
                                         };
 
                                         const $this = this;
-                                        document.addEventListener('userAuthenticated', (e) => {
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
                                             $this.show();
-                                        }, false);
+                                        } else {
+                                            $this.hide();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.show();
+                                            }, false);
+                                        }
 
                                         this.hasInitialized = true;
                                     }
@@ -2545,8 +2685,24 @@
                                 enable: function () {
                                     this.el().classList.remove('disabled');
                                 },
+                                disable: function () {
+                                    this.el().classList.add('disabled');
+                                },
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
+
+                                        const $this = this;
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -2681,6 +2837,11 @@
                             return document.getElementById("form-box-login");
                         },
                         show: function () {
+                            if (window._authManager.isLoggedIn) {
+                                window.App.Views.HomePage.show();
+                                return;
+                            }
+
                             this.initialize();
                             this.el().style.display = 'block';
                             if (!window.App.isMobileSize()) {
@@ -2780,7 +2941,21 @@
                                 },
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
+
                                         const $this = this;
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
+
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -2849,6 +3024,18 @@
                                     if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -2882,6 +3069,18 @@
                                     if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -2915,6 +3114,19 @@
                                     if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -2948,6 +3160,18 @@
                                     if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -2981,6 +3205,18 @@
                                     if (!this.el() || this.el().length == 0)return;
                                     if (this.hasInitialized === false) {
                                         const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -3146,6 +3382,7 @@
                             this.Components.CloseBtn.initialize();
                             this.Components.CreateAccLink.initialize();
                             this.Components.ForgotPasswordLink.initialize();
+
                         }
 
                     },
@@ -3154,6 +3391,11 @@
                             return document.getElementById("form-box-register");
                         },
                         show: function () {
+                            if (window._authManager.isLoggedIn) {
+                                window.App.Views.HomePage.show();
+                                return;
+                            }
+
                             this.initialize();
                             this.el().style.display = 'block';
                             this.Components.Name.el().focus();
@@ -3359,6 +3601,18 @@
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
                                         const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -3631,6 +3885,18 @@
                                 initialize: function () {
                                     if ( this.hasInitialized == false ) {
 
+                                        const $this = this;
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
 
                                             if (
@@ -3815,7 +4081,19 @@
                                 },
                                 initialize: function () {
                                     if (this.hasInitialized === false) {
+
                                         const $this = this;
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
                                         this.el().onclick = function (e) {
                                             if (
                                                 !window._authManager.isAuthenticated
@@ -3992,7 +4270,18 @@
                                         },
                                         show: function () {
                                             this.el().style.display = 'block';
-                                            this.fetch();
+
+                                            if (window._authManager.isAuthenticated) {
+                                                this.fetch();
+                                            } else {
+                                                const $this = this;
+                                                document.addEventListener('userAuthenticated', (e) => {
+                                                    if (window.App.currentView == 'MyLinks') {
+                                                        $this.fetch();
+                                                    }
+                                                }, false);
+                                            }
+
                                         },
                                         hide: function () {
                                             this.el().style.display = 'none';
@@ -4911,15 +5200,16 @@
                 Views: {
                     HomePage: {
                         components: {
-                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'HomePage';
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
+                            window.history.pushState(null, 'web into link - url shortner', '/');
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -4927,15 +5217,13 @@
                         }
                     },
                     MyLinks: {
-                        hasInitialized: false,
                         components: {
-                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'MyLinks'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'MyLinks'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'MyLinks';
-                            this.initialize();
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
@@ -4945,23 +5233,12 @@
                             window.App.hideComponents(this.components.initiallyVisible);
                             window.App.hideComponents(this.components.initiallyHidden);
                         },
-                        initialize: function () {
-                            if (this.hasInitialized == false) {
-                                document.addEventListener('userAuthenticated', (e) => {
-                                    if (window.App.currentView == 'MyLinks') {
-                                        window.App.Components.MyLinks.Components.Links.Components.List.fetch();
-                                    }
-                                }, false);
-
-                                this.hasInitialized = true;
-                            }
-                        }
                     },
                     ContactUs: {
                         components: {
-                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ContactUs'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ContactUs'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'ContactUs';
@@ -4977,9 +5254,9 @@
                     },
                     Login: {
                         components: {
-                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Login'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Login'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'Login';
@@ -4994,9 +5271,9 @@
                     },
                     Register: {
                         components: {
-                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Register'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Register'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'Register';
@@ -5011,9 +5288,9 @@
                     },
                     RegisterCustomShortlink: {
                         components: {
-                            initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'RegisterCustomShortlink', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'RegisterCustomShortlink';
@@ -5029,9 +5306,9 @@
                     },
                     EmailConfirmed: {
                         components: {
-                            initiallyVisible: ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'EmailConfirmed'],
+                            initiallyVisible: ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'EmailConfirmed'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'EmailConfirmed';
@@ -5046,9 +5323,9 @@
                     },
                     ChangePassword: {
                         components: {
-                            initiallyVisible: ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ChangePassword'],
+                            initiallyVisible: ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ChangePassword'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'ChangePassword';
@@ -6758,9 +7035,9 @@
 
                 window.App.Views.PA = {
                     components: {
-                        initiallyVisible:  ['MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'PA'],
+                        initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'PA'],
                         initiallyHidden: [],
-                        sticky: ['MenuTop', 'MenuAccTop']
+                        sticky: ['LogoTop', 'MenuTop', 'MenuAccTop']
                     },
                     show: function () {
                         window.App.currentView = 'PA';
@@ -6787,7 +7064,7 @@
         @endif
     </head>
     <body>
-        <div id="logo-top-container">
+        <div id="logo-top-container" style="display: none">
             <img
                 id="logo-top"
                 src="{{ $logoTop }}"
@@ -7077,6 +7354,18 @@
             </div>
         </div>
 
+        <div
+            class="form-box overlay"
+            id="profile-view" style="display: none"
+        >
+            <div class="form-box-title" id="profile-view-user-name">Pablo Câmara</div>
+            <div class="close-form-box" id="profile-view-close-btn">X</div>
+            <div class="profile-pic-container">
+                <img class="profile-pic-big"/>
+            </div>
+        </div>
+
+
         @if ($isAdmin)
             <div
                 class="form-box overlay"
@@ -7285,30 +7574,6 @@
 
         <script>
 
-            //TODO: depracate this function
-            // add event listener per component, on initialize
-            function enableAuthenticationDependentButtons() {
-                window.App.Components.ShortenUrl.Components.GenerateBtn.enable();
-
-                window.App.Components.MenuTop.Items.MyLinks.show();
-                window.App.Components.Login.Components.LoginBtn.enable();
-                window.App.Components.Login.Components.LoginWithGithubBtn.enable();
-                window.App.Components.Login.Components.LoginWithFacebookBtn.enable();
-                window.App.Components.Login.Components.LoginWithGoogleBtn.enable();
-                window.App.Components.Login.Components.LoginWithLinkedinBtn.enable();
-                window.App.Components.Login.Components.LoginWithTwitterBtn.enable();
-
-                if (window._authManager.isLoggedIn) {
-                    window.App.Components.Login.hide();
-                    window.App.Components.Register.hide();
-                }
-
-                window.App.Components.Register.Components.RegisterBtn.enable();
-                window.App.Components.RegisterCustomShortlink.Components.ContinueBtn.enable();
-                window.App.Components.PasswordRecovery.Components.SendPwdRecoveryBtn.enable();
-                window.App.Components.ChangePassword.Components.ChangePasswordBtn.enable();
-            }
-
             function showAdminMenuItem() {
                 if (
                     window._authManager.userHasPermission('is_admin')
@@ -7325,20 +7590,10 @@
             }
 
             document.addEventListener('userAuthenticated', (e) => {
-                enableAuthenticationDependentButtons();
 
                 if (
                     window._authManager.userData != null
                 ) {
-                    if (
-                        typeof window._authManager.userData.avatar !== 'undefined'
-                        &&
-                        typeof window._authManager.userData.avatar === 'string'
-                    ) {
-                        const userProfilePicEl = document.getElementById('user-profile-pic');
-                        userProfilePicEl.innerText = '';
-                        userProfilePicEl.style.backgroundImage = 'url("'+window._authManager.userData.avatar+'")';
-                    }
 
                     if (
                         typeof window._authManager.userData.name !== 'undefined'
@@ -7369,16 +7624,6 @@
                 if (
                     window._authManager.userData != null
                 ) {
-                    if (
-                        typeof window._authManager.userData.avatar !== 'undefined'
-                        &&
-                        typeof window._authManager.userData.avatar === 'string'
-                    ) {
-                        const userProfilePicEl = document.getElementById('user-profile-pic');
-                        userProfilePicEl.innerText = '';
-                        userProfilePicEl.style.backgroundImage = 'url("'+window._authManager.userData.avatar+'")';
-                    }
-
                     if (
                         typeof window._authManager.userData.name !== 'undefined'
                         &&
@@ -7482,26 +7727,13 @@
                 window._authManager.isAuthenticated = true;
                 window._authManager.userPermissions = {!! $userPermissions !!};
                 window._authManager.userData = {!! $userData !!};
-                // trigger userAuthenticated event
-                document.dispatchEvent(
-                                window._authManager.customEvents
-                                    .userAuthenticatedEvent
-                            );
-            </script>
-        @else
-            <script>
-                window._authManager.authenticate();
             </script>
         @endif
 
 
         <script>
-            if (window._authManager.isAuthenticated) {
-                enableAuthenticationDependentButtons();
-            }
 
             window.App.Components.MenuToggleMobile.initialize();
-            window.App.Components.LogoTop.initialize();
 
 
             if (
@@ -7553,5 +7785,27 @@
                 setCookie('user-has-been-informed-about-cookies', true);
             };
         </script>
+
+
+        @if (
+            isset($authToken)
+            &&
+            isset($isLoggedIn)
+            &&
+            isset($userPermissions)
+            &&
+            isset($userData)
+        )
+            <script>
+                document.dispatchEvent(
+                                window._authManager.customEvents
+                                    .userAuthenticatedEvent
+                            );
+            </script>
+         @else
+            <script>
+                window._authManager.authenticate();
+            </script>
+        @endif
     </body>
 </html>
