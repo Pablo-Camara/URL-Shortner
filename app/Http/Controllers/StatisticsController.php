@@ -887,10 +887,45 @@ class StatisticsController extends Controller
         // joins
         switch ($table) {
             case 'user_actions':
-                $results = $results->leftJoin('users', 'user_actions.user_id', '=', 'users.id')
-                ->leftJoin('actions', 'user_actions.action_id', '=', 'actions.id')
-                ->leftJoin('shortlinks', 'user_actions.shortlink_id', '=', 'shortlinks.id')
-                ->leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id');
+                switch ($currentView) {
+                    case 'totalTrafficReceivedInShortlinks':
+
+                        switch ($selectedGroupBy) {
+                            // only for traffic
+                            case 'total_by_user_type':
+                            case 'total_unique_by_user_type':
+                            case 'total_by_user_type_and_day':
+                            case 'total_unique_by_user_type_and_day':
+                            case 'total_by_user':
+                            case 'total_unique_by_user':
+                            case 'total_by_user_and_day':
+                            case 'total_unique_by_user_and_day':
+                                // when talking about Traffic Received
+                                // the users table join is 'users.id', '=', 'shortlinks.user_id'
+                                $results = $results->leftJoin('actions', 'user_actions.action_id', '=', 'actions.id')
+                                ->leftJoin('shortlinks', 'user_actions.shortlink_id', '=', 'shortlinks.id')
+                                ->leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id')
+                                ->leftJoin('users', 'users.id', '=', 'shortlinks.user_id');
+                                break;
+                            default:
+                                // other views do not need users join for view 'totalTrafficReceivedInShortlinks'
+                                $results = $results->leftJoin('actions', 'user_actions.action_id', '=', 'actions.id')
+                                ->leftJoin('shortlinks', 'user_actions.shortlink_id', '=', 'shortlinks.id')
+                                ->leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id');
+                                break;
+                        }
+
+                        break;
+
+                    default:
+                        // when not talking about Traffic Received
+                        // the users table join is 'user_actions.user_id', '=', 'users.id'
+                        $results = $results->leftJoin('users', 'user_actions.user_id', '=', 'users.id')
+                        ->leftJoin('actions', 'user_actions.action_id', '=', 'actions.id')
+                        ->leftJoin('shortlinks', 'user_actions.shortlink_id', '=', 'shortlinks.id')
+                        ->leftJoin('shortstrings', 'shortlinks.shortstring_id', '=', 'shortstrings.id');
+                        break;
+                }
                 break;
         }
 
