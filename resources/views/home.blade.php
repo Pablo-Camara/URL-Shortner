@@ -3545,6 +3545,7 @@
 
                     },
                     Register: {
+                        hasInitialized: false,
                         el: function () {
                             return document.getElementById("form-box-register");
                         },
@@ -3929,6 +3930,30 @@
                             this.Components.RegisterBtn.initialize();
                             this.Components.LoginToAccLink.initialize();
                             this.Components.CloseBtn.initialize();
+
+                            if (this.hasInitialized === false) {
+
+                                const $this = this;
+                                document.addEventListener('userRegisterFailed', (e) => {
+
+                                    if (e.isError) {
+                                        $this.Components.Feedback.showError(e.reason);
+                                    } else {
+                                        $this.Components.Feedback.showInfo(e.reason);
+                                    }
+
+                                    $this.Components.RegisterBtn.enable();
+                                }, false);
+
+                                document.addEventListener('userRegisterSuccess', (e) => {
+                                    $this.hide();
+                                    window.App.Components.RegisterSuccess.show();
+                                }, false);
+
+                                this.hasInitialized = true;
+
+                            }
+
                         }
 
                     },
@@ -7741,24 +7766,6 @@
         @endif
 
         <script>
-
-
-
-            document.addEventListener('userRegisterFailed', (e) => {
-
-                if (e.isError) {
-                    window.App.Components.Register.Components.Feedback.showError(e.reason);
-                } else {
-                    window.App.Components.Register.Components.Feedback.showInfo(e.reason);
-                }
-
-                window.App.Components.Register.Components.RegisterBtn.enable();
-            }, false);
-
-            document.addEventListener('userRegisterSuccess', (e) => {
-                window.App.Components.Register.hide();
-                window.App.Components.RegisterSuccess.show();
-            }, false);
 
             document.addEventListener('userPasswordChanged', (e) => {
                 window.App.Components.ChangePassword.hide();
