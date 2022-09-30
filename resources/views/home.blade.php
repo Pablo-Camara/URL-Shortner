@@ -3525,6 +3525,20 @@
                                     $this.hide();
                                 }, false);
 
+                                document.addEventListener('userLoginFailed', (e) => {
+                                    if (e.isError) {
+                                        $this.Components.Feedback.showError(e.reason);
+
+                                        if(e.error_id === 'unverified_account') {
+                                            $this.Components.ResendVerificationEmail.show();
+                                        }
+                                    } else {
+                                        $this.Components.Feedback.showInfo(e.reason);
+                                    }
+
+                                    $this.Components.LoginBtn.enable();
+                                }, false);
+
                                 this.hasInitialized = true;
                             }
                         }
@@ -7727,20 +7741,7 @@
         @endif
 
         <script>
-            document.addEventListener('userLoginFailed', (e) => {
 
-                if (e.isError) {
-                    window.App.Components.Login.Components.Feedback.showError(e.reason);
-
-                    if(e.error_id === 'unverified_account') {
-                        window.App.Components.Login.Components.ResendVerificationEmail.show();
-                    }
-                } else {
-                    window.App.Components.Login.Components.Feedback.showInfo(e.reason);
-                }
-
-                window.App.Components.Login.Components.LoginBtn.enable();
-            }, false);
 
 
             document.addEventListener('userRegisterFailed', (e) => {
