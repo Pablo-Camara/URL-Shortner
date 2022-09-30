@@ -854,6 +854,17 @@
                 margin-left: 10px;
             }
 
+            table.limit-table th {
+                color: white;
+                background: #333;
+                padding: 5px;
+            }
+
+            table.limit-table td {
+                background: #EEEEEE;
+                padding: 5px;
+            }
+
         </style>
 
         @if(isset($enableCaptcha) && $enableCaptcha === true)
@@ -1387,6 +1398,25 @@
                         &&
                         window._authManager.userPermissions[permissionName] == true
                     );
+                },
+                getUserLimit: function (limitName) {
+                    if (
+                        window._authManager.userData != null
+                    ) {
+                        if (
+                            typeof window._authManager.userData.limits !== 'undefined'
+                            &&
+                            typeof window._authManager.userData.limits[limitName] !== 'undefined'
+                        ) {
+                            if (window._authManager.userData.limits[limitName] === null) {
+                                return 'não definido';
+                            }
+
+                            return window._authManager.userData.limits[limitName];
+                        }
+                    }
+
+                    return '';
                 }
             };
 
@@ -2309,13 +2339,76 @@
                                         this.hasInitialized = true;
                                     }
                                 }
-                            }
+                            },
+                            ViewLimitsBtn: {
+                                hasInitialized: false,
+                                limitsVisible: false,
+                                el: function () {
+                                    return document.getElementById('view-profile-limits');
+                                },
+                                limitsContainerEl: function () {
+                                    return document.getElementById('profile-limits');
+                                },
+                                limitsListEl: function () {
+                                    return document.getElementById('profile-view-limit-list');
+                                },
+                                showLimits: function () {
+                                    const limitItems = this.limitsListEl().querySelectorAll('li');
+                                    for(var i = 0; i < limitItems.length; i++) {
+                                        const limitItem = limitItems[i];
+
+                                        if (limitItem.hasAttribute('data-permission-needed')) {
+                                            const permissionNeeded = limitItem.getAttribute('data-permission-needed');
+                                            if (
+                                                !window._authManager.userHasPermission(permissionNeeded)
+                                            ) {
+                                                limitItem.style.display = 'none';
+                                            } else {
+                                                limitItem.style.display = 'list-item';
+                                            }
+                                        }
+
+                                        const limits = limitItem.querySelectorAll('[data-limit-name]');
+                                        for(var ii = 0; ii < limits.length; ii++) {
+                                            const limitEl = limits[ii];
+                                            const limitName = limitEl.getAttribute('data-limit-name');
+                                            limitEl.innerText = window._authManager.getUserLimit(limitName);
+                                        }
+                                    }
+                                    this.limitsContainerEl().style.display = 'block';
+                                    this.limitsVisible = true;
+                                    this.el().innerText = 'Esconder limites';
+                                },
+                                hideLimits: function () {
+                                    this.limitsContainerEl().style.display = 'none';
+                                    this.limitsVisible = false;
+                                    this.el().innerText = 'Ver limites';
+                                },
+                                toggleShowLimits: function () {
+                                    if (this.limitsVisible) {
+                                        this.hideLimits();
+                                    } else {
+                                        this.showLimits();
+                                    }
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized == false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            $this.toggleShowLimits();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                         },
                         initialize: function () {
                             this.Components.CloseBtn.initialize();
                             this.Components.UserName.initialize();
                             this.Components.ProfilePicture.initialize();
                             this.Components.ViewPermissionsBtn.initialize();
+                            this.Components.ViewLimitsBtn.initialize();
                         }
                     },
                     ShortenUrl: {
@@ -7821,6 +7914,124 @@
                     <li data-permission-needed="create_shortlinks_with_length_4">
                         Criar links com 4 caracteres <br/>(depois da barra)
                     </li>
+                </ul>
+            </div>
+
+            <div class="button red" style="margin-top: 10px" id="view-profile-limits">Ver limites</div>
+            <div class="profile-permissions" id="profile-limits" style="display: none">
+                <b>Os meus limites:</b>
+                <ul id="profile-view-limit-list">
+                    <li>
+                        Links com 5 ou mais caracteres<br><small>(depois da barra)</small>:
+                        <table class="limit-table">
+                            <thead>
+                                <tr>
+                                    <th>Total</th>
+                                    <th>Por Dia</th>
+                                    <th>Por Mês</th>
+                                    <th>Por Ano</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td data-limit-name="max_shortlinks_with_5_or_more_of_length"></td>
+                                    <td data-limit-name="max_shortlinks_per_day_with_5_or_more_of_length"></td>
+                                    <td data-limit-name="max_shortlinks_per_month_with_5_or_more_of_length"></td>
+                                    <td data-limit-name="max_shortlinks_per_year_with_5_or_more_of_length"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </li>
+
+                    <li data-permission-needed="create_shortlinks_with_length_4">
+                        Links com 4 caracteres<br><small>(depois da barra)</small>:
+                        <table class="limit-table">
+                            <thead>
+                                <tr>
+                                    <th>Total</th>
+                                    <th>Por Dia</th>
+                                    <th>Por Mês</th>
+                                    <th>Por Ano</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td data-limit-name="max_shortlinks_with_length_4"></td>
+                                    <td data-limit-name="max_shortlinks_per_day_with_length_4"></td>
+                                    <td data-limit-name="max_shortlinks_per_month_with_length_4"></td>
+                                    <td data-limit-name="max_shortlinks_per_year_with_length_4"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </li>
+
+                    <li data-permission-needed="create_shortlinks_with_length_3">
+                        Links com 3 caracteres<br><small>(depois da barra)</small>:
+                        <table class="limit-table">
+                            <thead>
+                                <tr>
+                                    <th>Total</th>
+                                    <th>Por Dia</th>
+                                    <th>Por Mês</th>
+                                    <th>Por Ano</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td data-limit-name="max_shortlinks_with_length_3"></td>
+                                    <td data-limit-name="max_shortlinks_per_day_with_length_3"></td>
+                                    <td data-limit-name="max_shortlinks_per_month_with_length_3"></td>
+                                    <td data-limit-name="max_shortlinks_per_year_with_length_3"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </li>
+
+                    <li data-permission-needed="create_shortlinks_with_length_2">
+                        Links com 2 caracteres<br><small>(depois da barra)</small>:
+                        <table class="limit-table">
+                            <thead>
+                                <tr>
+                                    <th>Total</th>
+                                    <th>Por Dia</th>
+                                    <th>Por Mês</th>
+                                    <th>Por Ano</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td data-limit-name="max_shortlinks_with_length_2"></td>
+                                    <td data-limit-name="max_shortlinks_per_day_with_length_2"></td>
+                                    <td data-limit-name="max_shortlinks_per_month_with_length_2"></td>
+                                    <td data-limit-name="max_shortlinks_per_year_with_length_2"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </li>
+
+                    <li data-permission-needed="create_shortlinks_with_length_1">
+                        Links com 1 caractere<br><small>(depois da barra)</small>:
+                        <table class="limit-table">
+                            <thead>
+                                <tr>
+                                    <th>Total</th>
+                                    <th>Por Dia</th>
+                                    <th>Por Mês</th>
+                                    <th>Por Ano</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td data-limit-name="max_shortlinks_with_length_1"></td>
+                                    <td data-limit-name="max_shortlinks_per_day_with_length_1"></td>
+                                    <td data-limit-name="max_shortlinks_per_month_with_length_1"></td>
+                                    <td data-limit-name="max_shortlinks_per_year_with_length_1"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </li>
+
+
                 </ul>
             </div>
         </div>

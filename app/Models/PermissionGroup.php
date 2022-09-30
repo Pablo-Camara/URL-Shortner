@@ -72,7 +72,37 @@ class PermissionGroup extends Model
             'create_shortlinks_with_length_3' => $this->create_shortlinks_with_length_3,
             'create_shortlinks_with_length_4' => $this->create_shortlinks_with_length_4,
         ];
+    }
 
+    public function toLimitsArray()
+    {
+        return [
+            'max_shortlinks_with_5_or_more_of_length' => $this->max_shortlinks_with_5_or_more_of_length,
+            'max_shortlinks_per_day_with_5_or_more_of_length' => $this->max_shortlinks_per_day_with_5_or_more_of_length,
+            'max_shortlinks_per_month_with_5_or_more_of_length' => $this->max_shortlinks_per_month_with_5_or_more_of_length,
+            'max_shortlinks_per_year_with_5_or_more_of_length' => $this->max_shortlinks_per_year_with_5_or_more_of_length,
+
+            'max_shortlinks_with_length_1' => $this->max_shortlinks_with_length_1,
+            'max_shortlinks_per_day_with_length_1' => $this->max_shortlinks_per_day_with_length_1,
+            'max_shortlinks_per_month_with_length_1' => $this->max_shortlinks_per_month_with_length_1,
+            'max_shortlinks_per_year_with_length_1' => $this->max_shortlinks_per_year_with_length_1,
+
+            'max_shortlinks_with_length_2' => $this->max_shortlinks_with_length_2,
+            'max_shortlinks_per_day_with_length_2' => $this->max_shortlinks_per_day_with_length_2,
+            'max_shortlinks_per_month_with_length_2' => $this->max_shortlinks_per_month_with_length_2,
+            'max_shortlinks_per_year_with_length_2' => $this->max_shortlinks_per_year_with_length_2,
+
+            'max_shortlinks_with_length_3' => $this->max_shortlinks_with_length_3,
+            'max_shortlinks_per_day_with_length_3' => $this->max_shortlinks_per_day_with_length_3,
+            'max_shortlinks_per_month_with_length_3' => $this->max_shortlinks_per_month_with_length_3,
+            'max_shortlinks_per_year_with_length_3' => $this->max_shortlinks_per_year_with_length_3,
+
+            'max_shortlinks_with_length_4' => $this->max_shortlinks_with_length_4,
+            'max_shortlinks_per_day_with_length_4' => $this->max_shortlinks_per_day_with_length_4,
+            'max_shortlinks_per_month_with_length_4' => $this->max_shortlinks_per_month_with_length_4,
+            'max_shortlinks_per_year_with_length_4' => $this->max_shortlinks_per_year_with_length_4,
+
+        ];
     }
 
 }

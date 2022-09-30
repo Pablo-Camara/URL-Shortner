@@ -172,7 +172,8 @@ trait InteractsWithAuthCookie
 
             $authResponse['data'] = [
                 'avatar' => $user->avatar,
-                'name' => $user->name
+                'name' => $user->name,
+                'limits' => $user->permissionGroup->toLimitsArray()
             ];
 
             if ( $user->isAdmin() ) {
