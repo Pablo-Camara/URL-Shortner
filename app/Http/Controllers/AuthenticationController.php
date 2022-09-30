@@ -428,7 +428,7 @@ class AuthenticationController extends Controller
     public function changePassword(Request $request) {
 
         $validations = [
-            'new_password' => 'required|confirmed',
+            'new_password' => 'required|min:8|bail|confirmed',
         ];
 
         $enableCaptchaSitekey = config('captcha.enable');
@@ -439,7 +439,9 @@ class AuthenticationController extends Controller
         Validator::make(
             $request->all(),
             $validations,
-            [],
+            [
+                'new_password.min' => 'É obrigatório criar uma :attribute com no mínimo :min caracteres.'
+            ],
             [
                 'new_password' => 'nova palavra-passe',
             ]
