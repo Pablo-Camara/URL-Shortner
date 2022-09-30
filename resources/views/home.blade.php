@@ -1499,6 +1499,8 @@
                             // menu hidden by default in mobile view
                             if (window.App.isMobileSize()) {
                                 this.el().style.display = 'block';
+                            } else {
+                                this.hide();
                             }
                         },
                         initialize: function () {
@@ -1519,11 +1521,17 @@
                                     window.App.Components.MenuMobile.show();
                                 };
 
+                                const $this = this;
+                                window.addEventListener("resize", function () {
+                                    $this.show();
+                                });
+
                                 this.hasInitialized = true;
                             }
                         }
                     },
                     MenuMobile: {
+                        hasInitialized: false,
                         el: function () {
                             return document.getElementById('menu-mobile');
                         },
@@ -1764,9 +1772,19 @@
                             this.Items.CloseMenu.initialize();
                             this.Items.MyLinks.initialize();
                             this.Items.ContactUs.initialize();
+
+                            if (this.hasInitialized === false) {
+                                const $this = this;
+                                window.addEventListener("resize", function () {
+                                    $this.hide();
+                                });
+
+                                this.hasInitialized = true;
+                            }
                         }
                     },
                     MenuTop: {
+                        hasInitialized: false,
                         el: function () {
                             return document.getElementById('menu-top');
                         },
@@ -1776,6 +1794,8 @@
                             // menu hidden by default in mobile view
                             if (!window.App.isMobileSize()) {
                                 this.el().style.display = 'block';
+                            } else {
+                                this.hide();
                             }
                         },
                         hide: function () {
@@ -1827,6 +1847,16 @@
                         initialize: function () {
                             this.Items.MyLinks.initialize();
                             this.Items.ContactUs.initialize();
+
+                            if (this.hasInitialized === false) {
+
+                                const $this = this;
+                                window.addEventListener("resize", function () {
+                                    $this.show();
+                                });
+
+                                this.hasInitialized = true;
+                            }
                         }
                     },
                     MenuAccTop: {
@@ -1852,11 +1882,15 @@
                             // menu hidden by default in mobile view
                             if (!window.App.isMobileSize()) {
                                 this.el().style.display = 'block';
+
+                                if (this.isOpen) {
+                                    this.close();
+                                }
+                            } else {
+                                this.hide();
                             }
 
-                            if (this.isOpen) {
-                                this.close();
-                            }
+
                         },
                         hide: function (){
                             this.el().style.display = 'none';
@@ -2104,6 +2138,16 @@
                                         $this.GuestItems.show();
                                     }
                                 };
+
+                                window.addEventListener("resize", function () {
+                                    $this.show();
+
+                                    if ($this.isOpen) {
+                                        $this.close();
+                                        return;
+                                    }
+                                });
+
                                 this.hasInitialized = true;
                             }
                         }
