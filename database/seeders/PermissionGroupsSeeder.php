@@ -32,11 +32,16 @@ class PermissionGroupsSeeder extends Seeder
                 'view_shortlinks_total_unique_views' => 0,
             ],
             [
-                'name' => 'wil-admin',
+                'name' => 'utilizador todo poderoso',
                 'send_shortlink_by_email_when_generating' => 1,
                 'edit_shortlinks_destination_url' => 1,
                 'view_shortlinks_total_views' => 1,
                 'view_shortlinks_total_unique_views' => 1,
+                'create_custom_shortlinks' => 1,
+                'create_shortlinks_with_length_1' => 1,
+                'create_shortlinks_with_length_2' => 1,
+                'create_shortlinks_with_length_3' => 1,
+                'create_shortlinks_with_length_4' => 1,
             ]
         ];
 
