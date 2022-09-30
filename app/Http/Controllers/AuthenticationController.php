@@ -212,7 +212,7 @@ class AuthenticationController extends Controller
                 'name' => 'nome',
                 'password' => 'palavra-passe',
             ]
-        )->stopOnFirstFailure(true)->validate();
+        )->validate();
 
         $user = User::createNewRegisteredUser(
             $request->input('name'),
@@ -428,7 +428,7 @@ class AuthenticationController extends Controller
     public function changePassword(Request $request) {
 
         $validations = [
-            'new_password' => 'required|min:8|bail|confirmed',
+            'new_password' => 'required|min:8|confirmed',
         ];
 
         $enableCaptchaSitekey = config('captcha.enable');
@@ -445,7 +445,7 @@ class AuthenticationController extends Controller
             [
                 'new_password' => 'nova palavra-passe',
             ]
-        )->stopOnFirstFailure(true)->validate();
+        )->validate();
 
 
         $user = $request->user();

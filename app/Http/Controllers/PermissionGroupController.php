@@ -565,7 +565,7 @@ class PermissionGroupController extends Controller
             $validations,
             ['name.required' => 'É necessário dar um nome ao grupo de permissões.'],
             []
-        )->stopOnFirstFailure(true)->validate();
+        )->validate();
 
         $permissionGroupName = trim($request->input('name'));
 
@@ -813,7 +813,7 @@ class PermissionGroupController extends Controller
             $validations,
             ['id.required' => 'É enviar o ID do grupo do permissões no pedido de remoção.'],
             []
-        )->stopOnFirstFailure(true)->validate();
+        )->validate();
 
         /**
          * @var PermissionGroup

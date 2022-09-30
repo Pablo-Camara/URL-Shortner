@@ -245,7 +245,7 @@ class ShortlinkController extends Controller
                 $validations,
                 ['shortstring.regex' => 'Só é possível criar um link personalizado com letras, números e hífens.'],
                 ['long_url' => 'URL']
-            )->stopOnFirstFailure(true)->validate();
+            )->validate();
 
         } catch (ValidationException $ve) {
             if (
@@ -411,7 +411,7 @@ class ShortlinkController extends Controller
                     'custom-size.integer' => 'Tamanho inválido.',
                 ],
                 ['long_url' => 'URL']
-            )->stopOnFirstFailure(true)->validate();
+            )->validate();
 
         } catch (ValidationException $ve) {
             if (
@@ -594,7 +594,7 @@ class ShortlinkController extends Controller
                 $validations,
                 [],
                 ['long_url' => 'URL']
-            )->stopOnFirstFailure(true)->validate();
+            )->validate();
 
         } catch (ValidationException $ve) {
             if (
@@ -695,7 +695,7 @@ class ShortlinkController extends Controller
             $validations,
             [],
             []
-        )->stopOnFirstFailure(true)->validate();
+        )->validate();
 
         $shortlink = Shortlink::findOrFail($request->input('shortlink_id'));
 
