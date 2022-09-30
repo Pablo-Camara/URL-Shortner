@@ -304,6 +304,18 @@
                 width: 85%;
             }
 
+            #profile-view .profile-permissions {
+                margin-top: 10px;
+            }
+            #profile-view .profile-permissions ul {
+                font-size: 14px;
+                padding: 0 0 0 10px;
+            }
+
+            #profile-view .profile-permissions ul li {
+                margin-bottom: 8px;
+            }
+
             .loading-overlay {
                 position: absolute;
                 background-color: rgba(255,255,255,0.5);
@@ -620,6 +632,7 @@
 
             .profile-pic-container {
                 text-align: center;
+                margin-bottom: 10px;
             }
             img.profile-pic-big {
                 -webkit-border-radius: 100px;
@@ -630,15 +643,7 @@
 
             @media (min-width: 1024px) {
 
-                body {
-
-                }
-
-                #pa-view {
-                    width: auto;
-                    max-width: 94%;
-                }
-
+                #pa-view,
                 #my-links-view {
                     width: 50%;
                     max-width: unset;
@@ -1764,6 +1769,7 @@
                                                     window.history.pushState(null, 'Painel de Administração', $this.panelLocation);
                                                     window.App.Views.PA.show();
                                                 } else {
+                                                    e.target.innerText = 'A carregar painel de administração..';
                                                     window.location.href = $this.panelLocation;
                                                 }
                                             };
@@ -2069,6 +2075,7 @@
                                                     window.history.pushState(null, 'Painel de Administração', $this.panelLocation);
                                                     window.App.Views.PA.show();
                                                 } else {
+                                                    e.target.innerText = 'A carregar painel de administração..';
                                                     window.location.href = $this.panelLocation;
                                                 }
                                             };
@@ -2173,7 +2180,6 @@
                         }
                     },
                     Profile: {
-                        hasInitialized: false,
                         el: function () {
                             return document.getElementById('profile-view');
                         },
@@ -2251,18 +2257,65 @@
                                 initialize: function () {
                                     this.show();
                                 }
+                            },
+                            ViewPermissionsBtn: {
+                                hasInitialized: false,
+                                permissionsVisible: false,
+                                el: function () {
+                                    return document.getElementById('view-profile-permissions');
+                                },
+                                permissionsContainerEl: function () {
+                                    return document.getElementById('profile-permissions');
+                                },
+                                permissionsListEl: function () {
+                                    return document.getElementById('profile-view-permission-list');
+                                },
+                                showPermissions: function () {
+                                    const permissionItems = this.permissionsListEl().querySelectorAll('[data-permission-needed]');
+                                    for(var i = 0; i < permissionItems.length; i++) {
+                                        const permissionItem = permissionItems[i];
+                                        const permissionNeeded = permissionItem.getAttribute('data-permission-needed');
+                                        if (
+                                            window._authManager.userHasPermission(permissionNeeded)
+                                        ) {
+                                            permissionItem.style.display = 'list-item';
+                                        } else {
+                                            permissionItem.style.display = 'none';
+                                        }
+                                    }
+                                    this.permissionsContainerEl().style.display = 'block';
+                                    this.permissionsVisible = true;
+                                    this.el().innerText = 'Esconder permissões';
+                                },
+                                hidePermissions: function () {
+                                    this.permissionsContainerEl().style.display = 'none';
+                                    this.permissionsVisible = false;
+                                    this.el().innerText = 'Ver permissões';
+                                },
+                                toggleShowPermissions: function () {
+                                    if (this.permissionsVisible) {
+                                        this.hidePermissions();
+                                    } else {
+                                        this.showPermissions();
+                                    }
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized == false) {
+                                        const $this = this;
+                                        this.el().onclick = function (e) {
+                                            $this.toggleShowPermissions();
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
                             }
                         },
                         initialize: function () {
                             this.Components.CloseBtn.initialize();
                             this.Components.UserName.initialize();
                             this.Components.ProfilePicture.initialize();
-
-                            if (this.hasInitialized == false) {
-
-
-                                this.hasInitialized = true;
-                            }
+                            this.Components.ViewPermissionsBtn.initialize();
                         }
                     },
                     ShortenUrl: {
@@ -7406,9 +7459,9 @@
 
                 window.App.Views.PA = {
                     components: {
-                        initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'PA'],
-                        initiallyHidden: [],
-                        sticky: ['LogoTop', 'MenuTop', 'MenuAccTop']
+                        initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'PA'],
+                        initiallyHidden: ['ShortlinkResult'],
+                        sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
                     },
                     show: function () {
                         window.App.currentView = 'PA';
@@ -7734,6 +7787,42 @@
             <div class="profile-pic-container" id="profile-pic-container" style="display: none">
                 <img class="profile-pic-big" id="profile-pic-big"/>
             </div>
+            <div class="button blue" id="view-profile-permissions">Ver permissões</div>
+            <div class="profile-permissions" id="profile-permissions" style="display: none">
+                <b>As minhas permissões:</b>
+                <ul id="profile-view-permission-list">
+                    <li data-permission-needed="is_admin" style="color: green">
+                        Administrador
+                    </li>
+                    <li data-permission-needed="send_shortlink_by_email_when_generating">
+                        Enviar links por email ao gerar
+                    </li>
+                    <li data-permission-needed="edit_shortlinks_destination_url">
+                        Editar URL destino dos links gerados
+                    </li>
+                    <li data-permission-needed="view_shortlinks_total_views">
+                        Ver nº de visualizações dos links
+                    </li>
+                    <li data-permission-needed="view_shortlinks_total_unique_views">
+                        Ver nº de visualizações únicas dos links
+                    </li>
+                    <li data-permission-needed="create_custom_shortlinks">
+                        Criar links personalizados
+                    </li>
+                    <li data-permission-needed="create_shortlinks_with_length_1">
+                        Criar links com 1 caractere <br/><small>(depois da barra)</small>
+                    </li>
+                    <li data-permission-needed="create_shortlinks_with_length_2">
+                        Criar links com 2 caracteres <br/>(depois da barra)
+                    </li>
+                    <li data-permission-needed="create_shortlinks_with_length_3">
+                        Criar links com 3 caracteres <br/>(depois da barra)
+                    </li>
+                    <li data-permission-needed="create_shortlinks_with_length_4">
+                        Criar links com 4 caracteres <br/>(depois da barra)
+                    </li>
+                </ul>
+            </div>
         </div>
 
 
@@ -7867,22 +7956,22 @@
 
                 <div class="radio-input-container" id="generate_with_length_4_container">
                     <input type="radio" id="generate_with_length_4" name="shortstring_length" value="4">
-                    <label for="generate_with_length_4">4 caracteres</label>
+                    <label for="generate_with_length_4">4 caracteres <small>(depois da barra)</small></label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_3_container">
                     <input type="radio" id="generate_with_length_3" name="shortstring_length" value="3">
-                    <label for="generate_with_length_3">3 caracteres</label>
+                    <label for="generate_with_length_3">3 caracteres <small>(depois da barra)</small></label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_2_container">
                     <input type="radio" id="generate_with_length_2" name="shortstring_length" value="2">
-                    <label for="generate_with_length_2">2 caracteres</label>
+                    <label for="generate_with_length_2">2 caracteres <small>(depois da barra)</small></label>
                 </div>
 
                 <div class="radio-input-container" id="generate_with_length_1_container">
                     <input type="radio" id="generate_with_length_1" name="shortstring_length" value="1">
-                    <label for="generate_with_length_1">1 caractere</label>
+                    <label for="generate_with_length_1">1 caractere <small>(depois da barra)</small></label>
                 </div>
 
                 <a href="javascript:void(0);" class="form-link" id="cancel-and-generate-normally">Cancelar / gerar link normalmente</a>
