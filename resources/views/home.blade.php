@@ -618,6 +618,16 @@
                 border-bottom: 1px solid #EEE;
             }
 
+            .profile-pic-container {
+                text-align: center;
+            }
+            img.profile-pic-big {
+                -webkit-border-radius: 100px;
+                -moz-border-radius: 100px;
+                border-radius: 100px;
+                width: 100px;
+            }
+
             @media (min-width: 1024px) {
 
                 body {
@@ -727,16 +737,6 @@
 
                 #menu-top-acc .settings-icon img {
                     width: 100%;
-                }
-
-                .profile-pic-container {
-                    text-align: center;
-                }
-                img.profile-pic-big {
-                    -webkit-border-radius: 100px;
-                    -moz-border-radius: 100px;
-                    border-radius: 100px;
-                    width: 100px;
                 }
 
                 #menu-top-acc .profile-pic  {
@@ -1678,6 +1678,7 @@
                                     }
                                 },
                                 UserProfile: {
+                                    hasInitialized: false,
                                     el: function () {
                                         return document.getElementById('menu-mobile-user-name');
                                     },
@@ -1703,6 +1704,15 @@
                                     },
                                     initialize: function () {
                                         this.show();
+
+                                        if (this.hasInitialized === false) {
+
+                                            this.el().onclick = function(e) {
+                                                window.App.Views.Profile.show();
+                                            };
+
+                                            this.hasInitialized = true;
+                                        }
                                     }
                                 },
                                 PA: {
@@ -1973,6 +1983,7 @@
                                     }
                                 },
                                 UserProfile: {
+                                    hasInitialized: false,
                                     el: function () {
                                         return document.getElementById('menu-top-user-name');
                                     },
@@ -1998,6 +2009,15 @@
                                     },
                                     initialize: function () {
                                         this.show();
+
+                                        if (this.hasInitialized === false) {
+
+                                            this.el().onclick = function(e) {
+                                                window.App.Views.Profile.show();
+                                            };
+
+                                            this.hasInitialized = true;
+                                        }
                                     }
                                 },
                                 PA: {
@@ -2164,12 +2184,82 @@
                         hide: function (){
                             this.el().style.display = 'none';
                         },
+                        Components: {
+                            CloseBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById('profile-view-close-btn');
+                                },
+                                initialize: function () {
+                                    if (this.hasInitialized == false) {
+                                        this.el().onclick = function (e) {
+                                            window.App.Views.HomePage.show();
+                                        };
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            UserName: {
+                                el: function () {
+                                    return document.getElementById('profile-view-user-name');
+                                },
+                                setUserName: function () {
+                                    if (
+                                        window._authManager.userData != null
+                                    ) {
+                                        if (
+                                            typeof window._authManager.userData.name !== 'undefined'
+                                            &&
+                                            typeof window._authManager.userData.name === 'string'
+                                        ) {
+                                            this.el().innerText = window._authManager.userData.name;
+                                        }
+                                    }
+                                },
+                                initialize: function () {
+                                    this.setUserName();
+                                }
+                            },
+                            ProfilePicture: {
+                                el: function () {
+                                    return document.getElementById('profile-pic-big');
+                                },
+                                containerEl: function () {
+                                    return document.getElementById('profile-pic-container');
+                                },
+                                show: function (){
+                                    this.setPicture();
+                                    this.containerEl().style.display = 'block';
+                                },
+                                hide: function (){
+                                    this.containerEl().style.display = 'none';
+                                },
+                                setPicture: function () {
+                                    if (
+                                        window._authManager.userData != null
+                                    ) {
+                                        if (
+                                            typeof window._authManager.userData.avatar !== 'undefined'
+                                            &&
+                                            typeof window._authManager.userData.avatar === 'string'
+                                        ) {
+                                            const el = this.el();
+                                            el.src = window._authManager.userData.avatar;
+                                        }
+                                    }
+                                },
+                                initialize: function () {
+                                    this.show();
+                                }
+                            }
+                        },
                         initialize: function () {
-                            if (this.hasInitialized == false) {
-                                const $this = this;
-                                this.el().onclick = function (e) {
+                            this.Components.CloseBtn.initialize();
+                            this.Components.UserName.initialize();
+                            this.Components.ProfilePicture.initialize();
 
-                                };
+                            if (this.hasInitialized == false) {
+
 
                                 this.hasInitialized = true;
                             }
@@ -2545,6 +2635,9 @@
                                     this.hideOptions();
                                     this.unselectAllOptions();
                                     this.unflagHasError();
+                                },
+                                hide: function () {
+                                    this.el().style.display = 'none';
                                 },
                                 getSelectOptionValue: function () {
                                     for(var i = 1; i <= 4; i++) {
@@ -5476,6 +5569,24 @@
                             window.App.hideComponents(this.components.initiallyHidden);
                         }
                     },
+                    Profile: {
+                        components: {
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Profile'],
+                            initiallyHidden: ['ShortlinkResult'],
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        },
+                        show: function () {
+                            window.App.currentView = 'Profile';
+                            window.App.hideNonStickyComponents();
+                            window.App.hideComponents(this.components.initiallyHidden);
+                            window.App.showComponents(this.components.initiallyVisible);
+                            window.history.pushState(null, 'Meu perfil', '/meu-perfil');
+                        },
+                        hide: function () {
+                            window.App.hideComponents(this.components.initiallyVisible);
+                            window.App.hideComponents(this.components.initiallyHidden);
+                        }
+                    },
                     MyLinks: {
                         components: {
                             initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'MyLinks'],
@@ -7618,10 +7729,10 @@
             class="form-box overlay"
             id="profile-view" style="display: none"
         >
-            <div class="form-box-title" id="profile-view-user-name">Pablo Câmara</div>
+            <div class="form-box-title" id="profile-view-user-name"></div>
             <div class="close-form-box" id="profile-view-close-btn">X</div>
-            <div class="profile-pic-container">
-                <img class="profile-pic-big"/>
+            <div class="profile-pic-container" id="profile-pic-container" style="display: none">
+                <img class="profile-pic-big" id="profile-pic-big"/>
             </div>
         </div>
 

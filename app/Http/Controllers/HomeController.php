@@ -47,6 +47,16 @@ class HomeController extends Controller
     }
 
     /**
+     * Display profile page
+     */
+    public function myProfile() {
+        UserAction::logAction($this->userId, HomeControllerActions::OPENED_PROFILE_PAGE_DIRECTLY);
+        return view('home', [
+            'view' => 'Profile'
+        ]);
+    }
+
+    /**
      * Display login page
      */
     public function login() {

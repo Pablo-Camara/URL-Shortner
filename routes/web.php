@@ -22,6 +22,7 @@ Route::get('/entrar', [HomeController::class, 'login'])->name('login-page');
 Route::get('/criar-conta', [HomeController::class, 'register'])->name('register-page');
 Route::get('/os-meus-links', [HomeController::class, 'myLinks'])->name('my-links-page');
 Route::get('/contacte', [HomeController::class, 'contactUs'])->name('contact-us-page');
+Route::get('/meu-perfil', [HomeController::class, 'myProfile'])->name('profile-page');
 
 Route::get('/confirmar-email/{token}', [HomeController::class, 'confirmEmail'])
         ->middleware(['email.confirm', 'auth:sanctum', 'abilities:confirm_email'])
