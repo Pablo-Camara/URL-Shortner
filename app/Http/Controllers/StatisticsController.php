@@ -142,6 +142,22 @@ class StatisticsController extends Controller
                 'label' => 'Total por Ação',
             ],
             [
+                'name' => 'total_by_shortstring_length',
+                'label' => 'Total por Tamanho',
+            ],
+            [
+                'name' => 'total_by_shortstring_length_and_day',
+                'label' => 'Total por Tamanho + Dia',
+            ],
+            [
+                'name' => 'total_by_shortstring_length_and_user',
+                'label' => 'Total por Tamanho + Utilizador',
+            ],
+            [
+                'name' => 'total_by_shortstring_length_and_user_and_day',
+                'label' => 'Total por Tamanho + Utilizador + Dia',
+            ],
+            [
                 'name' => 'total_unique_by_action',
                 'label' => 'Total únicas por Ação',
             ],
@@ -251,8 +267,10 @@ class StatisticsController extends Controller
                 'total', 'total_by_day', 'total_by_action', 'total_by_action_and_day'
             ],
             'totalShortlinksGenerated' => [
-                'total', 'total_by_day', 'total_by_action', 'total_by_action_and_day',
-                'total_by_user_type', 'total_by_user_type_and_day', 'total_by_user', 'total_by_user_and_day'
+                'total', 'total_by_day', 'total_by_shortstring_length', 'total_by_shortstring_length_and_day',
+                'total_by_shortstring_length_and_user', 'total_by_shortstring_length_and_user_and_day',
+                'total_by_action', 'total_by_action_and_day', 'total_by_user_type',
+                'total_by_user_type_and_day', 'total_by_user', 'total_by_user_and_day'
             ],
             'totalTrafficReceivedInShortlinks' => [
                 'total', 'total_unique', 'total_by_day', 'total_unique_by_day', 'total_by_action', 'total_unique_by_action',
@@ -284,6 +302,18 @@ class StatisticsController extends Controller
             ],
             'total_unique_by_day' => [
                 'total_unique_desc', 'total_unique_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_shortstring_length' => [
+                'total_desc', 'total_asc'
+            ],
+            'total_by_shortstring_length_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
+            ],
+            'total_by_shortstring_length_and_user' => [
+                'total_desc', 'total_asc'
+            ],
+            'total_by_shortstring_length_and_user_and_day' => [
+                'total_desc', 'total_asc', 'day_desc', 'day_asc'
             ],
             'total_by_action' => [
                 'total_desc', 'total_asc'
@@ -619,6 +649,50 @@ class StatisticsController extends Controller
                 ];
                 $groupBy = [
                     DB::raw($table . '.created_at_day')
+                ];
+                break;
+            case 'total_by_shortstring_length':
+                $select = [
+                    DB::raw('shortstrings.length AS `'.__('admin-panel.length').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('shortstrings.length')
+                ];
+                break;
+            case 'total_by_shortstring_length_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('shortstrings.length AS `'.__('admin-panel.length').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    DB::raw('shortstrings.length')
+                ];
+                break;
+            case 'total_by_shortstring_length_and_user':
+                $select = [
+                    DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
+                    DB::raw('shortstrings.length AS `'.__('admin-panel.length').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw('users.id'),
+                    DB::raw('shortstrings.length')
+                ];
+                break;
+            case 'total_by_shortstring_length_and_user_and_day':
+                $select = [
+                    DB::raw($table . '.created_at_day AS `'.__('admin-panel.day').'`'),
+                    DB::raw('users.id AS `'.__('admin-panel.user-id').'`'),
+                    DB::raw('shortstrings.length AS `'.__('admin-panel.length').'`'),
+                    DB::raw('count(*) AS `'.__('admin-panel.total').'`')
+                ];
+                $groupBy = [
+                    DB::raw($table . '.created_at_day'),
+                    DB::raw('users.id'),
+                    DB::raw('shortstrings.length')
                 ];
                 break;
             case 'total_by_action':

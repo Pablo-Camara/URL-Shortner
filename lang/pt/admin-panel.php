@@ -12,6 +12,8 @@ return [
 
     'undefined' => 'não definido',
 
+    'length' => 'Tamanho',
+
     'permission-group-id' => 'Id Grupo',
     'permission-group' => 'Grupo de Permissões',
     'default-permission-group' => 'Grupo Predefinido para Novos Utilizadores',
