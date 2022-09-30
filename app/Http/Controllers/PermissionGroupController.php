@@ -633,12 +633,32 @@ class PermissionGroupController extends Controller
             }
 
             if (
+                is_numeric($maxShortlinksWith5orMoreOfLengthPerDay)
+                &&
+                (int)$maxShortlinksWith5orMoreOfLengthPerDay > (int)$maxShortlinksWith5orMoreOfLength
+            ) {
+                throw ValidationException::withMessages([
+                    'max_shortlinks_per_day_with_5_or_more_of_length' => 'O limite diário de shortlinks não pode ser superior ao limite total definido.'
+                ]);
+            }
+
+            if (
                 is_numeric($maxShortlinksWith5orMoreOfLengthPerMonth)
                 &&
                 (int)$maxShortlinksWith5orMoreOfLengthPerMonth === 0
             ) {
                 throw ValidationException::withMessages([
                     'max_shortlinks_per_month_with_5_or_more_of_length' => 'Definiste um limite total de ' . $maxShortlinksWith5orMoreOfLength . ' shortlinks ( para shortlinks com 5 ou mais de tamanho ), mas depois também definiste um total mensal = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                ]);
+            }
+
+            if (
+                is_numeric($maxShortlinksWith5orMoreOfLengthPerDay)
+                &&
+                (int)$maxShortlinksWith5orMoreOfLengthPerMonth > (int)$maxShortlinksWith5orMoreOfLength
+            ) {
+                throw ValidationException::withMessages([
+                    'max_shortlinks_per_month_with_5_or_more_of_length' => 'O limite mensal de shortlinks não pode ser superior ao limite total definido.'
                 ]);
             }
 
@@ -649,7 +669,17 @@ class PermissionGroupController extends Controller
                 (int)$maxShortlinksWith5orMoreOfLengthPerYear === 0
             ) {
                 throw ValidationException::withMessages([
-                    'max_shortlinks_per_month_with_5_or_more_of_length' => 'Definiste um limite total de ' . $maxShortlinksWith5orMoreOfLength . ' shortlinks ( para shortlinks com 5 ou mais de tamanho ), mas depois também definiste um total anual = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                    'max_shortlinks_per_year_with_5_or_more_of_length' => 'Definiste um limite total de ' . $maxShortlinksWith5orMoreOfLength . ' shortlinks ( para shortlinks com 5 ou mais de tamanho ), mas depois também definiste um total anual = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                ]);
+            }
+
+            if (
+                is_numeric($maxShortlinksWith5orMoreOfLengthPerDay)
+                &&
+                (int)$maxShortlinksWith5orMoreOfLengthPerYear > (int)$maxShortlinksWith5orMoreOfLength
+            ) {
+                throw ValidationException::withMessages([
+                    'max_shortlinks_per_year_with_5_or_more_of_length' => 'O limite anual de shortlinks não pode ser superior ao limite total definido.'
                 ]);
             }
         }
@@ -704,12 +734,32 @@ class PermissionGroupController extends Controller
                 }
 
                 if (
+                    is_numeric($request->input($perDayVar))
+                    &&
+                    (int)$request->input($perDayVar) > (int)$request->input($totalVar)
+                ) {
+                    throw ValidationException::withMessages([
+                        $perDayVar => 'O limite diário de shortlinks não pode ser superior ao limite total definido.'
+                    ]);
+                }
+
+                if (
                     is_numeric($request->input($perMonthVar))
                     &&
                     (int)$request->input($perMonthVar) === 0
                 ) {
                     throw ValidationException::withMessages([
                         $perMonthVar => 'Definiste um limite total de ' . $request->input($totalVar) . ' shortlinks ( para shortlinks com '.$i.' de tamanho ), mas depois também definiste um total mensal = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                    ]);
+                }
+
+                if (
+                    is_numeric($request->input($perMonthVar))
+                    &&
+                    (int)$request->input($perMonthVar) > (int)$request->input($totalVar)
+                ) {
+                    throw ValidationException::withMessages([
+                        $perMonthVar => 'O limite mensal de shortlinks não pode ser superior ao limite total definido.'
                     ]);
                 }
 
@@ -721,6 +771,16 @@ class PermissionGroupController extends Controller
                 ) {
                     throw ValidationException::withMessages([
                         $perYearVar => 'Definiste um limite total de ' . $request->input($totalVar) . ' shortlinks ( para shortlinks com '.$i.' de tamanho ), mas depois também definiste um total anual = 0, que não faz sentido pois impediria os utilizadores deste grupo de usufruirem do limite total que definiste.'
+                    ]);
+                }
+
+                if (
+                    is_numeric($request->input($perYearVar))
+                    &&
+                    (int)$request->input($perYearVar) > (int)$request->input($totalVar)
+                ) {
+                    throw ValidationException::withMessages([
+                        $perYearVar => 'O limite anual de shortlinks não pode ser superior ao limite total definido.'
                     ]);
                 }
             }
