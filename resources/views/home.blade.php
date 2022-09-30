@@ -2464,6 +2464,10 @@
                                             }, false);
                                         }
 
+                                        document.addEventListener('userLoggedIn', (e) => {
+                                            $this.show();
+                                        }, false);
+
                                         this.hasInitialized = true;
                                     }
                                 }
@@ -2559,6 +2563,21 @@
                                         this.cancelChoiceEl().onclick = function (e) {
                                             $this.reset();
                                         };
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.show();
+                                        } else {
+                                            $this.hide();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.show();
+                                            }, false);
+                                        }
+
+                                        document.addEventListener('userLoggedIn', (e) => {
+                                            $this.show();
+                                        }, false);
 
                                         this.hasInitialized = true;
                                     }
