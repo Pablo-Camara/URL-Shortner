@@ -4141,6 +4141,7 @@
                         }
                     },
                     ChangePassword: {
+                        hasInitialized: false,
                         el: function () {
                             return document.getElementById('change-password');
                         },
@@ -4341,6 +4342,28 @@
                             this.Components.NewPassword.initialize();
                             this.Components.NewPasswordConfirmation.initialize();
                             this.Components.ChangePasswordBtn.initialize();
+
+                            if (this.hasInitialized === false) {
+
+                                const $this = this;
+                                document.addEventListener('userPasswordChanged', (e) => {
+                                    $this.hide();
+                                    window.App.Components.PasswordHasChanged.show();
+                                }, false);
+
+                                document.addEventListener('userPasswordChangeFailed', (e) => {
+                                    if (e.isError) {
+                                        $this.Components.Feedback.showError(e.reason);
+                                    } else {
+                                        $this.Components.Feedback.showInfo(e.reason);
+                                    }
+
+                                    $this.Components.ChangePasswordBtn.enable();
+                                }, false);
+
+                                this.hasInitialized = true;
+                            }
+
                         }
                     },
                     PasswordHasChanged: {
@@ -7764,24 +7787,6 @@
                 window.App.currentView = '{{ $view }}';
             </script>
         @endif
-
-        <script>
-
-            document.addEventListener('userPasswordChanged', (e) => {
-                window.App.Components.ChangePassword.hide();
-                window.App.Components.PasswordHasChanged.show();
-            }, false);
-
-            document.addEventListener('userPasswordChangeFailed', (e) => {
-                if (e.isError) {
-                    window.App.Components.ChangePassword.Components.Feedback.showError(e.reason);
-                } else {
-                    window.App.Components.ChangePassword.Components.Feedback.showInfo(e.reason);
-                }
-
-                window.App.Components.ChangePassword.Components.ChangePasswordBtn.enable();
-            }, false);
-        </script>
 
         @if (
             isset($authToken)
