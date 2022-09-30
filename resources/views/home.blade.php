@@ -1399,6 +1399,27 @@
                         window._authManager.userPermissions[permissionName] == true
                     );
                 },
+                hasDataItem: function (dataItemName) {
+                    if (
+                        window._authManager.userData != null
+                    ) {
+                        if (
+                            typeof window._authManager.userData[dataItemName] !== 'undefined'
+                        ) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                },
+                getDataItem: function (dataItemName) {
+                    if (
+                        this.hasDataItem(dataItemName)
+                    ) {
+                        return window._authManager.userData[dataItemName];
+                    }
+                    return null;
+                },
                 getUserLimit: function (limitName) {
                     if (
                         window._authManager.userData != null
@@ -2264,25 +2285,21 @@
                                     return document.getElementById('profile-pic-container');
                                 },
                                 show: function (){
-                                    this.setPicture();
-                                    this.containerEl().style.display = 'block';
+                                    if (
+                                        window._authManager.getDataItem('avatar') != null
+                                    ) {
+                                        this.setPicture();
+                                        this.containerEl().style.display = 'block';
+                                    } else {
+                                        this.hide();
+                                    }
                                 },
                                 hide: function (){
                                     this.containerEl().style.display = 'none';
                                 },
                                 setPicture: function () {
-                                    if (
-                                        window._authManager.userData != null
-                                    ) {
-                                        if (
-                                            typeof window._authManager.userData.avatar !== 'undefined'
-                                            &&
-                                            typeof window._authManager.userData.avatar === 'string'
-                                        ) {
-                                            const el = this.el();
-                                            el.src = window._authManager.userData.avatar;
-                                        }
-                                    }
+                                    const el = this.el();
+                                    el.src = window._authManager.getDataItem('avatar');
                                 },
                                 initialize: function () {
                                     this.show();
