@@ -121,6 +121,11 @@ class ShortlinkController extends Controller
      */
     public function myLinks(Request $request)
     {
+        /**
+         * @var PermissionGroup
+         */
+        $userPermissions = $request->user()->permissionGroup;
+
         $selectFields = [
             'id',
             'destination_email',
@@ -128,16 +133,75 @@ class ShortlinkController extends Controller
             'created_at'
         ];
 
+        // all available order bys
+        $availableOrderBys = [
+            [
+                'name' => 'id_desc',
+                'label' => 'Mais recentes primeiro',
+            ],
+            [
+                'name' => 'id_asc',
+                'label' => 'Menos recentes primeiro',
+            ],
+            [
+                'name' => 'total_views_desc',
+                'label' => 'Com mais visualizações totais primeiro',
+            ],
+            [
+                'name' => 'total_views_asc',
+                'label' => 'Com menos visualizações totais primeiro',
+            ],
+            [
+                'name' => 'total_unique_views_desc',
+                'label' => 'Com mais visualizações únicas primeiro',
+            ],
+            [
+                'name' => 'total_views_asc',
+                'label' => 'Com menos visualizações únicas primeiro',
+            ],
+        ];
+
+        // all order bys that the user is allowed to use
+        $allowedOrderBys = [];
+
+        $selectedOrderBy = $request->input('orderBy');
+
+        $getAllowedOrderBysFunc = function ($allowedOrderBys) use ($availableOrderBys) {
+            $result = [];
+            foreach($availableOrderBys as $availableOrderBy) {
+                if (
+                    in_array($availableOrderBy['name'], $allowedOrderBys)
+                ) {
+                    array_push(
+                        $result,
+                        $availableOrderBy
+                    );
+                }
+            }
+            return $result;
+        };
+
+        // only logged in users should view the order by feature
+        // but just in case an admin ever configures the permission
+        // group for guests and allow guests to see shortlinks total views or unique views
+        // we will add the "recency" order by
+        // just like we will add the total/total unique views order by
+        if (
+            $this->isLoggedIn()
+            ||
+            $userPermissions->canViewShortlinksTotalViews()
+            ||
+            $userPermissions->canViewShortlinksTotalUniqueViews()
+        ) {
+            array_push($allowedOrderBys, 'id_desc');
+            array_push($allowedOrderBys, 'id_asc');
+        }
+
         $activeVisitsActionId = Action::where('name', '=', ShortlinkActions::VISITED_ACTIVE_SHORTLINK)->first();
 
         if (
             $activeVisitsActionId
         ) {
-            /**
-             * @var PermissionGroup
-             */
-            $userPermissions = $request->user()->permissionGroup;
-
             if (
                 $userPermissions->canViewShortlinksTotalViews()
             ) {
@@ -152,6 +216,9 @@ class ShortlinkController extends Controller
                                 user_actions.action_id = '.$activeVisitsActionId->id.'
                         ) AS total_views')
                 );
+
+                array_push($allowedOrderBys, 'total_views_desc');
+                array_push($allowedOrderBys, 'total_views_asc');
             }
 
             if (
@@ -168,6 +235,9 @@ class ShortlinkController extends Controller
                                 user_actions.action_id = '.$activeVisitsActionId->id.'
                         ) AS total_unique_views')
                 );
+
+                array_push($allowedOrderBys, 'total_unique_views_desc');
+                array_push($allowedOrderBys, 'total_views_asc');
             }
 
         }
@@ -190,9 +260,64 @@ class ShortlinkController extends Controller
                 }
             ]
          )
-         ->where('status_id', '=', Shortlink::STATUS_ACTIVE)
-         ->orderBy('id', 'desc')
-         ->paginate(3)
+         ->where('status_id', '=', Shortlink::STATUS_ACTIVE);
+
+         $userAllowedOrderBys = $getAllowedOrderBysFunc($allowedOrderBys);
+         $orderBy = null;
+
+         if (
+            !in_array(
+                $selectedOrderBy,
+                $allowedOrderBys
+            )
+            ||
+            empty($allowedOrderBys)
+         ) {
+            $selectedOrderBy = $availableOrderBys[0]['name'];
+         }
+
+         switch ($selectedOrderBy) {
+            case 'id_desc':
+                $orderBy = [
+                    'shortlinks.id',
+                    'DESC'
+                ];
+                break;
+            case 'id_asc':
+                $orderBy = [
+                    'shortlinks.id',
+                    'ASC'
+                ];
+                break;
+            case 'total_views_desc':
+                $orderBy = [
+                    'total_views',
+                    'DESC'
+                ];
+                break;
+            case 'total_views_asc':
+                $orderBy = [
+                    'total_views',
+                    'ASC'
+                ];
+                break;
+            case 'total_unique_views_desc':
+                $orderBy = [
+                    'total_unique_views',
+                    'DESC'
+                ];
+                break;
+            case 'total_views_asc':
+                $orderBy = [
+                    'total_unique_views',
+                    'ASC'
+                ];
+                break;
+         }
+
+         $userShortlinks = $userShortlinks->orderBy($orderBy[0],$orderBy[1]);
+
+         $userShortlinks = $userShortlinks->paginate(3)
          ->through(function($shortlink){
             $shortlink->long_url = $shortlink->redirectUrl->url;
             $shortlink->shortlink = URL::to('/' . $shortlink->shortstring->shortstring);
@@ -206,7 +331,21 @@ class ShortlinkController extends Controller
 
         UserAction::logAction($this->userId, ShortlinkActions::VIEWED_LINKS_LIST);
 
-        return new Response($userShortlinks);
+        $res = [
+            'search_results' => $userShortlinks,
+        ];
+
+        if (!empty($userAllowedOrderBys)) {
+            $res = array_merge(
+                $res,
+                [
+                    'availableOrderBys' => $userAllowedOrderBys,
+                    'orderBy' => $selectedOrderBy
+                ]
+            );
+        }
+
+        return new Response($res);
     }
 
     /**

@@ -67,6 +67,54 @@
                 cursor: pointer;
             }
 
+
+            .my-links-list-options {
+                text-align: right;
+            }
+
+            .my-links-list-options .my-links-order {
+                font-size: 12px;
+                text-align: right;
+                margin-bottom: 4px;
+                color: #333333;
+                display: inline-block;
+                position: relative;
+                cursor: pointer;
+            }
+
+            .my-links-list-options .my-links-order .arrow-down {
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 7px 5px 0 5px;
+                border-color: #a57212 transparent transparent transparent;
+                display: inline-block;
+            }
+
+            .my-links-list-options .my-links-order .my-links-order-list {
+                position: absolute;
+                background: white;
+                z-index: 99999;
+                border: 1px solid #e4e4e4;
+                right: 0;
+            }
+
+            .my-links-list-options .my-links-order .my-links-order-list .order-item {
+                padding: 10px;
+                border-bottom: 1px solid #dfdfdf;
+                cursor: pointer;
+                min-width: 222px;
+                color: #a06900;
+            }
+            .my-links-list-options .my-links-order .my-links-order-list .order-item:last-child {
+                border-bottom: 0;
+            }
+
+            .my-links-list-options .my-links-order .my-links-order-list .order-item:hover {
+                background: #a76d00;
+                color: white;
+            }
+
             .form-box h1 {
                 font-size: 22px;
                 margin: 10px;
@@ -302,6 +350,14 @@
             #pa-view,
             #my-links-view {
                 width: 85%;
+            }
+
+            #my-links-view-title {
+                margin-bottom: 22px;
+            }
+
+            #my-links-view-title.has-visible-list-options {
+                margin-bottom: 0px;
             }
 
             #profile-view .profile-permissions {
@@ -884,6 +940,27 @@
             Array.prototype.diff = function(a) {
                 return this.filter(function(i) {return a.indexOf(i) < 0;});
             };
+
+            function hideOnClickOutside(element, exceptions) {
+                const outsideClickListener = event => {
+                    if (
+                        !element.contains(event.target) && isVisible(element)
+                        &&
+                        !exceptions.includes(event.target)
+                    ) {
+                        element.style.display = 'none';
+                        removeClickListener();
+                    }
+                }
+
+                const removeClickListener = () => {
+                    document.removeEventListener('click', outsideClickListener);
+                }
+
+                document.addEventListener('click', outsideClickListener);
+            }
+
+            const isVisible = elem => !!elem && !!( elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length );
 
             window._authManager = {
                 at: null,
@@ -4717,6 +4794,7 @@
                         },
                         show: function () {
                             this.initialize();
+                            document.getElementById('my-links-view-title').classList.remove('has-visible-list-options');
                             this.el().style.display = 'block';
                         },
                         Components: {
@@ -4781,6 +4859,7 @@
                                             return document.getElementById('form-box-acc-links');
                                         },
                                         show: function () {
+                                            this.Components.ListOptions.hide();
                                             this.el().style.display = 'block';
 
                                             if (window._authManager.isAuthenticated) {
@@ -4800,6 +4879,140 @@
                                         },
                                         clear: function () {
                                             this.el().innerHTML = '';
+                                        },
+                                        Components: {
+                                            ListOptions: {
+                                                el: function () {
+                                                    return document.getElementById('my-links-list-options');
+                                                },
+                                                show: function () {
+                                                    this.el().style.display = 'block';
+                                                },
+                                                hide: function () {
+                                                    this.el().style.display = 'none';
+                                                },
+                                                hideIfNoOptionsVisible: function () {
+                                                    var hasVisibleOption = false;
+                                                    const options = Object.keys(this.Components);
+                                                    for(var i = 0; i < options.length; i++) {
+                                                        if (
+                                                            this.Components[options[i]].isVisible === true
+                                                        ) {
+                                                            hasVisibleOption = true;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if (hasVisibleOption === false) {
+                                                        this.hide();
+                                                        document.getElementById('my-links-view-title').classList.remove('has-visible-list-options');
+                                                    } else {
+                                                        document.getElementById('my-links-view-title').classList.add('has-visible-list-options');
+                                                    }
+                                                },
+                                                fixViewTitleMargin: function () {
+                                                    var hasVisibleOption = false;
+                                                    const options = Object.keys(this.Components);
+                                                    for(var i = 0; i < options.length; i++) {
+                                                        if (
+                                                            this.Components[options[i]].isVisible === true
+                                                        ) {
+                                                            hasVisibleOption = true;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if (hasVisibleOption === false) {
+                                                        document.getElementById('my-links-view-title').classList.remove('has-visible-list-options');
+                                                    } else {
+                                                        document.getElementById('my-links-view-title').classList.add('has-visible-list-options');
+                                                    }
+                                                },
+                                                Components: {
+                                                    OrderBy: {
+                                                        hasInitialized: false,
+                                                        currentOrderBy: null,
+                                                        isVisible: false,
+                                                        el: function () {
+                                                            return document.getElementById('my-links-order');
+                                                        },
+                                                        selectedOrderByEl: function () {
+                                                            return document.getElementById('my-links-selected-order');
+                                                        },
+                                                        availableOrderBysEl: function () {
+                                                            return document.getElementById('my-links-order-list');
+                                                        },
+                                                        arrowEl: function () {
+                                                            return document.getElementById('my-links-order-arrow');
+                                                        },
+                                                        show: function (selectedOrderBy, availableOrderBys) {
+                                                            this.initialize();
+                                                            const $this = this;
+                                                            this.availableOrderBysEl().innerHTML = '';
+                                                            for(var i = 0; i < availableOrderBys.length; i++) {
+                                                                const availableOrderBy = availableOrderBys[i];
+
+                                                                if (availableOrderBy.name === selectedOrderBy) {
+                                                                    this.selectedOrderByEl().innerText = availableOrderBy.label;
+                                                                }
+
+                                                                const availableOrderByEl = document.createElement('div');
+                                                                availableOrderByEl.classList.add('order-item');
+                                                                availableOrderByEl.innerText = availableOrderBy.label;
+                                                                availableOrderByEl.setAttribute('data-name', availableOrderBy.name);
+                                                                availableOrderByEl.onclick = function (e) {
+                                                                    $this.availableOrderBysEl().style.display = 'none';
+                                                                    const orderBy = e.target.getAttribute('data-name');
+                                                                    $this.currentOrderBy = orderBy;
+                                                                    $this.selectedOrderByEl().innerText = e.target.innerText;
+                                                                    window.App.Components.MyLinks.Components.Links.Components.List.fetch(1);
+                                                                };
+
+                                                                this.availableOrderBysEl().appendChild(availableOrderByEl);
+
+                                                            }
+                                                            this.el().style.display = 'inline-block';
+                                                            this.isVisible = true;
+                                                            window.App.Components.MyLinks.Components.Links.Components.List.Components.ListOptions.fixViewTitleMargin();
+                                                        },
+                                                        hide: function () {
+                                                            this.el().style.display = 'none';
+                                                            this.isVisible = false;
+                                                            window.App.Components.MyLinks.Components.Links.Components.List.Components.ListOptions.fixViewTitleMargin();
+                                                        },
+                                                        initialize: function () {
+                                                            if (this.hasInitialized === false) {
+                                                                const $this = this;
+
+                                                                const toggleListVisibility = function () {
+                                                                    if ($this.availableOrderBysEl().style.display === 'none') {
+                                                                        $this.availableOrderBysEl().style.display = 'block';
+                                                                        hideOnClickOutside(
+                                                                            $this.availableOrderBysEl(),
+                                                                            [
+                                                                                $this.selectedOrderByEl(),
+                                                                                $this.arrowEl()
+                                                                            ]
+                                                                        );
+                                                                    } else {
+                                                                        $this.availableOrderBysEl().style.display = 'none';
+                                                                    }
+                                                                };
+
+                                                                this.selectedOrderByEl().onclick = function (e) {
+                                                                    toggleListVisibility();
+                                                                };
+
+                                                                this.arrowEl().onclick = function (e) {
+                                                                    toggleListVisibility();
+                                                                };
+
+                                                                this.hasInitialized = true;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         },
                                         addLink: function (
                                             id,
@@ -4844,6 +5057,9 @@
 
                                             listItemOptionDeleteConfirmYes.onclick = function (e) {
                                                 listItemOptionDeleteConfirmYes.style.cursor = 'wait';
+                                                // the next line will invalidate the previous line
+                                                // but i think it is better.
+                                                listItemOptionDeleteConfirm.innerText = 'apagando..';
 
                                                 var deleteShortlinkFunc = function (token) {
                                                     var xhr = new XMLHttpRequest();
@@ -5224,34 +5440,50 @@
 
                                                     if (this.status === 200) {
                                                         window.App.Components.MyLinks.Components.Links.Components.Loading.hide();
-                                                        if (resObj.total == 0) {
+                                                        if (resObj.search_results.total == 0) {
                                                             window.App.Components.MyLinks.Components.Links.Components.NotFound.show();
+                                                            $this.Components.ListOptions.hide();
                                                         } else  {
                                                             window.App.Components.MyLinks.Components.Links.Components.NotFound.hide();
+                                                            if (
+                                                                typeof resObj.availableOrderBys !== 'undefined'
+                                                                &&
+                                                                typeof resObj.orderBy !== 'undefined'
+                                                            ) {
+                                                                $this.Components.ListOptions.Components.OrderBy.show(
+                                                                    resObj.orderBy,
+                                                                    resObj.availableOrderBys
+                                                                );
+                                                                $this.Components.ListOptions.show();
+                                                            } else {
+                                                                $this.Components.ListOptions.hideIfNoOptionsVisible();
+                                                            }
                                                         }
 
-                                                        for (var i = 0; i < resObj.data.length; i++) {
+
+
+                                                        for (var i = 0; i < resObj.search_results.data.length; i++) {
                                                             $this.addLink(
-                                                                resObj.data[i].id,
-                                                                resObj.data[i].long_url,
-                                                                resObj.data[i].shortlink,
-                                                                resObj.data[i].destination_email,
-                                                                resObj.data[i].created_at,
-                                                                resObj.data[i].total_views,
-                                                                resObj.data[i].total_unique_views
+                                                                resObj.search_results.data[i].id,
+                                                                resObj.search_results.data[i].long_url,
+                                                                resObj.search_results.data[i].shortlink,
+                                                                resObj.search_results.data[i].destination_email,
+                                                                resObj.search_results.data[i].created_at,
+                                                                resObj.search_results.data[i].total_views,
+                                                                resObj.search_results.data[i].total_unique_views
                                                             );
                                                         }
 
-                                                        if (resObj.total > 0) {
+                                                        if (resObj.search_results.total > 0) {
                                                             if (!window._authManager.isLoggedIn) {
                                                                 window.App.Components.MyLinks.Components.Links.Components.GuestMsg.show();
                                                             }
 
-                                                            window.App.Helpers.Pagination.setCurrentPage('MyLinksComponent', resObj.current_page);
-                                                            if (resObj.last_page > 1) {
+                                                            window.App.Helpers.Pagination.setCurrentPage('MyLinksComponent', resObj.search_results.current_page);
+                                                            if (resObj.search_results.last_page > 1) {
                                                                 const paginationLinks = window.App.Helpers.Pagination.createEl(
-                                                                    resObj.current_page,
-                                                                    resObj.last_page,
+                                                                    resObj.search_results.current_page,
+                                                                    resObj.search_results.last_page,
                                                                     'MyLinksComponent',
                                                                     function(param) {
                                                                         window.App.Components.MyLinks.Components.Links.Components.List.fetch(param);
@@ -5265,7 +5497,15 @@
                                                 }
                                             });
 
-                                            xhr.open("POST", this.api + '?page=' + pageNumber);
+                                            var postUrl = this.api + '?page=' + pageNumber;
+
+                                            if (
+                                                this.Components.ListOptions.Components.OrderBy.currentOrderBy != null
+                                            ) {
+                                                postUrl += '&orderBy=' + this.Components.ListOptions.Components.OrderBy.currentOrderBy;
+                                            }
+
+                                            xhr.open("POST", postUrl);
                                             xhr.setRequestHeader("Authorization", "Bearer " + window._authManager.at);
                                             xhr.send();
                                         },
@@ -7835,9 +8075,18 @@
             class="form-box overlay"
             id="my-links-view" style="display: none"
         >
-            <div class="form-box-title">Os meus links</div>
+            <div class="form-box-title" id="my-links-view-title">Os meus links</div>
             <div class="gray-note" id="my-links-guest-msg" style="display: none">Atenção, estás a utilizar a plataforma como convidado.<br>Entra na tua conta, ou cria uma, para poderes guardar ou editar os teus links.</div>
             <div class="close-form-box" id="my-links-view-close-btn">X</div>
+
+            <div id="my-links-list-options" class="my-links-list-options" style="display: none">
+                <div class="my-links-order" id="my-links-order" style="display: none">
+                    <span id="my-links-selected-order"></span>
+                    <div id="my-links-order-arrow" class="arrow-down"></div>
+                    <div id="my-links-order-list" class="my-links-order-list" style="display: none"></div>
+                </div>
+            </div>
+
             <div id="form-box-acc-links-loading">A carregar links..</div>
             <div id="form-box-acc-links-not-found" style="display: none">Ainda não gerou nenhum link..</div>
             <div id="form-box-acc-links" class="list-container" style="display: none"></div>
