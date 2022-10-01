@@ -616,6 +616,12 @@
                 background: #EEE;
             }
 
+            #menu-mobile .close-btn .x {
+                color: #b10000;
+                position: absolute;
+                left: 10px;
+            }
+
             #menu-mobile .menu-group-title {
                 margin-top: 10px;
                 font-weight: bold;
@@ -7616,7 +7622,7 @@
         </div>
 
         <div id="menu-mobile" style="display: none">
-            <div class="close-btn" id="close-menu-mobile">Fechar menu</div>
+            <div class="close-btn" id="close-menu-mobile"><div class="x">x</div>Fechar menu</div>
             <div class="menu-group-title">Menu Principal</div>
             <div class="menu-item" id="menu-mobile-item-my-links">Os meus links</div>
             <div class="menu-item" id="menu-mobile-item-contact-us">Contacte</div>
