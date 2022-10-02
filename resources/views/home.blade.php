@@ -6078,7 +6078,7 @@
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
-
+                            window.history.pushState(null, 'Criar links personalizado', '/criar-link-personalizado');
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
