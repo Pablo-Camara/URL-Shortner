@@ -5965,7 +5965,7 @@
                         components: {
                             initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult', 'MyLinks']
                         },
                         show: function () {
                             window.App.currentView = 'HomePage';
@@ -6071,7 +6071,7 @@
                         components: {
                             initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink', 'ShortlinkResult', 'MyLinks']
                         },
                         show: function () {
                             window.App.currentView = 'RegisterCustomShortlink';
