@@ -941,7 +941,7 @@
                 return this.filter(function(i) {return a.indexOf(i) < 0;});
             };
 
-            function hideOnClickOutside(element, exceptions) {
+            function hideOnClickOutside(element, exceptions, optionalCallback) {
                 const outsideClickListener = event => {
                     if (
                         !element.contains(event.target) && isVisible(element)
@@ -950,6 +950,10 @@
                     ) {
                         element.style.display = 'none';
                         removeClickListener();
+
+                        if (typeof optionalCallback === 'function') {
+                            optionalCallback();
+                        }
                     }
                 }
 
@@ -2021,6 +2025,11 @@
                         open: function () {
                             this.itemsEl().style.display = 'block';
                             this.isOpen = true;
+
+                            const $this = this;
+                            hideOnClickOutside(this.itemsEl(), [this.el()], function () {
+                                $this.isOpen = false;
+                            });
                         },
                         close: function () {
                             this.itemsEl().style.display = 'none';
