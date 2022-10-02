@@ -2981,6 +2981,7 @@
                         },
                         show: function () {
                             this.initialize();
+                            window.App.Components.MyLinks.Components.Links.Components.List.Components.ListOptions.Components.OrderBy.currentOrderBy = null;
                             window.App.Components.MyLinks.Components.Links.Components.List.fetch();
                             this.el().style.display = "block";
 
