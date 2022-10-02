@@ -5167,6 +5167,11 @@
                                                     listItemOptionDelete.style.display = 'block';
                                                 } else {
                                                     listItemOptionsContainer.style.display = 'block';
+                                                    hideOnClickOutside(listItemOptionsContainer, [
+                                                        listItemOptions,
+                                                        listItemOptionDeleteConfirmYes,
+                                                        listItemOptionDeleteConfirmNo
+                                                    ]);
                                                 }
                                             };
 
