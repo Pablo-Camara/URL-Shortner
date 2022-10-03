@@ -876,7 +876,7 @@ class ShortlinkApiController extends Controller
             &&
             $totalShortlinksWith5orMoreOfLength >= $permissionGroup->$permissionName
         ) {
-            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos (não personalizados) que podes gerar.']);
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos que podes gerar (com 5 ou mais caracteres depois da barra).']);
         }
         /** --------------- */
 
@@ -895,7 +895,7 @@ class ShortlinkApiController extends Controller
             &&
             $totalShortlinksThisYearWith5orMoreOfLength >= $permissionGroup->$permissionName
         ) {
-            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos (não personalizados) que podes gerar por ano.']);
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite anual de links curtos que podes gerar (com 5 ou mais caracteres depois da barra).']);
         }
         /** --------------- */
 
@@ -914,7 +914,7 @@ class ShortlinkApiController extends Controller
         &&
         $totalShortlinksThisMonthWith5orMoreOfLength >= $permissionGroup->$permissionName
         ) {
-            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos (não personalizados) que podes gerar por mês.']);
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite mensal de links curtos que podes gerar (com 5 ou mais caracteres depois da barra).']);
         }
         /** --------------- */
 
@@ -932,7 +932,7 @@ class ShortlinkApiController extends Controller
             &&
             $totalShortlinksTodayWith5orMoreOfLength >= $permissionGroup->$permissionName
         ) {
-            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite total de links curtos (não personalizados) que podes gerar por dia.']);
+            throw ValidationException::withMessages([$permissionName => 'Atingiste o limite diário de links curtos que podes gerar (com 5 ou mais caracteres depois da barra).']);
         }
         /** --------------- */
     }
