@@ -3,7 +3,7 @@
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PermissionGroupController;
-use App\Http\Controllers\ShortlinkController;
+use App\Http\Controllers\ShortlinkApiController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -45,7 +45,7 @@ Route::post('/change-password', [AuthenticationController::class, 'changePasswor
         ->middleware(['auth:sanctum', 'abilities:change_password'])
         ->name('recover-password');
 
-Route::post('/links', [ShortlinkController::class, 'myLinks'])
+Route::post('/links', [ShortlinkApiController::class, 'myLinks'])
         ->middleware(['auth:sanctum'])
         ->name('get-my-links');
 
@@ -53,14 +53,14 @@ Route::post('/contact', [ContactController::class, 'sendMessage'])
         ->middleware(['auth:sanctum'])
         ->name('contact');
 
-Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkController::class, 'shorten']);
-Route::middleware('auth:sanctum')->post('/register-custom-shortlink', [ShortlinkController::class, 'registerCustomShortlink']);
+Route::middleware('auth:sanctum')->post('/shorten', [ShortlinkApiController::class, 'shorten']);
+Route::middleware('auth:sanctum')->post('/register-custom-shortlink', [ShortlinkApiController::class, 'registerCustomShortlink']);
 
 
-Route::post('/shortlinks/edit', [ShortlinkController::class, 'editShortlinkUrl'])
+Route::post('/shortlinks/edit', [ShortlinkApiController::class, 'editShortlinkUrl'])
         ->middleware(['auth:sanctum']);
 
-Route::post('/shortlinks/delete', [ShortlinkController::class, 'deleteShortlinkUrl'])
+Route::post('/shortlinks/delete', [ShortlinkApiController::class, 'deleteShortlinkUrl'])
         ->middleware(['auth:sanctum']);
 
 Route::post('/stats', [StatisticsController::class, 'generic'])
