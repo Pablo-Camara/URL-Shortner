@@ -7,6 +7,7 @@
         <title>web into link - url shortner em português</title>
         <meta name="description" content="url shortner em português, transforme os seus links longos em links curtos, edita os teus links se quiseres e veja quantas pessoas visitam o seu link">
         <meta name="keywords" content="url shortner, encurtador de links, encurtador de urls, url shortner em português, url shortner português, encurtador de links português, encurtador de links em português, português">
+        <link rel="icon" type="image/x-icon" href="{{ asset('/img/WIL_favicon.png') }}">
 
         <!-- Fonts -->
         <link
