@@ -4,9 +4,9 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <title>web into link - url shortner português</title>
-        <meta name="description" content="Encurtador de links Português">
-        <meta name="keywords" content="url shortner, encurtador de links, encurtador de urls, português, free, grátis">
+        <title>web into link - url shortner em português</title>
+        <meta name="description" content="url shortner em português, transforme os seus links longos em links curtos, edita os teus links se quiseres e veja quantas pessoas visitam o seu link">
+        <meta name="keywords" content="url shortner, encurtador de links, encurtador de urls, url shortner em português, url shortner português, encurtador de links português, encurtador de links em português, português">
 
         <!-- Fonts -->
         <link
@@ -8233,7 +8233,7 @@
             id="my-links-view" style="display: none"
         >
             <div class="form-box-title" id="my-links-view-title">Os meus links</div>
-            <div class="gray-note" id="my-links-guest-msg" style="display: none">Atenção, estás a utilizar a plataforma como convidado.<br>Entra na tua conta, ou cria uma, para poderes guardar ou editar os teus links.</div>
+            <div class="gray-note" id="my-links-guest-msg" style="display: none">Atenção, estás a utilizar a plataforma como convidado.<br>Entra na tua conta, ou cria uma, para poderes editar os teus links e guarda-los permanentemente.</div>
             <div class="close-form-box" id="my-links-view-close-btn">X</div>
 
             <div id="my-links-list-options" class="my-links-list-options" style="display: none">
