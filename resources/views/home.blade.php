@@ -867,6 +867,7 @@
                     -moz-border-radius: 12px;
                     border-radius: 12px;
                     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px 0 rgb(0 0 0 / 6%);
+                    z-index: 9999999;
                 }
 
                 #menu-acc-items .menu-item
@@ -2327,7 +2328,6 @@
                                         return;
                                     }
 
-                                    window.App.hideNonStickyComponents();
                                     $this.open();
                                     if (
                                         window._authManager.isLoggedIn
