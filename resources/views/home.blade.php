@@ -606,7 +606,7 @@
             .form-box .list-container .list-item .previous-urls-container {
                 position: absolute;
                 background: white;
-                border: 1px solid #EEEEEE;
+                border: 1px dashed #d7b262;
                 padding: 10px;
                 z-index: 9999;
                 left: 10px;
@@ -614,7 +614,7 @@
             }
 
             .form-box .list-container .list-item .previously-used-link {
-                border-bottom: 1px solid #EEEEEE;
+                border-bottom: 1px dashed #d7b262;
                 padding: 10px;
                 word-break: break-all;
                 cursor: pointer;
@@ -623,6 +623,15 @@
 
             .form-box .list-container .list-item .previously-used-link:last-child {
                 border-bottom: 0;
+            }
+
+           /*  .form-box .list-container .list-item .previously-used-link .link {
+
+            } */
+            .form-box .list-container .list-item .previously-used-link .time-range {
+                color: #555;
+                font-size: 10px;
+                margin-top: 8px;
             }
 
             #logo-top-mobile {
@@ -2787,9 +2796,9 @@
                                                 }
                                             });
 
-                                            var paramsStr = 'long_url='+ longUrlInput.value;
+                                            var paramsStr = 'long_url='+ encodeURIComponent(longUrlInput.value);
                                             if (destinationEmailInput.value.length > 0) {
-                                                paramsStr += '&destination_email=' + destinationEmailInput.value;
+                                                paramsStr += '&destination_email=' + encodeURIComponent(destinationEmailInput.value);
                                             }
 
                                             if (
@@ -3313,7 +3322,7 @@
                                                     }
                                                 });
 
-                                                var queryStr = '?long_url='+ longUrlField.value +'&shortstring=' + shortStr;
+                                                var queryStr = '?long_url='+ encodeURIComponent(longUrlField.value) +'&shortstring=' + shortStr;
 
                                                 if (
                                                     typeof token !== 'undefined'
@@ -5251,13 +5260,26 @@
                                                 const prevUrl = previous_redirect_urls[i];
                                                 const prevUrlEl = document.createElement('div');
                                                 prevUrlEl.classList.add('previously-used-link');
-                                                prevUrlEl.innerText = prevUrl.url;
+                                                prevUrlEl.setAttribute('data-url', prevUrl.url);
+
+                                                const prevUrlElUrlContainer = document.createElement('div');
+                                                prevUrlElUrlContainer.classList.add('link');
+                                                prevUrlElUrlContainer.innerText = prevUrl.url;
+
+                                                prevUrlEl.appendChild(prevUrlElUrlContainer);
+
+                                                const prevUrlUsedTimeRangeContainer = document.createElement('div');
+                                                prevUrlUsedTimeRangeContainer.classList.add('time-range');
+                                                prevUrlUsedTimeRangeContainer.innerText = '(Desde ' + (new Date(prevUrl.created_at)).toLocaleString('pt-PT') + ' até '+ (new Date(prevUrl.updated_at)).toLocaleString('pt-PT') +')'
 
                                                 prevUrlEl.onclick = function (e) {
-                                                    editLongUrlInput.value = e.target.innerText;
+                                                    editLongUrlInput.value = prevUrlEl.getAttribute('data-url');
                                                     previousUrlsContainer.style.display = 'none';
                                                     viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
                                                 };
+
+                                                prevUrlEl.appendChild(prevUrlElUrlContainer);
+                                                prevUrlEl.appendChild(prevUrlUsedTimeRangeContainer);
 
                                                 previousUrlsContainer.appendChild(prevUrlEl);
                                             }
@@ -5354,13 +5376,26 @@
                                                                         const prevUrl = resObj.previous_redirect_urls[i];
                                                                         const prevUrlEl = document.createElement('div');
                                                                         prevUrlEl.classList.add('previously-used-link');
-                                                                        prevUrlEl.innerText = prevUrl.url;
+                                                                        prevUrlEl.setAttribute('data-url', prevUrl.url);
+
+                                                                        const prevUrlElUrlContainer = document.createElement('div');
+                                                                        prevUrlElUrlContainer.classList.add('link');
+                                                                        prevUrlElUrlContainer.innerText = prevUrl.url;
+
+                                                                        prevUrlEl.appendChild(prevUrlElUrlContainer);
+
+                                                                        const prevUrlUsedTimeRangeContainer = document.createElement('div');
+                                                                        prevUrlUsedTimeRangeContainer.classList.add('time-range');
+                                                                        prevUrlUsedTimeRangeContainer.innerText = '(Desde ' + (new Date(prevUrl.created_at)).toLocaleString('pt-PT') + ' até '+ (new Date(prevUrl.updated_at)).toLocaleString('pt-PT') +')'
 
                                                                         prevUrlEl.onclick = function (e) {
-                                                                            editLongUrlInput.value = e.target.innerText;
+                                                                            editLongUrlInput.value = prevUrlEl.getAttribute('data-url');
                                                                             previousUrlsContainer.style.display = 'none';
                                                                             viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
                                                                         };
+
+                                                                        prevUrlEl.appendChild(prevUrlElUrlContainer);
+                                                                        prevUrlEl.appendChild(prevUrlUsedTimeRangeContainer);
 
                                                                         previousUrlsContainer.appendChild(prevUrlEl);
                                                                     }
@@ -5396,7 +5431,7 @@
                                                     const shortlinkId = saveEditLongUrlLink.getAttribute('data-shortlink-id');
 
                                                     var credentialsQueryStr =
-                                                        "?shortlink_id=" + shortlinkId + "&long_url=" + editLongUrlInput.value;
+                                                        "?shortlink_id=" + shortlinkId + "&long_url=" + encodeURIComponent(editLongUrlInput.value);
 
                                                     if (
                                                         typeof token !== 'undefined'

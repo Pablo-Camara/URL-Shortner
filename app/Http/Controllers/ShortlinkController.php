@@ -792,9 +792,9 @@ class ShortlinkController extends Controller
         DB::beginTransaction();
         try {
 
-            ShortlinkUrl::where('shortlink_id', '=', $shortlink->id)->update(
-                ['is_redirect_url' => false]
-            );
+            ShortlinkUrl::where('shortlink_id', '=', $shortlink->id)
+                            ->where('is_redirect_url', '=', 1)
+                            ->update(['is_redirect_url' => false]);
             $shortlinkUrl = new ShortlinkUrl();
             $shortlinkUrl->url = $request->input('long_url');
             $shortlinkUrl->shortlink_id = $shortlink->id;
