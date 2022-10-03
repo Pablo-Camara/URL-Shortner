@@ -67,7 +67,7 @@ class ShortlinkApiController extends Controller
                 'label' => 'Com mais visualizações únicas primeiro',
             ],
             [
-                'name' => 'total_views_asc',
+                'name' => 'total_unique_views_asc',
                 'label' => 'Com menos visualizações únicas primeiro',
             ],
         ];
@@ -148,7 +148,7 @@ class ShortlinkApiController extends Controller
                 );
 
                 array_push($allowedOrderBys, 'total_unique_views_desc');
-                array_push($allowedOrderBys, 'total_views_asc');
+                array_push($allowedOrderBys, 'total_unique_views_asc');
             }
 
         }
@@ -225,7 +225,7 @@ class ShortlinkApiController extends Controller
                     'DESC'
                 ];
                 break;
-            case 'total_views_asc':
+            case 'total_unique_views_asc':
                 $orderBy = [
                     'total_unique_views',
                     'ASC'
