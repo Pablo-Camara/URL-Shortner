@@ -45,7 +45,7 @@ Route::post('/change-password', [AuthenticationController::class, 'changePasswor
         ->middleware(['auth:sanctum', 'abilities:change_password'])
         ->name('recover-password');
 
-Route::post('/links', [ShortlinkApiController::class, 'myLinks'])
+Route::post('/my-links', [ShortlinkApiController::class, 'myLinks'])
         ->middleware(['auth:sanctum'])
         ->name('get-my-links');
 

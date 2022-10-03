@@ -631,7 +631,7 @@
             .form-box .list-container .list-item .previously-used-link .time-range {
                 color: #555;
                 font-size: 10px;
-                margin-top: 8px;
+                margin-bottom: 3px;
             }
 
             #logo-top-mobile {
@@ -5069,6 +5069,7 @@
 
                                             const listItem = document.createElement("div");
                                             listItem.classList.add('list-item');
+                                            listItem.setAttribute('id', 'link-' + id);
 
                                             const listItemOptions = document.createElement('div');
                                             listItemOptions.classList.add('list-item-options');
@@ -5272,14 +5273,15 @@
                                                 prevUrlUsedTimeRangeContainer.classList.add('time-range');
                                                 prevUrlUsedTimeRangeContainer.innerText = '(Desde ' + (new Date(prevUrl.created_at)).toLocaleString('pt-PT') + ' até '+ (new Date(prevUrl.updated_at)).toLocaleString('pt-PT') +')'
 
-                                                prevUrlEl.onclick = function (e) {
-                                                    editLongUrlInput.value = prevUrlEl.getAttribute('data-url');
+                                                prevUrlElUrlContainer.onclick = function (e) {
+                                                    editLongUrlInput.value = e.target.innerText;
                                                     previousUrlsContainer.style.display = 'none';
                                                     viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
+                                                    window.location.href = '#link-' + id;
                                                 };
 
-                                                prevUrlEl.appendChild(prevUrlElUrlContainer);
                                                 prevUrlEl.appendChild(prevUrlUsedTimeRangeContainer);
+                                                prevUrlEl.appendChild(prevUrlElUrlContainer);
 
                                                 previousUrlsContainer.appendChild(prevUrlEl);
                                             }
@@ -5388,14 +5390,15 @@
                                                                         prevUrlUsedTimeRangeContainer.classList.add('time-range');
                                                                         prevUrlUsedTimeRangeContainer.innerText = '(Desde ' + (new Date(prevUrl.created_at)).toLocaleString('pt-PT') + ' até '+ (new Date(prevUrl.updated_at)).toLocaleString('pt-PT') +')'
 
-                                                                        prevUrlEl.onclick = function (e) {
-                                                                            editLongUrlInput.value = prevUrlEl.getAttribute('data-url');
+                                                                        prevUrlElUrlContainer.onclick = function (e) {
+                                                                            editLongUrlInput.value = e.target.innerText;
                                                                             previousUrlsContainer.style.display = 'none';
                                                                             viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
+                                                                            window.location.href = '#link-' + id;
                                                                         };
 
-                                                                        prevUrlEl.appendChild(prevUrlElUrlContainer);
                                                                         prevUrlEl.appendChild(prevUrlUsedTimeRangeContainer);
+                                                                        prevUrlEl.appendChild(prevUrlElUrlContainer);
 
                                                                         previousUrlsContainer.appendChild(prevUrlEl);
                                                                     }
@@ -6929,7 +6932,7 @@
                                             }
 
                                             $this.show();
-                                            location.href = "#dashboard-edit";
+                                            window.location.href = "#dashboard-edit";
                                         }
 
                                     }
