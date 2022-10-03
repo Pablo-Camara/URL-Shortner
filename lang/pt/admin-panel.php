@@ -181,9 +181,12 @@ return [
     'FAILED_TO_IMPORT_SHORTLINKS_FROM_GUEST_ACCOUNT' => 'Falha ao import shortlinks gerados enquanto convidado para conta de utilizador',
 
     'OPENED_HOME_PAGE_DIRECTLY' => 'Página Inícial aberta diretamente',
+    'OPENED_LINK_PERSONALIZATION_PAGE_DIRECTLY' => 'Página de Criar link personalizado aberta diretamente',
     'OPENED_LOGIN_PAGE_DIRECTLY' => 'Página de Início de Sessão aberta diretamente',
     'OPENED_REGISTER_PAGE_DIRECTLY' => 'Página de Registro aberta diretamente',
     'OPENED_MY_LINKS_PAGE_DIRECTLY' => 'Página "Os Meus Links" aberta diretamente',
+    'OPENED_PROFILE_PAGE_DIRECTLY' => 'Página do Meu Perfil aberta diretamente',
+    'OPENED_CONTACT_PAGE_DIRECTLY' => 'Página de COntacto aberta diretamente',
     'OPENED_CHANGE_PASSWORD_PAGE_DIRECTLY' => 'Página de Alteração de Palavra-passe aberta diretamente',
     'OPENED_ADMIN_PANEL_PAGE_DIRECTLY' => 'Página do Painel de Administração aberta diretamente',
 ];
