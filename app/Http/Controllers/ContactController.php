@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class ContactController extends Controller
 {
@@ -25,10 +26,10 @@ class ContactController extends Controller
         $user = $request->user();
 
         $validations = [
-            'name' => 'required',
+            'name' => "required|max:255|regex:/^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/",
             'email' => 'required|email',
-            'phone' => 'required',
-            'subject' => 'required',
+            'phone' => 'required|max:50',
+            'subject' => 'required|max:255',
             'message' => 'required'
         ];
 
@@ -37,7 +38,19 @@ class ContactController extends Controller
             $validations['g-recaptcha-response'] = 'required|captcha';
         }
 
-        $request->validate($validations);
+        Validator::make(
+            $request->all(),
+            $validations,
+            [
+                'name.regex' => 'O campo Nome contém caracteres inválidos / não permitidos.',
+                'name.max' => 'O campo Nome não pode conter mais do que 255 caracteres.',
+                'subject.max' => 'O campo do Assunto não pode conter mais do que 255 caracteres.',
+                'phone.max' => 'O campo do Telefone não pode conter mais do que 50 caracteres.',
+            ],
+            [
+                'name' => 'nome',
+            ]
+        )->validate();
 
         $ip = request()->ip();
 
@@ -71,11 +84,11 @@ class ContactController extends Controller
             UserAction::logAction($user->id, ContactControllerActions::FAILED_TO_STORE_CONTACT_MESSAGE);
         }
 
-        $destinationEmail = config('app.contact_email');
+        $destinationEmails = explode(',', config('app.contact_email'));
 
         try {
             Mail::to(
-                $destinationEmail
+                $destinationEmails
             )->queue(new NewContactMessage(
                 $request->input('name'),
                 $request->input('email'),

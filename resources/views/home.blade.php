@@ -5984,11 +5984,11 @@
                                                         if (this.status === 401) {
                                                             window.location.reload();
                                                         }
+                                                        $this.enable();
                                                         const resObj = JSON.parse(this.response); //TODO: Catch exception
 
                                                         if (this.status === 201) {
                                                             window.App.Components.ContactUs.Components.Feedback.showSuccess('A sua mensagem foi enviada com sucesso!');
-                                                            $this.enable();
 
                                                             for(var i = 0; i < requiredFields.length; i++) {
                                                                 const field = requiredFields[i];
@@ -8276,7 +8276,7 @@
                     <div class="input-label" id="contact-phone-label">
                         Telefone
                     </div>
-                    <input type="text" id="contact-phone" maxlength="255"/>
+                    <input type="text" id="contact-phone" maxlength="50"/>
                 </div>
 
                 <div class="input-container">
