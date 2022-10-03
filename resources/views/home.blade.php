@@ -4895,7 +4895,7 @@
                                         }
                                     },
                                     List: {
-                                        api: "{{ url('/api/links') }}",
+                                        api: "{{ url('/api/my-links') }}",
                                         el: function () {
                                             return document.getElementById('form-box-acc-links');
                                         },
