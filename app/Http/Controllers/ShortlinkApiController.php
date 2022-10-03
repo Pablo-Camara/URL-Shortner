@@ -500,12 +500,13 @@ class ShortlinkApiController extends Controller
             $useBaseConvert = false;
         }
 
-        $this->validateHasNotReachedLimitsForShortstringsWith5orMoreOfLength(
-            $user,
-            $permissionGroup
-        );
-
         if ($useBaseConvert) {
+
+            $this->validateHasNotReachedLimitsForShortstringsWith5orMoreOfLength(
+                $user,
+                $permissionGroup
+            );
+
             $nextAvailableShortstring = $this->tryGeneratingShortstringWithBaseConvert(5, $user->id);
         } else {
 
