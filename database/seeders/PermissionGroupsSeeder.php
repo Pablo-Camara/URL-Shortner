@@ -17,11 +17,7 @@ class PermissionGroupsSeeder extends Seeder
         $permissionGroups = [
             [
                 'name' => 'convidado',
-                'guests_permission_group' => 1,
-                'send_shortlink_by_email_when_generating' => 0,
-                'edit_shortlinks_destination_url' => 0,
-                'view_shortlinks_total_views' => 0,
-                'view_shortlinks_total_unique_views' => 0,
+                'guests_permission_group' => 1
             ],
             [
                 'name' => 'utilizador registrado',
@@ -29,12 +25,12 @@ class PermissionGroupsSeeder extends Seeder
                 'send_shortlink_by_email_when_generating' => 1,
                 'edit_shortlinks_destination_url' => 1,
                 'view_shortlinks_total_views' => 1,
-                'view_shortlinks_total_unique_views' => 0,
             ],
             [
                 'name' => 'utilizador todo poderoso',
                 'send_shortlink_by_email_when_generating' => 1,
                 'edit_shortlinks_destination_url' => 1,
+                'view_shortlinks_url_history' => 1,
                 'view_shortlinks_total_views' => 1,
                 'view_shortlinks_total_unique_views' => 1,
                 'create_custom_shortlinks' => 1,

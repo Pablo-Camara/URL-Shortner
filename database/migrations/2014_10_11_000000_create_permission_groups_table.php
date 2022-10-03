@@ -23,6 +23,7 @@ return new class extends Migration
 
             $table->boolean('send_shortlink_by_email_when_generating')->default(0);
             $table->boolean('edit_shortlinks_destination_url')->default(0);
+            $table->boolean('view_shortlinks_url_history')->default(0);
             $table->boolean('view_shortlinks_total_views')->default(0);
             $table->boolean('view_shortlinks_total_unique_views')->default(0);
 

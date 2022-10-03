@@ -42,6 +42,7 @@ class PermissionGroupController extends Controller
             __('admin-panel.guests_permission_group') => $transformBinaryToText,
             __('admin-panel.send_shortlink_by_email_when_generating') => $transformBinaryToText,
             __('admin-panel.edit_shortlinks_destination_url') => $transformBinaryToText,
+            __('admin-panel.view_shortlinks_url_history') => $transformBinaryToText,
             __('admin-panel.view_shortlinks_total_views') => $transformBinaryToText,
             __('admin-panel.view_shortlinks_total_unique_views') => $transformBinaryToText,
             __('admin-panel.create_custom_shortlinks') => $transformBinaryToText,
@@ -85,6 +86,7 @@ class PermissionGroupController extends Controller
             DB::raw('permission_groups.guests_permission_group AS `'.__('admin-panel.guests_permission_group').'`'),
             DB::raw('permission_groups.send_shortlink_by_email_when_generating AS `'.__('admin-panel.send_shortlink_by_email_when_generating').'`'),
             DB::raw('permission_groups.edit_shortlinks_destination_url AS `'.__('admin-panel.edit_shortlinks_destination_url').'`'),
+            DB::raw('permission_groups.view_shortlinks_url_history AS `'.__('admin-panel.view_shortlinks_url_history').'`'),
             DB::raw('permission_groups.view_shortlinks_total_views AS `'.__('admin-panel.view_shortlinks_total_views').'`'),
             DB::raw('permission_groups.view_shortlinks_total_unique_views AS `'.__('admin-panel.view_shortlinks_total_unique_views').'`'),
             DB::raw('permission_groups.create_custom_shortlinks AS `'.__('admin-panel.create_custom_shortlinks').'`'),
@@ -200,6 +202,14 @@ class PermissionGroupController extends Controller
             $editShortlinksDestinationUrlAttributes['checked'] = 'checked';
         }
 
+        $canViewShortlinksUrlHistory = [
+            'name' => 'view_shortlinks_url_history',
+            'type' => 'checkbox'
+        ];
+        if ($permissionGroup->canViewShortlinksUrlHistory()) {
+            $canViewShortlinksUrlHistory['checked'] = 'checked';
+        }
+
         $canViewShortlinksTotalViews = [
             'name' => 'view_shortlinks_total_views',
             'type' => 'checkbox'
@@ -276,6 +286,11 @@ class PermissionGroupController extends Controller
                 'label' => __('admin-panel.edit_shortlinks_destination_url'),
                 'element_type' => 'input',
                 'element_attributes' => $editShortlinksDestinationUrlAttributes,
+            ],
+            [
+                'label' => __('admin-panel.view_shortlinks_url_history'),
+                'element_type' => 'input',
+                'element_attributes' => $canViewShortlinksUrlHistory,
             ],
             [
                 'label' => __('admin-panel.view_shortlinks_total_views'),
@@ -585,6 +600,7 @@ class PermissionGroupController extends Controller
         $permissionGroup->name = $permissionGroupName;
         $permissionGroup->send_shortlink_by_email_when_generating = !empty($request->input('send_shortlink_by_email_when_generating')) ? 1 : 0;
         $permissionGroup->edit_shortlinks_destination_url = !empty($request->input('edit_shortlinks_destination_url')) ? 1 : 0;
+        $permissionGroup->view_shortlinks_url_history = !empty($request->input('view_shortlinks_url_history')) ? 1 : 0;
         $permissionGroup->view_shortlinks_total_views = !empty($request->input('view_shortlinks_total_views')) ? 1 : 0;
         $permissionGroup->view_shortlinks_total_unique_views = !empty($request->input('view_shortlinks_total_unique_views')) ? 1 : 0;
         $permissionGroup->create_custom_shortlinks = !empty($request->input('create_custom_shortlinks')) ? 1 : 0;

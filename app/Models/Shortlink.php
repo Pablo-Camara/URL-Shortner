@@ -23,6 +23,12 @@ class Shortlink extends Model
                     ->where('is_redirect_url', '=', 1);
     }
 
+    public function previousRedirectUrls() {
+        return $this->hasMany(ShortlinkUrl::class)
+                    ->where('is_redirect_url', '=', 0)
+                    ->orderBy('id', 'DESC');
+    }
+
     public static function moveShortlinksFromUserToUser (
         $fromUserId,
         $toUserId

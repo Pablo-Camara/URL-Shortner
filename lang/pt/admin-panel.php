@@ -21,6 +21,7 @@ return [
 
     'send_shortlink_by_email_when_generating' => 'Enviar shortlinks por email ao gerar',
     'edit_shortlinks_destination_url' => 'Editar URL Destino',
+    'view_shortlinks_url_history' => 'Ver / usar histórico de URLs destino',
     'view_shortlinks_total_views' => 'Ver Total de Visualizações',
     'view_shortlinks_total_unique_views' => 'Ver Total de Visualizações Únicas',
     'create_custom_shortlinks' => 'Criar links personalizados',

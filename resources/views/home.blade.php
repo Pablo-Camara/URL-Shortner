@@ -603,6 +603,28 @@
                 margin-right: 14px;
             }
 
+            .form-box .list-container .list-item .previous-urls-container {
+                position: absolute;
+                background: white;
+                border: 1px solid #EEEEEE;
+                padding: 10px;
+                z-index: 9999;
+                left: 10px;
+                right: 10px;
+            }
+
+            .form-box .list-container .list-item .previously-used-link {
+                border-bottom: 1px solid #EEEEEE;
+                padding: 10px;
+                word-break: break-all;
+                cursor: pointer;
+                font-size: 12px;
+            }
+
+            .form-box .list-container .list-item .previously-used-link:last-child {
+                border-bottom: 0;
+            }
+
             #logo-top-mobile {
                 max-width: 115px;
             }
@@ -5031,7 +5053,8 @@
                                             destinationEmail,
                                             createdAt,
                                             total_views,
-                                            total_unique_views
+                                            total_unique_views,
+                                            previous_redirect_urls
                                         ) {
                                             //TODO: reduce addLink() function size / organize.
 
@@ -5218,6 +5241,44 @@
                                             const editLongUrlLink = document.createElement('a');
                                             const saveEditLongUrlLink = document.createElement('a');
                                             const cancelEditLongUrlLink = document.createElement('a');
+                                            const viewPreviousUrlsLink = document.createElement('a');
+                                            const previousUrlsContainer = document.createElement('div');
+
+                                            previousUrlsContainer.classList.add('previous-urls-container');
+                                            previousUrlsContainer.style.display = 'none';
+
+                                            for(var i = 0; i < previous_redirect_urls.length; i++) {
+                                                const prevUrl = previous_redirect_urls[i];
+                                                const prevUrlEl = document.createElement('div');
+                                                prevUrlEl.classList.add('previously-used-link');
+                                                prevUrlEl.innerText = prevUrl.url;
+
+                                                prevUrlEl.onclick = function (e) {
+                                                    editLongUrlInput.value = e.target.innerText;
+                                                    previousUrlsContainer.style.display = 'none';
+                                                    viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
+                                                };
+
+                                                previousUrlsContainer.appendChild(prevUrlEl);
+                                            }
+
+                                            viewPreviousUrlsLink.style.display = 'none';
+                                            viewPreviousUrlsLink.classList.add('generic-edit-link-1');
+                                            viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
+                                            viewPreviousUrlsLink.onclick = function (e) {
+                                                if (previousUrlsContainer.style.display === 'block') {
+                                                    previousUrlsContainer.style.display = 'none';
+                                                    viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
+                                                } else {
+                                                    viewPreviousUrlsLink.innerText = 'esconder links utilizados anteriormente';
+                                                    previousUrlsContainer.style.display = 'block';
+                                                    hideOnClickOutside(previousUrlsContainer, [
+                                                        viewPreviousUrlsLink
+                                                    ], function () {
+                                                        viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
+                                                    })
+                                                }
+                                            };
 
                                             editLongUrlLink.classList.add('generic-edit-link-1');
                                             editLongUrlLink.innerText = 'editar';
@@ -5229,6 +5290,14 @@
                                                 editLongUrlLink.style.display = 'none';
                                                 saveEditLongUrlLink.style.display = 'inline-block';
                                                 cancelEditLongUrlLink.style.display = 'inline-block';
+
+                                                if (
+                                                    previous_redirect_urls.length > 0
+                                                    ||
+                                                    previousUrlsContainer.querySelectorAll('.previously-used-link').length > 0
+                                                ) {
+                                                    viewPreviousUrlsLink.style.display = 'inline-block';
+                                                }
                                             };
 
                                             saveEditLongUrlLink.classList.add('generic-edit-link-1');
@@ -5261,17 +5330,42 @@
 
                                                             if (this.status === 201) {
                                                                 longUrlContainer.innerText = editLongUrlInput.value;
-
                                                                 saveEditLongUrlLink.style.color = 'green';
                                                                 setTimeout(function () {
                                                                     saveEditLongUrlLink.style.color = saveColor;
                                                                     saveEditLongUrlLink.style.display = 'none';
                                                                     saveEditLongUrlLink.innerText = 'guardar';
+                                                                    viewPreviousUrlsLink.style.display = 'none';
                                                                     editLongUrlInput.style.display = 'none';
                                                                     longUrlContainer.style.display = 'block';
                                                                     cancelEditLongUrlLink.style.display = 'none';
                                                                     editLongUrlLink.style.display = 'inline-block';
                                                                 }, 1000);
+
+                                                                const resObj = JSON.parse(this.response); //TODO: Catch exception
+                                                                // reload url history
+                                                                previousUrlsContainer.innerHTML = '';
+                                                                if (
+                                                                    typeof resObj.previous_redirect_urls !== 'undefined'
+                                                                    &&
+                                                                    resObj.previous_redirect_urls.length > 0
+                                                                ) {
+                                                                    for(var i = 0; i < resObj.previous_redirect_urls.length; i++) {
+                                                                        const prevUrl = resObj.previous_redirect_urls[i];
+                                                                        const prevUrlEl = document.createElement('div');
+                                                                        prevUrlEl.classList.add('previously-used-link');
+                                                                        prevUrlEl.innerText = prevUrl.url;
+
+                                                                        prevUrlEl.onclick = function (e) {
+                                                                            editLongUrlInput.value = e.target.innerText;
+                                                                            previousUrlsContainer.style.display = 'none';
+                                                                            viewPreviousUrlsLink.innerText = 'ver links utilizados anteriormente';
+                                                                        };
+
+                                                                        previousUrlsContainer.appendChild(prevUrlEl);
+                                                                    }
+                                                                }
+
                                                                 return;
                                                             }
 
@@ -5345,6 +5439,7 @@
                                                 longUrlContainer.style.display = 'block';
                                                 cancelEditLongUrlLink.style.display = 'none';
                                                 saveEditLongUrlLink.style.display = 'none';
+                                                viewPreviousUrlsLink.style.display = 'none';
                                                 editLongUrlLink.style.display = 'inline-block';
                                                 editLongUrlInput.value = longUrlContainer.innerText;
                                                 editLongUrlInputFeedback.style.display = 'none';
@@ -5400,6 +5495,14 @@
                                                 listItem.appendChild(editLongUrlLink);
                                                 listItem.appendChild(cancelEditLongUrlLink);
                                                 listItem.appendChild(saveEditLongUrlLink);
+
+                                                if (
+                                                    window._authManager.userHasPermission('view_shortlinks_url_history')
+                                                ) {
+                                                    listItem.appendChild(viewPreviousUrlsLink);
+                                                    listItem.appendChild(previousUrlsContainer);
+                                                }
+
                                                 listItem.appendChild(editLongUrlInput);
                                                 listItem.appendChild(editLongUrlInputFeedback);
                                             }
@@ -5485,7 +5588,8 @@
                                                                 resObj.search_results.data[i].destination_email,
                                                                 resObj.search_results.data[i].created_at,
                                                                 resObj.search_results.data[i].total_views,
-                                                                resObj.search_results.data[i].total_unique_views
+                                                                resObj.search_results.data[i].total_unique_views,
+                                                                resObj.search_results.data[i].previous_redirect_urls,
                                                             );
                                                         }
 
@@ -8179,6 +8283,9 @@
                     </li>
                     <li data-permission-needed="edit_shortlinks_destination_url">
                         Editar URL destino dos links gerados
+                    </li>
+                    <li data-permission-needed="view_shortlinks_url_history">
+                        Ver histórico de URLs destino dos links editados
                     </li>
                     <li data-permission-needed="view_shortlinks_total_views">
                         Ver nº de visualizações dos links

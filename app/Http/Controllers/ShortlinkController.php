@@ -260,6 +260,13 @@ class ShortlinkController extends Controller
                 }
             ]
          )
+         ->with(
+            [
+                'previousRedirectUrls' => function ($query) {
+                    $query->select(['id', 'shortlink_id', 'url', 'created_at', 'updated_at']);
+                }
+            ]
+         )
          ->where('status_id', '=', Shortlink::STATUS_ACTIVE);
 
          $userAllowedOrderBys = $getAllowedOrderBysFunc($allowedOrderBys);
@@ -807,7 +814,9 @@ class ShortlinkController extends Controller
             ]
         );
 
-        return new Response('',Response::HTTP_CREATED);
+        return new Response([
+            'previous_redirect_urls' => $shortlink->previousRedirectUrls
+        ],Response::HTTP_CREATED);
     }
 
 

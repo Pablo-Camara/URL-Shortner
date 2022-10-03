@@ -15,6 +15,7 @@ class PermissionGroup extends Model
     protected $casts = [
         'send_shortlink_by_email_when_generating' => 'boolean',
         'edit_shortlinks_destination_url' => 'boolean',
+        'view_shortlinks_url_history' => 'boolean',
         'view_shortlinks_total_views' => 'boolean',
         'view_shortlinks_total_unique_views' => 'boolean',
         'create_custom_shortlinks' => 'boolean',
@@ -36,6 +37,10 @@ class PermissionGroup extends Model
 
     public function canEditShortlinksDestinationUrl() {
         return $this->edit_shortlinks_destination_url;
+    }
+
+    public function canViewShortlinksUrlHistory() {
+        return $this->view_shortlinks_url_history;
     }
 
     public function canViewShortlinksTotalViews() {
@@ -64,6 +69,7 @@ class PermissionGroup extends Model
         return [
             'send_shortlink_by_email_when_generating' => $this->send_shortlink_by_email_when_generating,
             'edit_shortlinks_destination_url' => $this->edit_shortlinks_destination_url,
+            'view_shortlinks_url_history' => $this->view_shortlinks_url_history,
             'view_shortlinks_total_views' => $this->view_shortlinks_total_views,
             'view_shortlinks_total_unique_views' => $this->view_shortlinks_total_unique_views,
             'create_custom_shortlinks' => $this->create_custom_shortlinks,
