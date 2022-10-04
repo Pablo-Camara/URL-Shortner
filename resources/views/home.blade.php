@@ -2354,6 +2354,50 @@
                             }
                         }
                     },
+                    CurrentPresentation: {
+                        hasInitialized: false,
+                        isVisible: false,
+                        el: function () {
+                            return document.getElementById("current-presentation");
+                        },
+                        show: function () {
+                            this.initialize();
+                            if (!window.App.isMobileSize()) {
+                                const el = this.el();
+                                el.style.display = 'block';
+                                el.style.marginTop = '0';
+                                el.style.position = 'absolute';
+
+                                var dHeight = (window.innerHeight > 0) ? window.innerHeight : screen.height;
+                                var center = (dHeight/2)-(el.offsetHeight/2);
+
+                                if (center < 85) {
+                                    center = 85;
+                                }
+
+                                el.style.top = center + 'px';
+                            }
+                            this.isVisible = true;
+                        },
+                        hide: function () {
+                            this.el().style.display = 'none';
+                            this.isVisible = false;
+                        },
+                        initialize: function () {
+                            if ( this.hasInitialized === false ) {
+                                const $this = this;
+                                window.addEventListener("resize", function () {
+                                    if (window.App.isMobileSize()) {
+                                        $this.hide();
+                                    } else if (!window.App.isMobileSize()) {
+                                        $this.show();
+                                    }
+                                });
+
+                                this.hasInitialized = true;
+                            }
+                        }
+                    },
                     Profile: {
                         el: function () {
                             return document.getElementById('profile-view');
@@ -2553,26 +2597,44 @@
                         }
                     },
                     ShortenUrl: {
+                        hasInitialized: false,
+                        isVisible: false,
                         el: function () {
                             return document.getElementById("shorten-urls");
                         },
                         show: function () {
                             this.initialize();
-                            this.el().style.display = 'block';
+                            const el = this.el();
+                            el.style.display = 'block';
                             const longUrlInput = this.Components.LongUrl.el();
                             longUrlInput.value = "";
                             if (!window.App.isMobileSize()) {
                                 longUrlInput.focus();
+
+                                el.style.marginTop = '0';
+                                el.style.position = 'absolute';
+
+                                var dHeight = (window.innerHeight > 0) ? window.innerHeight : screen.height;
+                                var center = (dHeight/2)-(el.offsetHeight/2);
+
+                                if (center < 150) {
+                                    center = 150;
+                                }
+
+                                el.style.top = center + 'px';
                             }
 
                             this.Components.DestinationEmail.show();
 
                             this.Components.CreateCustomLink.show();
                             this.Components.ChooseCustomSize.show();
+
+                            this.isVisible = true;
                         },
                         hide: function() {
                             this.el().style.display = 'none';
                             this.Components.Feedback.hide();
+                            this.isVisible = false;
                         },
                         Components: {
                             Feedback: {
@@ -3014,9 +3076,23 @@
                             this.Components.GenerateBtn.initialize();
                             this.Components.CreateCustomLink.initialize();
                             this.Components.ChooseCustomSize.initialize();
+
+                            if ( this.hasInitialized === false ) {
+                                const $this = this;
+                                window.addEventListener("resize", function () {
+                                    if ($this.isVisible) {
+                                        $this.el().removeAttribute('style');
+                                        $this.show();
+                                    }
+                                });
+
+                                this.hasInitialized = true;
+                            }
                         }
                     },
                     ShortlinkResult: {
+                        hasInitialized: false,
+                        isVisible: false,
                         el: function () {
                             return document.getElementById("form-box-with-shortlink");
                         },
@@ -3024,7 +3100,8 @@
                             this.initialize();
                             window.App.Components.MyLinks.Components.Links.Components.List.Components.ListOptions.Components.OrderBy.currentOrderBy = null;
                             window.App.Components.MyLinks.Components.Links.Components.List.fetch();
-                            this.el().style.display = "block";
+                            const el = this.el();
+                            el.style.display = "block";
 
                             if (window._authManager.isLoggedIn) {
                                 this.Components.GotoMyLinksBtn.show();
@@ -3033,9 +3110,25 @@
                                 this.Components.GotoMyLinksBtn.hide();
                                 this.Components.SaveShortlinkBtn.show();
                             }
+
+                            if (!window.App.isMobileSize()) {
+                                el.style.marginTop = '0';
+                                el.style.position = 'absolute';
+
+                                var dHeight = (window.innerHeight > 0) ? window.innerHeight : screen.height;
+                                var center = (dHeight/2)-(el.offsetHeight/2);
+
+                                if (center < 150) {
+                                    center = 150;
+                                }
+
+                                el.style.top = center + 'px';
+                            }
+                            this.isVisible = true;
                         },
                         hide: function () {
                             this.el().style.display = "none";
+                            this.isVisible = false;
                         },
                         Components: {
                             Shortlink: {
@@ -3119,21 +3212,61 @@
                             this.Components.GotoMyLinksBtn.initialize();
                             this.Components.SaveShortlinkBtn.initialize();
                             this.Components.GenerateAnotherLink.initialize();
+
+                            if ( this.hasInitialized === false ) {
+                                const $this = this;
+                                window.addEventListener("resize", function () {
+                                    if ($this.isVisible) {
+                                        $this.el().removeAttribute('style');
+                                        $this.show();
+                                    }
+                                });
+
+                                this.hasInitialized = true;
+                            }
                         }
 
                     },
                     RegisterCustomShortlink: {
+                        hasInitialized: false,
+                        isVisible: true,
+                        isAnimationRunning: false,
+                        hasAnimatedOnce: false,
                         el: function () {
                             return document.getElementById("form-box-shortlink-requested");
                         },
                         show: function () {
                             this.initialize();
                             this.Components.Feedback.hide();
-                            this.Components.RequestedShortlink.reset();
-                            this.Components.RequestedShortlinkLongUrl.reset();
-                            this.el().style.display = "block";
+                            if (this.isAnimationRunning === false) {
+                                this.Components.RequestedShortlink.reset();
+                            }
 
-                            if (this.Components.RequestedShortlink.el().value.length == 0) {
+                            this.Components.RequestedShortlinkLongUrl.reset();
+                            const el = this.el();
+                            el.style.display = "block";
+
+                            if (!window.App.isMobileSize()) {
+                                el.style.marginTop = '0';
+                                el.style.position = 'absolute';
+
+                                var dHeight = (window.innerHeight > 0) ? window.innerHeight : screen.height;
+                                var center = (dHeight/2)-(el.offsetHeight/2);
+
+                                if (center < 150) {
+                                    center = 150;
+                                }
+
+                                el.style.top = center + 'px';
+                            }
+
+                            if (
+                                this.Components.RequestedShortlink.el().value.length == 0
+                                &&
+                                this.isAnimationRunning === false
+                                &&
+                                this.hasAnimatedOnce === false
+                            ) {
                                 const $this = this;
 
                                 var letters = 'personalizar';
@@ -3144,23 +3277,34 @@
                                         function(){
                                             $this.Components.RequestedShortlink.el().value += letters.shift();
                                             $this.Components.RequestedShortlink.mirror();
+
+                                            if (letters.length === 0) {
+                                                $this.isAnimationRunning = false;
+                                                $this.hasAnimatedOnce = true;
+
+                                                setTimeout(
+                                                    function () {
+                                                        $this.Components.RequestedShortlink.el().focus();
+                                                    },
+                                                    100
+                                                );
+
+                                            }
                                         },
                                         i*100
                                     );
                                 }
 
-                                setTimeout(
-                                    function() {
-                                        $this.Components.RequestedShortlink.el().focus();
-                                    },
-                                    letters.length*100
-                                );
+                                this.isAnimationRunning = true;
                             } else {
                                 this.Components.RequestedShortlinkLongUrl.el().focus();
                             }
+
+                            this.isVisible = true;
                         },
                         hide: function () {
                             this.el().style.display = "none";
+                            this.isVisible = false;
                         },
                         Components: {
                             RequestedShortlink: {
@@ -3388,6 +3532,18 @@
                             this.Components.RequestedShortlink.initialize();
                             this.Components.ContinueBtn.initialize();
                             this.Components.CloseBtn.initialize();
+
+                            if ( this.hasInitialized === false ) {
+                                const $this = this;
+                                window.addEventListener("resize", function () {
+                                    if ($this.isVisible) {
+                                        $this.el().removeAttribute('style');
+                                        $this.show();
+                                    }
+                                });
+
+                                this.hasInitialized = true;
+                            }
                         }
 
                     },
@@ -6120,9 +6276,9 @@
                 Views: {
                     HomePage: {
                         components: {
-                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult', 'MyLinks']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult', 'MyLinks']
                         },
                         show: function () {
                             window.App.currentView = 'HomePage';
@@ -6138,9 +6294,9 @@
                     },
                     Profile: {
                         components: {
-                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Profile'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'Profile'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'Profile';
@@ -6156,9 +6312,9 @@
                     },
                     MyLinks: {
                         components: {
-                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'MyLinks'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation','ShortenUrl', 'MyLinks'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'MyLinks';
@@ -6174,9 +6330,9 @@
                     },
                     ContactUs: {
                         components: {
-                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ContactUs'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ContactUs'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'ContactUs';
@@ -6192,9 +6348,9 @@
                     },
                     Login: {
                         components: {
-                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Login'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'Login'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'Login';
@@ -6209,9 +6365,9 @@
                     },
                     Register: {
                         components: {
-                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'Register'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'Register'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'Register';
@@ -6226,9 +6382,9 @@
                     },
                     RegisterCustomShortlink: {
                         components: {
-                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink'],
+                            initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'RegisterCustomShortlink'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'RegisterCustomShortlink', 'ShortlinkResult', 'MyLinks']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'RegisterCustomShortlink', 'ShortlinkResult', 'MyLinks']
                         },
                         show: function () {
                             window.App.currentView = 'RegisterCustomShortlink';
@@ -6244,9 +6400,9 @@
                     },
                     EmailConfirmed: {
                         components: {
-                            initiallyVisible: ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'EmailConfirmed'],
+                            initiallyVisible: ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'EmailConfirmed'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'EmailConfirmed';
@@ -6261,9 +6417,9 @@
                     },
                     ChangePassword: {
                         components: {
-                            initiallyVisible: ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ChangePassword'],
+                            initiallyVisible: ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ChangePassword'],
                             initiallyHidden: ['ShortlinkResult'],
-                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                            sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult']
                         },
                         show: function () {
                             window.App.currentView = 'ChangePassword';
@@ -7973,9 +8129,9 @@
 
                 window.App.Views.PA = {
                     components: {
-                        initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'PA'],
+                        initiallyVisible:  ['LogoTop', 'MenuToggleMobile', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'PA'],
                         initiallyHidden: ['ShortlinkResult'],
-                        sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'ShortenUrl', 'ShortlinkResult']
+                        sticky: ['LogoTop', 'MenuTop', 'MenuAccTop', 'CurrentPresentation', 'ShortenUrl', 'ShortlinkResult']
                     },
                     show: function () {
                         window.App.currentView = 'PA';
@@ -8059,7 +8215,7 @@
             </div>
         </div>
 
-        <div id="current-presentation">
+        <div id="current-presentation" style="display: none">
             <div id="cp-title">
                 web<br/>into<br/>link
             </div>
