@@ -142,3 +142,31 @@ and update the below env variables in the .env file:
 ENABLE_LOGIN_WITH_LINKEDIN=true
 LINKEDIN_CLIENT_ID=yourClientId
 LINKEDIN_CLIENT_SECRET=yourClientSecret
+
+
+# Login with Twitter
+
+Go to
+https://developer.twitter.com/en/portal/dashboard
+
+after you login / create an account, with a verified phone number,
+create a new project/app, setup the information they ask for,
+
+make sure to setup "User authentication settings" and :
+ select: - Request email from users
+ 
+ - set up the "Callback URI / Redirect URL" to:
+    https://<your-domain>/auth/twitter/callback
+
+You are also required to request Elevated access:
+https://developer.twitter.com/en/portal/products/elevated
+
+fill up forms / go through steps
+and setup any other information required then update .env file variables with the "Consumer Keys" ( where you get API Key and Secret):
+
+ENABLE_LOGIN_WITH_TWITTER=true
+TWITTER_CLIENT_ID=yourTwitterApiKey
+TWITTER_CLIENT_SECRET=yourTwitterApiSecret
+
+
+
