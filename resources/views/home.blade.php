@@ -30,7 +30,7 @@
                 background: url('{{ $currentBackground }}');
                 background-size: cover;
                 background-repeat: no-repeat;
-                min-height: 100vh;
+                min-height: 100%;
                 background-position-x: 70%;
                 background-attachment: fixed;
             }
