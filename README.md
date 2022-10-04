@@ -1,28 +1,3 @@
-# Installation
-
-## Initial application data
-When first installing the project we need to seed some data into the database.
-
-So we must run:
-- php artisan db:seed
-
-and to generate the available shortlinks,
-we must run:
-
-SHORTSTRINGS_LENGTH=3 php artisan db:seed --class=ShortstringSeeder
-
-other examples (using/set multiple env variables/settings):
-SHORTSTRING_SEED_METHOD=recursive SHORTSTRINGS_LENGTH=5 TOTAL_SHORTSTRINGS_TO_SEED=1 php artisan db:seed --class=ShortstringSeeder
-
-Where the SHORTSTRINGS_LENGTH value is the length of the strings to be generated.
-
-## Post install application data seeding
-
-We can also run that same command for generating more shortlinks as needed.
-If we initially ran with the SHORTSTRINGS_LENGTH with the value of 3,
-when running out of shortlinks ( before we run out ) we should probably run it with the value of 4.
-
-SHORTSTRINGS_LENGTH=4 php artisan db:seed --class=ShortstringSeeder
 # Google reCAPTCHA v3
 
 Use use reCAPTCHA v3 for bot protection.
@@ -91,6 +66,8 @@ and setup:
 - Privacy Policy URL
 - Terms of Service URL
 
+You also have to go to -> App Review -> Permissions and Features
+and Request Advanced Access for: email, public_profile
 
 After that,  set your application from Development to "LIVE" mode.
 
@@ -146,4 +123,22 @@ and then "Publish App", some things will be required for the app to be approved 
 
 
 
+# Login with LinkedIn
 
+Go to https://developers.linkedin.com/
+Click "Create App"
+follow the steps / fill in necessary info,
+then under "Products" tab
+
+where you see "Sign In with LinkedIn" click "Request Access",
+then go to the "Auth" tab, 
+in the "OAuth 2.0 settings" section edit the "Authorized redirect URLs for your app",
+and add the following redirect url:
+https://<your-domain>/auth/linkedin/callback
+
+then get the Client ID, and the Client Secret
+and update the below env variables in the .env file:
+
+ENABLE_LOGIN_WITH_LINKEDIN=true
+LINKEDIN_CLIENT_ID=yourClientId
+LINKEDIN_CLIENT_SECRET=yourClientSecret
