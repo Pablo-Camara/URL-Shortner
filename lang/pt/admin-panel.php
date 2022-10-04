@@ -189,4 +189,6 @@ return [
     'OPENED_CONTACT_PAGE_DIRECTLY' => 'Página de COntacto aberta diretamente',
     'OPENED_CHANGE_PASSWORD_PAGE_DIRECTLY' => 'Página de Alteração de Palavra-passe aberta diretamente',
     'OPENED_ADMIN_PANEL_PAGE_DIRECTLY' => 'Página do Painel de Administração aberta diretamente',
+
+    'SENT_CONTACT_MESSAGE' => 'Envio de mensagem através da página de contacto'
 ];
