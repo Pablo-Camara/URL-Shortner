@@ -3238,12 +3238,12 @@
                         show: function () {
                             this.initialize();
                             this.Components.Feedback.hide();
-                            if (this.isAnimationRunning === false) {
-                                this.Components.RequestedShortlink.reset();
-                            }
+
+                            const el = this.el();
+                            const $this = this;
 
                             this.Components.RequestedShortlinkLongUrl.reset();
-                            const el = this.el();
+
                             el.style.display = "block";
 
                             if (!window.App.isMobileSize()) {
@@ -3267,8 +3267,6 @@
                                 &&
                                 this.hasAnimatedOnce === false
                             ) {
-                                const $this = this;
-
                                 var letters = 'personalizar';
                                 letters = letters.split('');
 
@@ -3297,7 +3295,11 @@
 
                                 this.isAnimationRunning = true;
                             } else {
-                                this.Components.RequestedShortlinkLongUrl.el().focus();
+                                if (this.Components.RequestedShortlink.el().value.length == 0) {
+                                    his.Components.RequestedShortlink.el().focus();
+                                } else {
+                                    this.Components.RequestedShortlinkLongUrl.el().focus();
+                                }
                             }
 
                             this.isVisible = true;
@@ -3519,7 +3521,6 @@
                                     if ( this.hasInitialized === false ) {
 
                                         this.el().onclick = function (e) {
-                                            window.App.Components.RegisterCustomShortlink.Components.RequestedShortlink.el().value = '';
                                             window.App.Views.HomePage.show();
                                         };
 
