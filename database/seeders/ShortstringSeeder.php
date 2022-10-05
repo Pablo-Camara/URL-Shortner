@@ -66,6 +66,7 @@ class ShortstringSeeder extends Seeder
 
         $stringLength = env('SHORTSTRINGS_LENGTH', null);
         $this->skipUntilInsertNumber = env('SKIP_UNTIL_INSERT_NUMBER', null);
+
         $totalCombinationsPossible = (count($set)**$stringLength);
         if (empty($stringLength)) {
             echo PHP_EOL . 'Must set SHORTSTRINGS_LENGTH env variable when running the seeder.' . PHP_EOL;
@@ -86,12 +87,15 @@ class ShortstringSeeder extends Seeder
         $this->generateAllKLength($set, $stringLength);
 
         echo PHP_EOL . PHP_EOL . 'Done generating all the combinations possible.  (' . $totalCombinationsPossible . ')' . PHP_EOL . PHP_EOL;
-        echo PHP_EOL . PHP_EOL . 'Will now insert the ' . $totalCombinationsPossible . ' combinations in a random order into the live table: ' . $this->liveTable . PHP_EOL . PHP_EOL;
 
-        $copyDataSql = "INSERT INTO " . $this->liveTable . " (shortstring, is_available, is_custom, length)
-        SELECT shortstring, is_available, is_custom, length
-        FROM " . $this->tempTable . "
-        ORDER BY RAND();";
+        if (env('SKIP_INSERT_INTO_LIVE_TABLE', null) === null) {
+            echo PHP_EOL . PHP_EOL . 'Will now insert the ' . $totalCombinationsPossible . ' combinations in a random order into the live table: ' . $this->liveTable . PHP_EOL . PHP_EOL;
+
+            $copyDataSql = "INSERT INTO " . $this->liveTable . " (shortstring, is_available, is_custom, length)
+            SELECT shortstring, is_available, is_custom, length
+            FROM " . $this->tempTable . "
+            ORDER BY RAND();";
+        }
 
         $insertedRows = DB::affectingStatement($copyDataSql);
 
