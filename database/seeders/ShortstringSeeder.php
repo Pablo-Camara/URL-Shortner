@@ -73,10 +73,16 @@ class ShortstringSeeder extends Seeder
      */
     public function run()
     {
+
+        if (!empty(env('SKIP_TO_FINISH_FUNCTION', null))) {
+            $this->finish(true);
+            return;
+        }
+
+
         $alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
         $numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
         $set = array_merge($alphabet, $numbers);
-
 
         $this->stringLength = env('SHORTSTRINGS_LENGTH', null);
         $this->skipUntilInsertNumber = env('SKIP_UNTIL_INSERT_NUMBER', null);
@@ -91,10 +97,7 @@ class ShortstringSeeder extends Seeder
 
         $this->totalCombinationsPossible = (count($set)**$this->stringLength);
 
-        if (!empty(env('SKIP_TO_FINISH_FUNCTION', null))) {
-            $this->finish();
-            return;
-        }
+
 
         if (env('SKIP_CREATE_TEMP_TABLE', null) === null) {
             echo PHP_EOL . PHP_EOL . 'Will create temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
@@ -118,9 +121,6 @@ class ShortstringSeeder extends Seeder
 
         $this->generateAllKLength($set, $this->stringLength);
 
-
-
-
     }
 
     private function finish($skipped = false) {
@@ -132,8 +132,11 @@ class ShortstringSeeder extends Seeder
 
 
         if (env('SKIP_INSERT_INTO_LIVE_TABLE', null) === null) {
-            echo PHP_EOL . PHP_EOL . 'Will now insert the ' . $this->totalCombinationsPossible . ' combinations in a random order into the live table: ' . $this->liveTable . PHP_EOL . PHP_EOL;
-
+            if ($skipped === false) {
+                echo PHP_EOL . PHP_EOL . 'Will now insert the ' . $this->totalCombinationsPossible . ' combinations in a random order into the live table: ' . $this->liveTable . PHP_EOL . PHP_EOL;
+            } else {
+                echo PHP_EOL . PHP_EOL . 'Will now insert combinations from the temp ('.$this->tempTable.') table in a random order into the live table: ' . $this->liveTable . PHP_EOL . PHP_EOL;
+            }
             $copyDataSql = "INSERT INTO " . $this->liveTable . " (shortstring, is_available, is_custom, length)
             SELECT shortstring, is_available, is_custom, length
             FROM " . $this->tempTable . "
@@ -141,7 +144,11 @@ class ShortstringSeeder extends Seeder
 
             $insertedRows = DB::affectingStatement($copyDataSql);
 
-            echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings with length of ' . $this->stringLength . '.' . PHP_EOL . PHP_EOL;
+            if ($skipped === false) {
+                echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings with length of ' . $this->stringLength . '.' . PHP_EOL . PHP_EOL;
+            } else {
+                echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings.' . PHP_EOL . PHP_EOL;
+            }
         }
 
         if (env('SKIP_CREATE_TEMP_TABLE', null) === null) {
