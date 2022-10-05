@@ -4456,6 +4456,232 @@
                                     }
                                 }
                             },
+                            RegisterWithGithubBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-with-github-button");
+                                },
+                                enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/github/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            RegisterWithFacebookBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-with-facebook-button");
+                                },
+                                enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/facebook/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            RegisterWithGoogleBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-with-google-button");
+                                },
+                                enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
+
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/google/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            RegisterWithLinkedinBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-with-linkedin-button");
+                                },
+                                enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/linkedin/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
+                            RegisterWithTwitterBtn: {
+                                hasInitialized: false,
+                                el: function () {
+                                    return document.getElementById("register-with-twitter-button");
+                                },
+                                enable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.remove('disabled');
+                                },
+                                disable: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    this.el().classList.add('disabled');
+                                },
+                                initialize: function () {
+                                    if (!this.el() || this.el().length == 0)return;
+                                    if (this.hasInitialized === false) {
+                                        const $this = this;
+
+                                        if (
+                                            window._authManager.isAuthenticated
+                                        ) {
+                                            $this.enable();
+                                        } else {
+                                            $this.disable();
+                                            document.addEventListener('userAuthenticated', (e) => {
+                                                $this.enable();
+                                            }, false);
+                                        }
+
+                                        this.el().onclick = function (e) {
+                                            if (
+                                                !window._authManager.isAuthenticated
+                                                ||
+                                                e.target.classList.contains('disabled')
+                                            ) {
+                                                return false;
+                                            }
+
+                                            window.location.replace('/auth/twitter/redirect');
+                                        };
+
+                                        this.hasInitialized = true;
+                                    }
+                                }
+                            },
                             CloseBtn: {
                                 hasInitialized: false,
                                 el: function () {
@@ -4511,6 +4737,11 @@
                             this.Components.PasswordConfirmation.initialize();
                             this.Components.RegisterBtn.initialize();
                             this.Components.LoginToAccLink.initialize();
+                            this.Components.RegisterWithGithubBtn.initialize();
+                            this.Components.RegisterWithFacebookBtn.initialize();
+                            this.Components.RegisterWithGoogleBtn.initialize();
+                            this.Components.RegisterWithLinkedinBtn.initialize();
+                            this.Components.RegisterWithTwitterBtn.initialize();
                             this.Components.CloseBtn.initialize();
 
                             if (this.hasInitialized === false) {
@@ -8376,6 +8607,24 @@
 
             <div class="button disabled" id="register-button">Continuar</div>
             <a href="javascript:void(0);" id="login-to-account-link" class="form-link">Já tenho uma conta</a>
+
+            <div class="external-logins">
+                @if(isset($enableLoginWithGoogleBtn) && $enableLoginWithGoogleBtn === true)
+                    <div class="button light-blue disabled" id="register-with-google-button"><img src="{{ asset('img/google-logo.png') }}" width="30">Entrar com o Google</div>
+                @endif
+                @if(isset($enableLoginWithFacebookBtn) && $enableLoginWithFacebookBtn === true)
+                    <div class="button blue disabled" id="register-with-facebook-button"><img src="{{ asset('img/facebook-logo.png') }}" width="26"/>Entrar com o Facebook</div>
+                @endif
+                @if(isset($enableLoginWithTwitterBtn) && $enableLoginWithTwitterBtn === true)
+                    <div class="button sky-blue disabled" id="register-with-twitter-button"><img src="{{ asset('img/twitter-logo.png') }}" width="26"/>Entrar com o Twitter</div>
+                @endif
+                @if(isset($enableLoginWithLinkedinBtn) && $enableLoginWithLinkedinBtn === true)
+                    <div class="button darker-blue disabled" id="register-with-linkedin-button"><img src="{{ asset('img/linkedin-logo.png') }}" width="26">Entrar com o LinkedIn</div>
+                @endif
+                @if(isset($enableLoginWithGithubBtn) && $enableLoginWithGithubBtn === true)
+                    <div class="button dark disabled" id="register-with-github-button"><img src="{{ asset('img/github-logo.png') }}" width="30"/>Entrar com o Github</div>
+                @endif
+            </div>
         </div>
 
         <div
