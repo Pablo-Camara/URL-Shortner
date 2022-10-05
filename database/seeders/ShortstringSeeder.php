@@ -91,7 +91,7 @@ class ShortstringSeeder extends Seeder
 
         $this->totalCombinationsPossible = (count($set)**$this->stringLength);
 
-        if (env('SKIP_TO_FINISH_FUNCTION', null) === null) {
+        if (!empty(env('SKIP_TO_FINISH_FUNCTION', null))) {
             $this->finish();
             return;
         }
