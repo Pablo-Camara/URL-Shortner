@@ -10,6 +10,8 @@ class ShortstringSeeder extends Seeder
 {
     private $tempTable = 'shortstrings_temp';
     private $liveTable = 'shortstrings';
+    private $insertCount = 0;
+    private $skipUntilInsertNumber = null;
 
     private function generateAllKLength($set, $k)
     {
@@ -27,6 +29,11 @@ class ShortstringSeeder extends Seeder
     {
         if ($k == 0)
         {
+            $this->insertCount++;
+            if (!is_null($this->skipUntilInsertNumber) && $this->insertCount < $this->skipUntilInsertNumber) {
+                return;
+            }
+
             echo 'Inserting: ' . $prefix . PHP_EOL;
             DB::table($this->tempTable)->insert([
                 'shortstring' => $prefix,
@@ -58,6 +65,7 @@ class ShortstringSeeder extends Seeder
 
 
         $stringLength = env('SHORTSTRINGS_LENGTH', null);
+        $this->skipUntilInsertNumber = env('SKIP_UNTIL_INSERT_NUMBER', null);
         $totalCombinationsPossible = (count($set)**$stringLength);
         if (empty($stringLength)) {
             echo PHP_EOL . 'Must set SHORTSTRINGS_LENGTH env variable when running the seeder.' . PHP_EOL;
@@ -66,8 +74,11 @@ class ShortstringSeeder extends Seeder
             die();
         }
 
-        echo PHP_EOL . PHP_EOL . 'Will create temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
-        $tempTableCreate = DB::statement("CREATE TABLE " . $this->tempTable . ' LIKE ' . $this->liveTable);
+        if (env('SKIP_CREATE_TEMP_TABLE', null) === null) {
+            echo PHP_EOL . PHP_EOL . 'Will create temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
+            $tempTableCreate = DB::statement("CREATE TABLE " . $this->tempTable . ' LIKE ' . $this->liveTable);
+        }
+
 
         echo PHP_EOL . PHP_EOL . 'Will generate all shortstring combinations with the length of ' . $stringLength . '.' . PHP_EOL . PHP_EOL;
         echo PHP_EOL . PHP_EOL . 'Alphabet that will be used: ' . implode(',', $set) . PHP_EOL . PHP_EOL;
