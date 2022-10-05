@@ -14,6 +14,7 @@ class ShortstringSeeder extends Seeder
     private $skipUntilInsertNumber = null;
     private $legitInserts = 0;
     private $maxInserts = null;
+    private $stringLength = null;
 
     private function generateAllKLength($set, $k)
     {
@@ -48,7 +49,8 @@ class ShortstringSeeder extends Seeder
                 &&
                 $this->legitInserts >= $this->maxInserts
             ) {
-                echo PHP_EOL . PHP_EOL . 'Reached max inserts number. Closing.';
+                echo PHP_EOL . PHP_EOL . 'Reached max inserts number. Closing.' . PHP_EOL;
+                $this->finish();
                 die();
             }
             return;
@@ -76,33 +78,61 @@ class ShortstringSeeder extends Seeder
         $set = array_merge($alphabet, $numbers);
 
 
-        $stringLength = env('SHORTSTRINGS_LENGTH', null);
+        $this->stringLength = env('SHORTSTRINGS_LENGTH', null);
         $this->skipUntilInsertNumber = env('SKIP_UNTIL_INSERT_NUMBER', null);
         $this->maxInserts = env('MAX_INSERTS', null);
 
-        $totalCombinationsPossible = (count($set)**$stringLength);
-        if (empty($stringLength)) {
+        if (empty($this->stringLength)) {
             echo PHP_EOL . 'Must set SHORTSTRINGS_LENGTH env variable when running the seeder.' . PHP_EOL;
             echo 'Example, seed all combinations with 1 of length:' . PHP_EOL;
             echo 'SHORTSTRINGS_LENGTH=1 php artisan db:seed --class=ShortstringSeeder' . PHP_EOL . PHP_EOL;
             die();
         }
 
+        $this->totalCombinationsPossible = (count($set)**$this->stringLength);
+
+        if (env('SKIP_TO_FINISH_FUNCTION', null) === null) {
+            $this->finish();
+            return;
+        }
+
         if (env('SKIP_CREATE_TEMP_TABLE', null) === null) {
             echo PHP_EOL . PHP_EOL . 'Will create temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
             $tempTableCreate = DB::statement("CREATE TABLE " . $this->tempTable . ' LIKE ' . $this->liveTable);
+        } else {
+            echo PHP_EOL . PHP_EOL . 'Will not create the temp table (' . $this->tempTable . ')' . PHP_EOL . PHP_EOL;
         }
 
 
-        echo PHP_EOL . PHP_EOL . 'Will generate all shortstring combinations with the length of ' . $stringLength . '.' . PHP_EOL . PHP_EOL;
+        echo PHP_EOL . PHP_EOL . 'Will generate shortstring combinations with the length of ' . $this->stringLength . '.' . PHP_EOL . PHP_EOL;
         echo PHP_EOL . PHP_EOL . 'Alphabet that will be used: ' . implode(',', $set) . PHP_EOL . PHP_EOL;
-        echo PHP_EOL . PHP_EOL . 'Total combinations possible: ' . $totalCombinationsPossible . PHP_EOL . PHP_EOL;
-        $this->generateAllKLength($set, $stringLength);
+        echo PHP_EOL . PHP_EOL . 'Total combinations possible: ' . $this->totalCombinationsPossible . PHP_EOL . PHP_EOL;
 
-        echo PHP_EOL . PHP_EOL . 'Done generating all the combinations possible.  (' . $totalCombinationsPossible . ')' . PHP_EOL . PHP_EOL;
+        if (!is_null($this->skipUntilInsertNumber)) {
+            echo PHP_EOL . PHP_EOL . 'Will skip inserts until insert nº ' . $this->skipUntilInsertNumber . '.' . PHP_EOL . PHP_EOL;
+        }
+
+        if (!is_null($this->maxInserts)) {
+            echo PHP_EOL . PHP_EOL . 'Max inserts allowed/defined: ' . $this->maxInserts . '.' . PHP_EOL . PHP_EOL;
+        }
+
+        $this->generateAllKLength($set, $this->stringLength);
+
+
+
+
+    }
+
+    private function finish($skipped = false) {
+        if ($skipped === false) {
+            echo PHP_EOL . PHP_EOL . 'Done generating all the combinations possible.  (' . $this->totalCombinationsPossible . ')' . PHP_EOL . PHP_EOL;
+        } else {
+            echo PHP_EOL . PHP_EOL . 'Will execute the finish function directly.' . PHP_EOL . PHP_EOL;
+        }
+
 
         if (env('SKIP_INSERT_INTO_LIVE_TABLE', null) === null) {
-            echo PHP_EOL . PHP_EOL . 'Will now insert the ' . $totalCombinationsPossible . ' combinations in a random order into the live table: ' . $this->liveTable . PHP_EOL . PHP_EOL;
+            echo PHP_EOL . PHP_EOL . 'Will now insert the ' . $this->totalCombinationsPossible . ' combinations in a random order into the live table: ' . $this->liveTable . PHP_EOL . PHP_EOL;
 
             $copyDataSql = "INSERT INTO " . $this->liveTable . " (shortstring, is_available, is_custom, length)
             SELECT shortstring, is_available, is_custom, length
@@ -111,14 +141,14 @@ class ShortstringSeeder extends Seeder
 
             $insertedRows = DB::affectingStatement($copyDataSql);
 
-            echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings with length of ' . $stringLength . '.' . PHP_EOL . PHP_EOL;
+            echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings with length of ' . $this->stringLength . '.' . PHP_EOL . PHP_EOL;
         }
 
         if (env('SKIP_CREATE_TEMP_TABLE', null) === null) {
             echo PHP_EOL . PHP_EOL . 'Will now drop the temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
             $dropTempTable = DB::statement( "DROP TABLE " . $this->tempTable);
+        } else {
+            echo PHP_EOL . PHP_EOL . 'Will not drop the temp table (' . $this->tempTable . ')' . PHP_EOL . PHP_EOL;
         }
-
-
     }
 }
