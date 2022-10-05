@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -335,6 +336,17 @@ class ShortlinkApiController extends Controller
         }
 
         $shortstringText = $request->input('shortstring');
+
+        $routeCollection = Route::getRoutes();
+
+        foreach ($routeCollection as $value) {
+            if ( $shortstringText === $value->uri() ) {
+                return new Response([
+                    //TODO: translate
+                    'message' => 'Este link não está disponível!'
+                ], Response::HTTP_SERVICE_UNAVAILABLE);
+            }
+        }
 
         $shortstring = Shortstring::where('shortstring', '=', $shortstringText)->first();
 
