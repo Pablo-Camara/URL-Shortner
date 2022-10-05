@@ -33,7 +33,7 @@ class TestSendEmail extends Command
         $testEmails = env('TEST_EMAIL_DESTINATION', null);
 
         if (is_null($testEmails)) {
-            die('Must set TEST_EMAIL_DESTINATION env variable. (Emails comma separated)');
+            die(PHP_EOL . PHP_EOL .  'Must set TEST_EMAIL_DESTINATION env variable. (Emails comma separated)' . PHP_EOL . PHP_EOL);
         }
 
         Mail::to(
