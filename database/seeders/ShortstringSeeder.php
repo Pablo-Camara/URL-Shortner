@@ -12,6 +12,8 @@ class ShortstringSeeder extends Seeder
     private $liveTable = 'shortstrings';
     private $insertCount = 0;
     private $skipUntilInsertNumber = null;
+    private $legitInserts = 0;
+    private $maxInserts = null;
 
     private function generateAllKLength($set, $k)
     {
@@ -39,6 +41,16 @@ class ShortstringSeeder extends Seeder
                 'shortstring' => $prefix,
                 'length' => strlen($prefix)
             ]);
+            $this->legitInserts++;
+
+            if (
+                !is_null(($this->maxInserts))
+                &&
+                $this->legitInserts >= $this->maxInserts
+            ) {
+                echo PHP_EOL . PHP_EOL . 'Reached max inserts number. Closing.';
+                die();
+            }
             return;
         }
 
@@ -66,6 +78,7 @@ class ShortstringSeeder extends Seeder
 
         $stringLength = env('SHORTSTRINGS_LENGTH', null);
         $this->skipUntilInsertNumber = env('SKIP_UNTIL_INSERT_NUMBER', null);
+        $this->maxInserts = env('MAX_INSERTS', null);
 
         $totalCombinationsPossible = (count($set)**$stringLength);
         if (empty($stringLength)) {
