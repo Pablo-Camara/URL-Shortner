@@ -97,8 +97,11 @@ class ShortstringSeeder extends Seeder
 
         echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings with length of ' . $stringLength . '.' . PHP_EOL . PHP_EOL;
 
-        echo PHP_EOL . PHP_EOL . 'Will now drop the temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
-        $dropTempTable = DB::statement( "DROP TABLE " . $this->tempTable);
+        if (env('SKIP_CREATE_TEMP_TABLE', null) === null) {
+            echo PHP_EOL . PHP_EOL . 'Will now drop the temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
+            $dropTempTable = DB::statement( "DROP TABLE " . $this->tempTable);
+        }
+
 
     }
 }
