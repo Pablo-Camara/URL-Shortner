@@ -495,19 +495,21 @@ class ShortlinkApiController extends Controller
             throw ValidationException::withMessages(['long_url' => 'Não é possível criar um link curto para este url.']);
         }
 
-        $useBaseConvert = true;
-        if (!empty($customSize)) {
-            $useBaseConvert = false;
-        }
 
-        if ($useBaseConvert) {
+
+        if (empty($customSize)) {
 
             $this->validateHasNotReachedLimitsForShortstringsWith5orMoreOfLength(
                 $user,
                 $permissionGroup
             );
 
-            $nextAvailableShortstring = $this->tryGeneratingShortstringWithBaseConvert(5, $user->id);
+            $nextAvailableShortstring = Shortstring::where(
+                'is_available', '=', 1
+            )->where(
+                'length', '>=', 5
+            )->orderBy('length', 'ASC')->first();
+
         } else {
 
             if (
@@ -524,19 +526,11 @@ class ShortlinkApiController extends Controller
                 $customSize
             );
 
-            $useRandom = config('app.use_random_for_premium_urls');
-
             $nextAvailableShortstring = Shortstring::where(
                 'is_available', '=', 1
             )->where(
                 'length', '=', $customSize
-            );
-
-            if ($useRandom) {
-                $nextAvailableShortstring->inRandomOrder();
-            }
-
-            $nextAvailableShortstring = $nextAvailableShortstring->first();
+            )->first();
         }
 
 
@@ -588,7 +582,7 @@ class ShortlinkApiController extends Controller
 
             UserAction::logAction(
                 $newShortlink->user_id,
-                $useBaseConvert ? ShortlinkActions::GENERATED_SHORTLINK_WITH_BC : ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
+                ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
                 [
                     'shortlink_id' => $newShortlink->id
                 ]
@@ -779,84 +773,6 @@ class ShortlinkApiController extends Controller
         );
 
         return new Response('', Response::HTTP_OK);
-    }
-
-
-    /**
-     * Generates a shortstring with base_convert
-     * based on a number (autoincrement value to avoid dupes)
-     *
-     * @param int $currentAutoincrementValue
-     * @return string
-     */
-    private function generateShortstringWithBaseConvert(int $currentAutoincrementValue, $minimumShortstringLength) {
-        $alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        $totalAlphabetChars = strlen($alphabet);
-
-
-        $totalRecordCombinationsFrom1to4 = (36**1)+(36**2)+(36**3)+(36**4);
-
-        // not to miss combinations due to having preseeded combinations
-        // with length 1 to 4, they must be seeded.
-        if ($currentAutoincrementValue >= $totalRecordCombinationsFrom1to4) {
-            $currentAutoincrementValue = $currentAutoincrementValue - $totalRecordCombinationsFrom1to4;
-        }
-        $shortstring = base_convert(
-            ($currentAutoincrementValue - 1 /* minus 1, to not skip first convertion ( 0 ) */) + ($totalAlphabetChars**($minimumShortstringLength-1)),
-            10,
-            $totalAlphabetChars
-        );
-
-        return $shortstring;
-    }
-
-
-    /**
-     * Attempts to generate a shortstring and return it
-     * if not successful will return null
-     *
-     * @return Shortstring|null
-     */
-    private function tryGeneratingShortstringWithBaseConvert($minimumShortstringLength, $userId) {
-        $shortstringCreated = false;
-        $totalAttempts = 0;
-        $nextAvailableShortstring = null;
-        while ($shortstringCreated == false) {
-            try {
-                $shortstringsTableStatus = DB::select(
-                    "SHOW TABLE STATUS LIKE 'shortstrings'"
-                );
-                $currAutoincrementVal = $shortstringsTableStatus[0]->Auto_increment;
-                $shortstringToAdd = $this->generateShortstringWithBaseConvert($currAutoincrementVal, $minimumShortstringLength);
-
-                $nextAvailableShortstring = new Shortstring();
-                $nextAvailableShortstring->shortstring = $shortstringToAdd;
-
-                // we make it available
-                // until we use it
-                // and make it unavailable
-                $nextAvailableShortstring->is_custom = 0;
-                $nextAvailableShortstring->length = strlen($shortstringToAdd);
-                $nextAvailableShortstring->is_available = 1;
-                $nextAvailableShortstring->save();
-                $shortstringCreated = true;
-            } catch (\Throwable $th) {
-                $totalAttempts++;
-            }
-
-            // TODO: set max attempts in env variable / app config
-            // avoid infinite loop
-            if ($totalAttempts >= 20) {
-                //TODO: log event ( to monitor if this ever happens )
-                // should never happen but just in case..
-                if (!is_null($userId)) {
-                    UserAction::logAction($userId, ShortlinkActions::REACHED_MAX_GENERATE_ATTEMPTS_WITH_BC);
-                }
-                break;
-            }
-        }
-
-        return $nextAvailableShortstring;
     }
 
 

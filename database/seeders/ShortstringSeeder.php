@@ -2,15 +2,14 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class ShortstringSeeder extends Seeder
 {
-
-    private $totalInsertions = 0;
-
-    private $maxShortstringsToInsertRecursively = null;
+    private $tempTable = 'shortstrings_temp';
+    private $liveTable = 'shortstrings';
 
     private function generateAllKLength($set, $k)
     {
@@ -26,26 +25,13 @@ class ShortstringSeeder extends Seeder
         int $k
     )
     {
-        if (
-            !is_null($this->maxShortstringsToInsertRecursively)
-            &&
-            $this->totalInsertions >= $this->maxShortstringsToInsertRecursively
-        ) {
-            die('done! Inserted ' . $this->totalInsertions . ' rows');
-        }
         if ($k == 0)
         {
-            echo 'Trying to insert: ' . $prefix . PHP_EOL;
-            try {
-                DB::table('shortstrings')->insert([
-                    'shortstring' => $prefix
-                ]);
-                echo 'Inserted: ' . $prefix . PHP_EOL;
-                $this->totalInsertions++;
-            } catch (\Throwable $th) {
-                echo $th->getMessage() . PHP_EOL;
-            }
-
+            echo 'Inserting: ' . $prefix . PHP_EOL;
+            DB::table($this->tempTable)->insert([
+                'shortstring' => $prefix,
+                'length' => strlen($prefix)
+            ]);
             return;
         }
 
@@ -59,54 +45,6 @@ class ShortstringSeeder extends Seeder
 
 
 
-    private function seedUsingBaseConvert($totalLinksToSeed = null) {
-        if ( is_null($totalLinksToSeed) ) {
-            $totalLinksToSeed = env('TOTAL_SHORTSTRINGS_TO_SEED', $this->maxShortstringsToInsertRecursively);
-        }
-        for ($i = 0; $i < $totalLinksToSeed; $i++){
-            $alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-            $totalAlphabetChars = strlen($alphabet);
-            $shortstring = base_convert($i, 10, $totalAlphabetChars);
-
-            echo 'Trying to insert: ' . $shortstring . PHP_EOL;
-            try {
-                DB::table('shortstrings')->insert([
-                    'shortstring' => $shortstring
-                ]);
-                echo 'Inserted: ' . $shortstring . PHP_EOL;
-                $this->totalInsertions++;
-            } catch (\Throwable $th) {
-                echo $th->getMessage() . PHP_EOL;
-            }
-
-        }
-        echo PHP_EOL . 'Total insertions: ' . $this->totalInsertions . PHP_EOL;
-    }
-
-    private function seedAllPossibilitiesUsingRecursiveFunction($totalShortstringsToInsert = null, $stringLengthToStartFrom = null) {
-
-        if ( is_null($totalShortstringsToInsert) ) {
-            $totalShortstringsToInsert = env('TOTAL_SHORTSTRINGS_TO_SEED', $this->maxShortstringsToInsertRecursively);
-        };
-
-
-        $this->maxShortstringsToInsertRecursively = $totalShortstringsToInsert;
-
-        if ( is_null($stringLengthToStartFrom) ) {
-            $stringLengthToStartFrom = env('SHORTSTRINGS_LENGTH', 3);
-        };
-
-        $strLen = $stringLengthToStartFrom;
-
-        $alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
-        $numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-        $set = array_merge($numbers, $alphabet);
-
-        while (true) {
-            $this->generateAllKLength($set, $strLen);
-            $strLen++;
-        }
-    }
     /**
      * Run the database seeds.
      *
@@ -114,46 +52,42 @@ class ShortstringSeeder extends Seeder
      */
     public function run()
     {
-        // We could either seed using base_convert
-        // which has less combinations per string length starting on string length 2
-        // because it does not consider zeros on the left for the combinations.
-        // or we could seed using a recursive function that consider combinations
-        // with zeros on the left.
+        $alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+        $numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        $set = array_merge($alphabet, $numbers);
 
-        // we can use the following env variable
-        // when calling the seeder from CLI
-        // to decide wheter to use 'base_convert' or 'recursive' functions
-        // default is recursive
-        $seedMethod = env('SHORTSTRING_SEED_METHOD', 'recursive');
 
-        if (!in_array(strtolower($seedMethod), ['recursive', 'base_convert'])) {
-            $seedMethod = 'recursive';
+        $stringLength = env('SHORTSTRINGS_LENGTH', null);
+        $totalCombinationsPossible = (count($set)**$stringLength);
+        if (empty($stringLength)) {
+            echo PHP_EOL . 'Must set SHORTSTRINGS_LENGTH env variable when running the seeder.' . PHP_EOL;
+            echo 'Example, seed all combinations with 1 of length:' . PHP_EOL;
+            echo 'SHORTSTRINGS_LENGTH=1 php artisan db:seed --class=ShortstringSeeder' . PHP_EOL . PHP_EOL;
+            die();
         }
 
-        echo 'Will use the "' . $seedMethod . '" method to seed the shortstrings.' . PHP_EOL;
+        echo PHP_EOL . PHP_EOL . 'Will create temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
+        $tempTableCreate = DB::statement("CREATE TABLE " . $this->tempTable . ' LIKE ' . $this->liveTable);
 
-        // for both function we can either pass parameters here directly
-        // in the seeder function params
-        // or when calling the seeder we can set ENV variables
-        // these ENV variables have defaults already set for us:
+        echo PHP_EOL . PHP_EOL . 'Will generate all shortstring combinations with the length of ' . $stringLength . '.' . PHP_EOL . PHP_EOL;
+        echo PHP_EOL . PHP_EOL . 'Alphabet that will be used: ' . implode(',', $set) . PHP_EOL . PHP_EOL;
+        echo PHP_EOL . PHP_EOL . 'Total combinations possible: ' . $totalCombinationsPossible . PHP_EOL . PHP_EOL;
+        $this->generateAllKLength($set, $stringLength);
 
-        // TOTAL_SHORTSTRINGS_TO_SEED = 100000 ( set in the private variable
-        // on top of this file/class $maxShortstringsToInsertRecursively
+        echo PHP_EOL . PHP_EOL . 'Done generating all the combinations possible.  (' . $totalCombinationsPossible . ')' . PHP_EOL . PHP_EOL;
+        echo PHP_EOL . PHP_EOL . 'Will now insert the ' . $totalCombinationsPossible . ' combinations in a random order into the live table: ' . $this->liveTable . PHP_EOL . PHP_EOL;
 
+        $copyDataSql = "INSERT INTO " . $this->liveTable . " (shortstring, is_available, is_custom, length)
+        SELECT shortstring, is_available, is_custom, length
+        FROM " . $this->tempTable . "
+        ORDER BY RAND();";
 
-        if ($seedMethod === 'base_convert') {
-            $this->seedUsingBaseConvert();
-        }
+        $insertedRows = DB::affectingStatement($copyDataSql);
 
+        echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings with length of ' . $stringLength . '.' . PHP_EOL . PHP_EOL;
 
-        // and for the below function we have the env var
-        // called SHORTSTRINGS_LENGTH = 3 ( default )
-        // which define where to start in terms of string length
-        // to generate all possibilities starting from that string length
-
-        if ($seedMethod === 'recursive') {
-            $this->seedAllPossibilitiesUsingRecursiveFunction();
-        }
+        echo PHP_EOL . PHP_EOL . 'Will now drop the temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
+        $dropTempTable = DB::statement( "DROP TABLE " . $this->tempTable);
 
     }
 }

@@ -55,7 +55,6 @@ class StatisticsController extends Controller
                 AuthActions::REGISTERED_WITH_GITHUB
             ],
             'totalShortlinksGenerated' => [
-                ShortlinkActions::GENERATED_SHORTLINK_WITH_BC,
                 ShortlinkActions::GENERATED_SHORTLINK_WITH_PRESEEDED_STRING,
             ],
             'totalTrafficReceivedInShortlinks' => [

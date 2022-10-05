@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('shortstrings', function (Blueprint $table) {
             $table->id();
             $table->string('shortstring', 255)->unique();
-            $table->boolean('is_available')->default(0)->index();
+            $table->boolean('is_available')->default(1)->index();
             $table->boolean('is_custom')->default(0)->index();
             $table->unsignedTinyInteger('length')->index();
             $table->timestamp('created_at')->useCurrent();

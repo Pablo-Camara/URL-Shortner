@@ -91,7 +91,6 @@ return [
     'LOGGED_IN_WITH_LINKEDIN' => 'Início de Sessão com o LinkedIn',
     'LOGGED_IN_WITH_GITHUB' => 'Início de Sessão com o Github',
 
-    'GENERATED_SHORTLINK_WITH_BC' => 'Shortlinks gerados com método "BaseConvert" ',
     'GENERATED_SHORTLINK_WITH_PRESEEDED_STRING' => 'Shortlinks gerados com método "Pre-Seeded"',
 
     'VISITED_ACTIVE_SHORTLINK' => 'Visualizações (Em Shortlink(s) activo(s))',
@@ -165,9 +164,9 @@ return [
     'ATTEMPTED_TO_GENERATE_SHORTLINK_FOR_URL_THAT_IS_TOO_LONG' => 'Tentativa de gerar shortlink para URL muito grande',
     'ATTEMPTED_TO_EDIT_SHORTLINK_URL_TO_ONE_THAT_IS_TOO_LONG' => 'Tentativa de editar shortlink para URL muito grande',
     'ATTEMPTED_TO_CREATE_SHORTLINK_FOR_SHORTLINK' => 'Tentativa de shortlink para shortlink',
-    'REACHED_MAX_GENERATE_ATTEMPTS_WITH_BC' => 'Atingido maximo de tentativas para gerar shortlink com método "BaseConvert"',
+
     'DID_NOT_FIND_AVAILABLE_PRESEEDED_SHORTSTRING' => 'Shortstring "Pre-Gerada" não encontrada',
-    'WILL_TRY_GENERATING_SHORTSTRING_WITH_BC' => 'Tentativa de Gerar Shortlink com método "Base Convert"',
+
     'FOUND_NO_AVAILABLE_SHORTSTRING' => 'Nenhum Shortstring disponível encontrado',
 
     'VISITED_DELETED_SHORTLINK' => 'Visualizações (Em Shortlink(s) apagados(s))',
