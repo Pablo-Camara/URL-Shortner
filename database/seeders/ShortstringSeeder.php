@@ -95,11 +95,11 @@ class ShortstringSeeder extends Seeder
             SELECT shortstring, is_available, is_custom, length
             FROM " . $this->tempTable . "
             ORDER BY RAND();";
+
+            $insertedRows = DB::affectingStatement($copyDataSql);
+
+            echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings with length of ' . $stringLength . '.' . PHP_EOL . PHP_EOL;
         }
-
-        $insertedRows = DB::affectingStatement($copyDataSql);
-
-        echo PHP_EOL . PHP_EOL . 'Inserted ' . $insertedRows . ' new shortstrings with length of ' . $stringLength . '.' . PHP_EOL . PHP_EOL;
 
         if (env('SKIP_CREATE_TEMP_TABLE', null) === null) {
             echo PHP_EOL . PHP_EOL . 'Will now drop the temporary table: ' . $this->tempTable . PHP_EOL . PHP_EOL;
