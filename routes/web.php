@@ -59,7 +59,7 @@ Route::get('/auth/github/callback', [AuthenticationController::class, 'githubCal
 /**
  * Laravel docs says:
  * Stateless authentication is not available for the Twitter OAuth 1.0 driver.
- * ( which might be a problem to solve if the app ever has to scale horizontally )
+ * ( which is not a problem because we use SESSION_DRIVER=cookie )
  */
 Route::middleware(['sessionful'])->group(function () {
 
