@@ -43,10 +43,22 @@ return [
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
             //'local_domain' => env('MAIL_EHLO_DOMAIN'),
-            //'auth_mode'  => null,
+            'auth_mode'  => null,
+            'verify_peer'       => false,
+            'verify_peer_name'  => false,
+            'allow_self_signed' => true,
+            'ssl' => [
+                'auth_mode'  => null,
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true
+            ],
             'stream' => [
                 'ssl' => [
+                    'auth_mode'  => null,
                     'verify_peer'       => false,
+                    'verify_peer_name'  => false,
+                    'allow_self_signed' => true
                 ]
             ]
         ],
@@ -86,6 +98,25 @@ return [
         ],
     ],
 
+
+    'auth_mode'  => null,
+            'verify_peer'       => false,
+            'verify_peer_name'  => false,
+            'allow_self_signed' => true,
+            'ssl' => [
+                'auth_mode'  => null,
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true
+            ],
+            'stream' => [
+                'ssl' => [
+                    'auth_mode'  => null,
+                    'verify_peer'       => false,
+                    'verify_peer_name'  => false,
+                    'allow_self_signed' => true
+                ]
+                ],
     /*
     |--------------------------------------------------------------------------
     | Global "From" Address
