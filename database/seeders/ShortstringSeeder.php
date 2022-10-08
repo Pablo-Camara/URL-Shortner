@@ -120,7 +120,7 @@ class ShortstringSeeder extends Seeder
         }
 
         $this->generateAllKLength($set, $this->stringLength);
-
+        $this->finish();
     }
 
     private function finish($skipped = false) {
