@@ -14,7 +14,7 @@ class HomeComposer
         $currentBackground = asset('/img/bg_' . ($withCoffee ? 'with' : 'without') . '_coffee.jpeg');
 
         $logoTop = asset('/img/logo.png');
-        $logoTopMobile = asset('/img/logo-full-mobile.png');
+        $logoTopMobile = asset('/img/logo.png');
 
         $enableLoginWithGoogleBtn = config('services.google.enable_login_btn');
         $enableLoginWithFacebookBtn = config('services.facebook.enable_login_btn');
