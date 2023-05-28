@@ -15,6 +15,7 @@ class ShortstringSeeder extends Seeder
     private $legitInserts = 0;
     private $maxInserts = null;
     private $stringLength = null;
+    private $totalCombinationsPossible = '';
 
     private function generateAllKLength($set, $k)
     {
