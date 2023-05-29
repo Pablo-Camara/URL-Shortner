@@ -22,7 +22,7 @@ class PermissionGroupsSeeder extends Seeder
             [
                 'name' => 'utilizador registrado',
                 'default' => 1,
-                'send_shortlink_by_email_when_generating' => 1,
+                'send_shortlink_by_email_when_generating' => 0,
                 'edit_shortlinks_destination_url' => 1,
                 'view_shortlinks_total_views' => 1,
             ],
