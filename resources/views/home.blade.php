@@ -8398,7 +8398,7 @@
             <img id="logo-top-mobile"
                 src="{{ $logoTopMobile }}"
             >
-            <div id="logo-top-mobile-desc">url shortner<br/>em português</div>
+            <div id="logo-top-mobile-desc">will shorten urls</div>
         </div>
 
         <div id="mobile-menu-toggle">
