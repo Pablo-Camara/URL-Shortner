@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <title>will shorten urls - url shortner em português</title>
+        <title>shorten big urls - url shortner em português</title>
         <meta name="description" content="url shortner em português, transforme os seus links longos em links curtos, edita os teus links se quiseres e veja quantas pessoas visitam o seu link">
         <meta name="keywords" content="url shortner, encurtador de links, encurtador de urls, url shortner em português, url shortner português, encurtador de links português, encurtador de links em português, português">
         <link rel="icon" type="image/x-icon" href="{{ asset('/img/WIL_favicon.png') }}">
@@ -6517,7 +6517,7 @@
                             window.App.hideNonStickyComponents();
                             window.App.hideComponents(this.components.initiallyHidden);
                             window.App.showComponents(this.components.initiallyVisible);
-                            window.history.pushState(null, 'will shorten urls - url shortner', '/');
+                            window.history.pushState(null, 'shorten big urls - url shortner', '/');
                         },
                         hide: function () {
                             window.App.hideComponents(this.components.initiallyVisible);
@@ -8398,7 +8398,7 @@
             <img id="logo-top-mobile"
                 src="{{ $logoTopMobile }}"
             >
-            <div id="logo-top-mobile-desc">will shorten urls</div>
+            <div id="logo-top-mobile-desc">shorten big urls</div>
         </div>
 
         <div id="mobile-menu-toggle">
@@ -8449,7 +8449,7 @@
 
         <div id="current-presentation" style="display: none">
             <div id="cp-title">
-                will<br/>shorten<br/>urls
+                shorten<br/>big<br/>urls
             </div>
             <div id="cp-desc">
                 url shortner<br/>em português
