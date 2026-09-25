@@ -1,75 +1,34 @@
 <?php
 
-use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ShortlinkController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\LinkController;
+use App\Http\Controllers\RedirectController;
+use App\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
-
-Route::get('/', [HomeController::class, 'index']);
-Route::get('/criar-link-personalizado', [HomeController::class, 'linkPersonalization']);
-Route::get('/entrar', [HomeController::class, 'login'])->name('login-page');
-Route::get('/criar-conta', [HomeController::class, 'register'])->name('register-page');
-Route::get('/os-meus-links', [HomeController::class, 'myLinks'])->name('my-links-page');
-Route::get('/contacte', [HomeController::class, 'contactUs'])->name('contact-us-page');
-Route::get('/meu-perfil', [HomeController::class, 'myProfile'])->name('profile-page');
-
-Route::get('/confirmar-email/{token}', [HomeController::class, 'confirmEmail'])
-        ->middleware(['email.confirm', 'auth:sanctum', 'abilities:confirm_email'])
-        ->name('emailConfirmationLink');
-
-Route::get('/alterar-palavra-passe/{token}', [HomeController::class, 'changePassword'])
-        ->middleware(['password.change', 'auth:sanctum', 'abilities:change_password'])
-        ->name('changePasswordLink');
-
-/** Admin panel */
-Route::get('/painel-admin', [HomeController::class, 'adminPanel']);
-
-
-/**
- * routes for Login with External services
- */
-/** Google */
-Route::get('/auth/google/redirect', [AuthenticationController::class, 'googleRedirect']);
-Route::get('/auth/google/callback', [AuthenticationController::class, 'googleCallback']);
-
-/** Facebook */
-Route::get('/auth/facebook/redirect', [AuthenticationController::class, 'facebookRedirect']);
-Route::get('/auth/facebook/callback', [AuthenticationController::class, 'facebookCallback']);
-
-/** LinkedIn */
-Route::get('/auth/linkedin/redirect', [AuthenticationController::class, 'linkedinRedirect']);
-Route::get('/auth/linkedin/callback', [AuthenticationController::class, 'linkedinCallback']);
-
-
-/** Github */
-Route::get('/auth/github/redirect', [AuthenticationController::class, 'githubRedirect']);
-Route::get('/auth/github/callback', [AuthenticationController::class, 'githubCallback']);
-
-/**
- * Laravel docs says:
- * Stateless authentication is not available for the Twitter OAuth 1.0 driver.
- * ( which is not a problem because we use SESSION_DRIVER=cookie )
- */
-Route::middleware(['sessionful'])->group(function () {
-
-    /** Twitter */
-    Route::get('/auth/twitter/redirect', [AuthenticationController::class, 'twitterRedirect']);
-    Route::get('/auth/twitter/callback', [AuthenticationController::class, 'twitterCallback']);
-
+Route::view('/', 'app');
+Route::view('/app', 'app')->name('login');
+Route::prefix('api')->group(function () {
+    Route::get('/session', [AccountController::class, 'session']);
+    Route::post('/login', [AccountController::class, 'login'])->middleware('throttle:account');
+    Route::post('/register', [AccountController::class, 'register'])->middleware('throttle:account');
+    Route::post('/logout', [AccountController::class, 'logout'])->middleware('auth');
+    Route::middleware(['auth', 'throttle:manage'])->group(function () {
+        Route::get('/stats', [LinkController::class, 'stats']);
+        Route::get('/links', [LinkController::class, 'index']);
+        Route::post('/links', [LinkController::class, 'store']);
+        Route::get('/links/{link}', [LinkController::class, 'show']);
+        Route::patch('/links/{link}', [LinkController::class, 'update']);
+        Route::patch('/links/{link}/status', [LinkController::class, 'status']);
+    });
 });
-/** -- */
-
-
-
-Route::get('/{shortstring}', [ShortlinkController::class, 'visit']);
+// Keep redirect reads stateless: analytics never creates a visitor session or cookie.
+Route::get('/{alias}', RedirectController::class)->where('alias', '[a-zA-Z0-9-]+')->withoutMiddleware([
+    VerifyCsrfToken::class,
+    StartSession::class,
+    AddQueuedCookiesToResponse::class,
+    ShareErrorsFromSession::class,
+]);

@@ -35,57 +35,6 @@ return [
 
     'expire_on_close' => false,
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Auth Token Cookie Name
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the name that you wish for the auth token cookie
-    |
-    */
-    'auth_token_cookie_name' => env('AUTH_TOKEN_COOKIE_NAME', 'ATCN'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Auth Token Cookie Lifetime
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the number of minutes that you wish the auth token cookie
-    | to be allowed to remain idle before it expires.
-    |
-    | default: 24*60 = 1440 = 24h in minutes
-    */
-    'auth_token_cookie_lifetime' => env('AUTH_TOKEN_COOKIE_LIFETIME', 1440),
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Email Confirmation Token Lifetime
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the number of minutes that you wish for
-    | the email confirmation token to last
-    | when expired the user will not be able to confirm his email
-    | with the same token / link sent by email
-    | the user will have to 'Resend confirmation email'
-    | when trying to login ( and failing )
-    |
-    | default: 24*60 = 1440 = 24h in minutes
-    */
-    'email_confirmation_token_lifetime' => env('EMAIL_CONFIRMATION_TOKEN_LIFETIME', 1440),
-
-    /**
-     * life time for email confirmation token when user 'Resends' the confirmation email
-     */
-    'resent_email_confirmation_token_lifetime' => env('RESENT_EMAIL_CONFIRMATION_TOKEN_LIFETIME', 60),
-
-    /**
-     * life time for the password recovery token
-     */
-    'password_recovery_token_lifetime' => env('PASSWORD_RECOVERY_TOKEN_LIFETIME', 30),
-
-
     /*
     |--------------------------------------------------------------------------
     | Session Encryption

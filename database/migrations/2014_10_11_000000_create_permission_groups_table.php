@@ -71,6 +71,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user_permissions');
+        Schema::dropIfExists('permission_groups');
     }
 };

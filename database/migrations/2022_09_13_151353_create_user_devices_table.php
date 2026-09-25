@@ -31,7 +31,6 @@ return new class extends Migration
             $table->string('platform')->nullable();
             $table->string('browser')->nullable();
 
-
             $table->timestamp('created_at')->useCurrent();
             $table->date('created_at_day')->default(DB::raw('CURRENT_DATE'))->index();
 

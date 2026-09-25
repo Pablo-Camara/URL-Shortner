@@ -6,13 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Shortstring extends Model
 {
+    protected $guarded = ['id'];
 
-    /**
-     * Get the shortlinks that used this shortstring, in case any
-     */
     public function shortlink()
     {
         return $this->hasOne(Shortlink::class);
     }
-
 }
