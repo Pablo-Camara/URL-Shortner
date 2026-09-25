@@ -29,8 +29,8 @@ and generate your Client SECRET
 and then update the following env variables in the .env file:
 
 ENABLE_LOGIN_WITH_GITHUB=true
-GITHUB_CLIENT_ID=yourClientId
-GITHUB_CLIENT_SECRET=yourClientSecret
+GITHUB_CLIENT_ID=your-provider-value
+GITHUB_CLIENT_SECRET=your-provider-value
 
 
 # Login with Facebook
@@ -76,8 +76,8 @@ Get the App ID and App secret
 and setup the following env variables in the .env file:
 
 ENABLE_LOGIN_WITH_FACEBOOK=true
-FACEBOOK_CLIENT_ID=412647327691226
-FACEBOOK_CLIENT_SECRET=148fcbc4b646cbb3d57d7b16da75feef
+FACEBOOK_CLIENT_ID=your-provider-value
+FACEBOOK_CLIENT_SECRET=your-provider-value
 
 
 # Login with Google
@@ -115,8 +115,8 @@ and in the next step copy the Client ID and Secret and set it up in
 the following env variables in the .env file:
 
 ENABLE_LOGIN_WITH_GOOGLE=true
-GOOGLE_CLIENT_ID=yourClientId
-GOOGLE_CLIENT_SECRET=yourClientSecret
+GOOGLE_CLIENT_ID=your-provider-value
+GOOGLE_CLIENT_SECRET=your-provider-value
 
 you also need to open the "OAuth Consent Screen" ( menu item below "Credentials " menu item )
 and then "Publish App", some things will be required for the app to be approved and the approval might take some time.
@@ -140,8 +140,8 @@ then get the Client ID, and the Client Secret
 and update the below env variables in the .env file:
 
 ENABLE_LOGIN_WITH_LINKEDIN=true
-LINKEDIN_CLIENT_ID=yourClientId
-LINKEDIN_CLIENT_SECRET=yourClientSecret
+LINKEDIN_CLIENT_ID=your-provider-value
+LINKEDIN_CLIENT_SECRET=your-provider-value
 
 
 # Login with Twitter
