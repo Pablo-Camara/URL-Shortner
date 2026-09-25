@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShortlinkUrl extends Model
 {
-
+    protected $guarded = ['id'];
 }

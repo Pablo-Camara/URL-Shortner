@@ -6,40 +6,45 @@ use Illuminate\Database\Eloquent\Model;
 
 class Shortlink extends Model
 {
-    const STATUS_ACTIVE = 1;
-    const STATUS_DELETED = 2;
-    const STATUS_SUSPENDED = 3;
+    public const ACTIVE = 1;
 
-    /**
-     * Get the shortstring used for the shortlink
-     */
+    public const ARCHIVED = 2;
+
+    public const PAUSED = 3;
+
+    protected $guarded = ['id'];
+
+    protected $casts = ['expires_at' => 'datetime', 'version' => 'integer'];
+
     public function shortstring()
     {
         return $this->belongsTo(Shortstring::class);
     }
 
-    public function redirectUrl() {
-        return $this->hasOne(ShortlinkUrl::class)
-                    ->where('is_redirect_url', '=', 1);
+    public function destination()
+    {
+        return $this->hasOne(ShortlinkUrl::class)->where('is_redirect_url', true);
     }
 
-    public function previousRedirectUrls() {
-        return $this->hasMany(ShortlinkUrl::class)
-                    ->where('is_redirect_url', '=', 0)
-                    ->orderBy('id', 'DESC');
+    public function history()
+    {
+        return $this->hasMany(ShortlinkUrl::class)->orderByDesc('id');
     }
 
-    public static function moveShortlinksFromUserToUser (
-        $fromUserId,
-        $toUserId
-    ) {
-        try {
-            $totalRowsUpdated = Shortlink::where(
-                'user_id', '=', $fromUserId
-            )->update(['user_id' => $toUserId]);
-            return $totalRowsUpdated;
-        } catch (\Throwable $th) {
-            return null;
+    public function clicks()
+    {
+        return $this->hasMany(DailyClick::class);
+    }
+
+    public function status(): string
+    {
+        if ($this->status_id === self::ARCHIVED) {
+            return 'archived';
         }
+        if ($this->status_id === self::PAUSED) {
+            return 'paused';
+        }
+
+        return $this->expires_at?->isPast() ? 'expired' : 'active';
     }
 }

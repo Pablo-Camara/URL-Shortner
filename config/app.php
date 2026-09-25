@@ -1,6 +1,11 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\AuthServiceProvider;
+use App\Providers\EventServiceProvider;
+use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\ServiceProvider;
 
 return [
 
@@ -56,14 +61,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'force_https_in_prod' => env('FORCE_HTTPS_SCHEME_IN_PROD', false),
-
     'asset_url' => env('ASSET_URL'),
-
-    'contact_email' => env('CONTACT_EMAIL', 'pablo.camara.pt@gmail.com'),
-
-    'use_random_for_premium_urls' => env('USE_RANDOM_FOR_PREMIUM_URLS', false),
-
 
     /*
     |--------------------------------------------------------------------------
@@ -76,7 +74,7 @@ return [
     |
     */
 
-    'timezone' => 'Europe/Lisbon',
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------
@@ -89,7 +87,7 @@ return [
     |
     */
 
-    'locale' => 'pt',
+    'locale' => 'en',
 
     /*
     |--------------------------------------------------------------------------
@@ -161,34 +159,7 @@ return [
     |
     */
 
-    'providers' => [
-
-        /*
-         * Laravel Framework Service Providers...
-         */
-        Illuminate\Auth\AuthServiceProvider::class,
-        Illuminate\Broadcasting\BroadcastServiceProvider::class,
-        Illuminate\Bus\BusServiceProvider::class,
-        Illuminate\Cache\CacheServiceProvider::class,
-        Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
-        Illuminate\Cookie\CookieServiceProvider::class,
-        Illuminate\Database\DatabaseServiceProvider::class,
-        Illuminate\Encryption\EncryptionServiceProvider::class,
-        Illuminate\Filesystem\FilesystemServiceProvider::class,
-        Illuminate\Foundation\Providers\FoundationServiceProvider::class,
-        Illuminate\Hashing\HashServiceProvider::class,
-        Illuminate\Mail\MailServiceProvider::class,
-        Illuminate\Notifications\NotificationServiceProvider::class,
-        Illuminate\Pagination\PaginationServiceProvider::class,
-        Illuminate\Pipeline\PipelineServiceProvider::class,
-        Illuminate\Queue\QueueServiceProvider::class,
-        Illuminate\Redis\RedisServiceProvider::class,
-        Illuminate\Auth\Passwords\PasswordResetServiceProvider::class,
-        Illuminate\Session\SessionServiceProvider::class,
-        Illuminate\Translation\TranslationServiceProvider::class,
-        Illuminate\Validation\ValidationServiceProvider::class,
-        Illuminate\View\ViewServiceProvider::class,
-
+    'providers' => ServiceProvider::defaultProviders()->merge([
         /*
          * Package Service Providers...
          */
@@ -196,15 +167,11 @@ return [
         /*
          * Application Service Providers...
          */
-        App\Providers\AppServiceProvider::class,
-        App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
-        App\Providers\EventServiceProvider::class,
-        App\Providers\RouteServiceProvider::class,
-        Anhskohbo\NoCaptcha\NoCaptchaServiceProvider::class,
-        App\Providers\ViewServiceProvider::class
-
-    ],
+        AppServiceProvider::class,
+        AuthServiceProvider::class,
+        EventServiceProvider::class,
+        RouteServiceProvider::class,
+    ])->toArray(),
 
     /*
     |--------------------------------------------------------------------------
@@ -218,8 +185,7 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
-        // 'ExampleClass' => App\Example\ExampleClass::class,
-        'NoCaptcha' => Anhskohbo\NoCaptcha\Facades\NoCaptcha::class,
+        // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
 ];

@@ -70,7 +70,6 @@ return [
     'guest_users' => 'Utilizadores não registrados',
     'registered_users' => 'Utilizadores registrados',
 
-
     'browser' => 'Navegador',
     'device_height' => 'Altura Ecrã',
     'device_width' => 'Largura Ecrã',
@@ -94,7 +93,6 @@ return [
     'GENERATED_SHORTLINK_WITH_PRESEEDED_STRING' => 'Shortlinks gerados com método "Pre-Seeded"',
 
     'VISITED_ACTIVE_SHORTLINK' => 'Visualizações (Em Shortlink(s) activo(s))',
-
 
     'AUTHENTICATED_AS_GUEST' => 'Autenticação como Convidado',
     'AUTHENTICATED_AS_USER' => 'Autenticação como Utilizador',
@@ -128,8 +126,6 @@ return [
     'ATTEMPTED_TO_LOGIN_WITH_UNVERIFIED_EMAIL' => 'Tentative de Início de Sessão com email não confirmado',
     'ATTEMPTED_TO_LOGIN_WHILE_LOGGED_IN' => 'Tentativa de Início de Sessão com sessão já iniciada',
 
-
-
     'FAILED_TO_LOGIN_WITH_GITHUB' => 'Início de Sessão com Github falhou',
 
     'FAILED_TO_LOGIN_WITH_FACEBOOK' => 'Início de Sessão com Facebook falhou',
@@ -152,8 +148,6 @@ return [
     'IMPORTED_ACTIONS_FROM_GUEST_ACCOUNT' => 'Ações enquanto convidado importadas para conta de utilizador',
     'FAILED_TO_SAVE_ACTIONS_FROM_GUEST_TO_ACCOUNT' => 'Falha ao guardar ações do convidado em conta de utilizador',
     'FAILED_TO_IMPORT_ACTIONS_FROM_GUEST_ACCOUNT' => 'Falha ao importar ações do convidado para conta de utilizador',
-
-
 
     'SENT_SHORTLINK_TO_EMAIL' => 'Shortlink Enviado por Email',
 
@@ -189,5 +183,5 @@ return [
     'OPENED_CHANGE_PASSWORD_PAGE_DIRECTLY' => 'Página de Alteração de Palavra-passe aberta diretamente',
     'OPENED_ADMIN_PANEL_PAGE_DIRECTLY' => 'Página do Painel de Administração aberta diretamente',
 
-    'SENT_CONTACT_MESSAGE' => 'Envio de mensagem através da página de contacto'
+    'SENT_CONTACT_MESSAGE' => 'Envio de mensagem através da página de contacto',
 ];

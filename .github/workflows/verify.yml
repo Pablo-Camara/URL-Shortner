@@ -1,0 +1,35 @@
+name: Verify link manager
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Match checkout ownership
+        run: |
+          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
+      - run: scripts/setup.sh
+      - run: docker compose run --rm app php artisan test --compact
+      - run: docker compose run --rm app vendor/bin/pint --test
+      - run: docker compose run --rm node npm test
+      - run: docker compose run --rm node npm run format:check
+      - run: docker compose run --rm app composer audit
+      - run: docker compose run --rm node npm audit
+      - name: Verify real HTTP delivery
+        run: |
+          docker compose run --rm app php artisan db:seed --class=DemoSeeder
+          node scripts/check-http.mjs
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs --tail 100
+      - name: Stop local stack
+        if: always()
+        run: docker compose down
